@@ -33,6 +33,14 @@ This document records the source-backed facts that shaped the application archit
 - Exact unlock prerequisites are now verified for a small seed subset, but the broader roster still needs structured extraction and verification.
 - Public guides are guide sites with their own editorial layer. That is acceptable for initial catalog construction, but every imported record should retain source provenance and confidence so incorrect values can be patched cleanly.
 
+## Community-derived mechanic notes
+
+- A March 2026 Reddit discussion on Dijiang operator syncing reported community-tested Mood numbers of `50,000` max Mood, `1` Mood drained per second while working, and `6,000` Mood restored per hour while resting. Source: [Reddit discussion](https://www.reddit.com/r/Endfield/comments/1rfo6b2/dijiang_operator_syncing/).
+- That same discussion reinforces an important planning consequence for this optimizer: an empty production slot is especially costly because a staffed slot contributes the room's baseline worker bonus even if the assigned operator has weak or mismatched Base Skills.
+- The optimizer now uses those rates as the basis of its long-run Mood uptime model for production-room sustain and Control Nexus ship-wide sustain.
+- The current implementation still intentionally stops short of a full per-operator rest-cycle simulator. It does not track current Mood, explicit rest windows, or operator rotation schedules over time.
+- Future Mood work should focus on raising fidelity from this calibrated uptime model rather than going back to flat sustain weights.
+
 ## Working assumptions for the first implementation
 
 - The optimizer should treat publicly confirmed skill effects as authoritative enough for a first-pass catalog when at least one reputable guide page provides the operator's alpha and beta values.

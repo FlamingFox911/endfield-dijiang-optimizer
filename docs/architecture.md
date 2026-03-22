@@ -130,14 +130,24 @@ The score for a room is modeled from:
 - Base output for the chosen recipe and room level.
 - Baseline occupancy efficiency in production rooms, currently modeled as `40%` extra base output per assigned operator seat in Manufacturing Cabin and Growth Chamber rooms.
 - Matching production or growth bonuses from assigned operators.
-- Mood sustain effects such as Control Nexus mood regen and room mood-drop reduction.
+- Mood sustain effects such as room mood regen, room mood-drop reduction, and Control Nexus ship-wide sustain.
 - Reception Room and Control Nexus effects that improve clue or facility-wide value when applicable.
+
+V1 still does not run a full time-based Mood simulation with current Mood state, explicit rest schedules, or rotation planning. It now does use the community-derived long-run Mood rates as a calibrated uptime model:
+
+- baseline Mood drain while working is treated as `3,600` per hour
+- baseline Mood recovery while resting is treated as `6,000` per hour
+- the implied baseline long-run working uptime is `62.5%`
+- production-room Mood effects preserve the staffed-seat `+40%` value and the operator's own direct production bonus over the long run
+- Control Nexus Mood effects are treated as ship-wide sustain that improves the long-run uptime of production-room operator value
+
+The optimization objective is still total score, not raw projected output totals. Projected outputs are derived after scoring, but they are now kept aligned with the production-side effects of the Mood model, including ship-wide Control Nexus Mood support.
 
 The result payload returns:
 
 - Recommended operator assignments per room.
 - The room recipe plan used for the run.
-- Estimated output by exact recipe and by broader product family.
+- Estimated output by exact recipe and by broader product family, including production-side gains preserved by the current Mood model.
 - Opportunity-cost warnings when hard assignments reduce production.
 - The source catalog version used for the run.
 

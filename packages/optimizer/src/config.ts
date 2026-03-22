@@ -3,12 +3,13 @@ import type { OptimizationProfile } from "@endfield/domain";
 import type { OptimizationSearchConfig } from "./types.js";
 
 export const SUPPORT_WEIGHTS = {
-  version: "2026-03-22-v3",
+  version: "2026-03-22-v4",
   controlNexusMoodRegenWeight: 0.55,
   controlNexusMoodDropReductionWeight: 0.45,
   assignedOperatorProductionEfficiencyPercent: 40,
-  manufacturingMoodSustainFactor: 0.25,
-  growthMoodSustainFactor: 0.25,
+  baselineMoodDrainPerHour: 3_600,
+  baselineMoodRegenPerHour: 6_000,
+  baselineMoodWorkingUptime: 0.625,
   receptionClueCollectionWeight: 0.75,
   receptionClueRateWeight: 0,
   offRoomClueWeight: 0.2,

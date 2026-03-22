@@ -6,6 +6,7 @@ import {
   DEFAULT_OPTIMIZATION_EFFORT,
   DEFAULT_OPTIMIZATION_PROFILE,
   OptimizationCancelledError,
+  SUPPORT_WEIGHTS,
   applyMaxFacilitiesOverlay,
   getOptimizationSearchConfig,
   formatOptimizationResultText,
@@ -51,6 +52,118 @@ describe("optimizer runtime", () => {
     expect(manufacturingPlan).toBeDefined();
     expect(manufacturingPlan!.assignedOperatorIds).toEqual(["snowshine"]);
     expect(manufacturingPlan!.scoreBreakdown.directProductionScore).toBeCloseTo(baseUnits * 1.4, 6);
+  });
+
+  it("values production-room Mood sustain from long-run uptime against the staffed seat and personal bonuses", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    const recipe = catalog.recipes.find((entry) => entry.id === "arms-insp-set");
+    const pogranichnik = scenario.roster.find((operator) => operator.operatorId === "pogranichnik");
+
+    expect(recipe).toBeDefined();
+    expect(pogranichnik).toBeDefined();
+
+    for (const operator of scenario.roster) {
+      operator.owned = operator.operatorId === "pogranichnik";
+    }
+
+    pogranichnik!.owned = true;
+    pogranichnik!.baseSkillStates = pogranichnik!.baseSkillStates.map((state) => ({
+      ...state,
+      unlockedRank: state.skillId === "hone-the-weapons" || state.skillId === "morale-boost" ? 1 : 0,
+    }));
+
+    scenario.facilities.controlNexus.level = 3;
+    scenario.facilities.hardAssignments = [];
+    scenario.facilities.manufacturingCabins[0]!.enabled = true;
+    scenario.facilities.manufacturingCabins[0]!.level = 3;
+    scenario.facilities.manufacturingCabins[0]!.fixedRecipeId = "arms-insp-set";
+    scenario.facilities.manufacturingCabins[1]!.enabled = false;
+    scenario.facilities.growthChambers[0]!.enabled = false;
+    scenario.facilities.receptionRoom!.enabled = false;
+
+    const result = solveScenario(catalog, scenario);
+    const manufacturingPlan = result.roomPlans.find((room) => room.roomId === "mfg-1");
+    const baseUnits = (scenario.options.horizonHours * 60 / recipe!.baseDurationMinutes!) * (recipe!.outputAmount ?? 1);
+    const boostedUptime = 1 / (
+      1 + ((SUPPORT_WEIGHTS.baselineMoodDrainPerHour * 0.86) / SUPPORT_WEIGHTS.baselineMoodRegenPerHour)
+    );
+    const preservedActiveContributionUnits = baseUnits * 0.6;
+    const expectedMoodSustainUnits =
+      preservedActiveContributionUnits * ((boostedUptime / SUPPORT_WEIGHTS.baselineMoodWorkingUptime) - 1);
+    const expectedScore = baseUnits + (baseUnits * 0.4) + (baseUnits * 0.2) + expectedMoodSustainUnits;
+
+    expect(manufacturingPlan).toBeDefined();
+    expect(manufacturingPlan!.assignedOperatorIds).toEqual(["pogranichnik"]);
+    expect(manufacturingPlan!.scoreBreakdown.directProductionScore).toBeCloseTo(expectedScore, 6);
+  });
+
+  it("values Control Nexus Mood support from long-run shipwide uptime", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    const recipe = catalog.recipes.find((entry) => entry.id === "arms-insp-set");
+    const snowshine = scenario.roster.find((operator) => operator.operatorId === "snowshine");
+    const pogranichnik = scenario.roster.find((operator) => operator.operatorId === "pogranichnik");
+
+    expect(recipe).toBeDefined();
+    expect(snowshine).toBeDefined();
+    expect(pogranichnik).toBeDefined();
+
+    for (const operator of scenario.roster) {
+      operator.owned = operator.operatorId === "snowshine" || operator.operatorId === "pogranichnik";
+    }
+
+    snowshine!.owned = true;
+    snowshine!.baseSkillStates = snowshine!.baseSkillStates.map((state) => ({
+      ...state,
+      unlockedRank: state.skillId === "happy-go-lucky" ? 1 : 0,
+    }));
+    pogranichnik!.owned = true;
+    pogranichnik!.baseSkillStates = pogranichnik!.baseSkillStates.map((state) => ({
+      ...state,
+      unlockedRank: state.skillId === "hone-the-weapons" ? 1 : 0,
+    }));
+
+    scenario.facilities.controlNexus.level = 3;
+    scenario.facilities.hardAssignments = [
+      { operatorId: "snowshine", roomId: "control_nexus" },
+      { operatorId: "pogranichnik", roomId: "mfg-1" },
+    ];
+    scenario.facilities.manufacturingCabins[0]!.enabled = true;
+    scenario.facilities.manufacturingCabins[0]!.level = 3;
+    scenario.facilities.manufacturingCabins[0]!.fixedRecipeId = "arms-insp-set";
+    scenario.facilities.manufacturingCabins[1]!.enabled = false;
+    scenario.facilities.growthChambers[0]!.enabled = false;
+    scenario.facilities.receptionRoom!.enabled = false;
+
+    const result = solveScenario(catalog, scenario);
+    const controlPlan = result.roomPlans.find((room) => room.roomId === "control_nexus");
+    const manufacturingPlan = result.roomPlans.find((room) => room.roomId === "mfg-1");
+    const baseUnits = (scenario.options.horizonHours * 60 / recipe!.baseDurationMinutes!) * (recipe!.outputAmount ?? 1);
+    let controlWorkingUptime = SUPPORT_WEIGHTS.baselineMoodWorkingUptime;
+    for (let iteration = 0; iteration < 16; iteration += 1) {
+      controlWorkingUptime = 1 / (
+        1 + (
+          SUPPORT_WEIGHTS.baselineMoodDrainPerHour
+          / (SUPPORT_WEIGHTS.baselineMoodRegenPerHour * (1 + ((12 * controlWorkingUptime) / 100)))
+        )
+      );
+    }
+    const averageMoodRegenPercent = 12 * controlWorkingUptime;
+    const boostedProductionUptime = 1 / (
+      1 + (SUPPORT_WEIGHTS.baselineMoodDrainPerHour / (
+        SUPPORT_WEIGHTS.baselineMoodRegenPerHour * (1 + (averageMoodRegenPercent / 100))
+      ))
+    );
+    const expectedCrossRoomContribution =
+      (baseUnits * 0.6) * ((boostedProductionUptime / SUPPORT_WEIGHTS.baselineMoodWorkingUptime) - 1);
+    const expectedManufacturingOutput = baseUnits + (baseUnits * 0.4) + (baseUnits * 0.2) + expectedCrossRoomContribution;
+
+    expect(controlPlan).toBeDefined();
+    expect(manufacturingPlan).toBeDefined();
+    expect(controlPlan!.assignedOperatorIds).toContain("snowshine");
+    expect(controlPlan!.scoreBreakdown.crossRoomBonusContribution).toBeCloseTo(expectedCrossRoomContribution, 6);
+    expect(manufacturingPlan!.projectedOutputs.weapon_exp).toBeCloseTo(expectedManufacturingOutput, 6);
   });
 
   it("applies the max-facilities overlay without mutating the original scenario", async () => {

@@ -61,6 +61,7 @@ The repo now contains:
 - a versioned bundled catalog for the pinned `2026-03-20 / v1.1-phase1` snapshot
 - shared catalog and scenario validation/migration services
 - a branch-and-bound assignment solver with room score breakdowns
+- a long-run Mood-aware scoring model for production rooms and Control Nexus ship-wide support, with projected outputs aligned to those production-side gains
 - a next-unlock recommender that includes level gating, Elite promotions, and Base Skill node costs
 - a packaged CLI and browser app using the same shared runtime
 - tests covering data services, optimizer behavior, CLI packaging, and the web app
