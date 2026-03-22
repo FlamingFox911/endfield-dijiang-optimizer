@@ -1,0 +1,44 @@
+{
+  "name": "endfield-dijiang-optimizer",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "npm@9.8.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build:packages && npm run build:apps",
+    "build:packages": "npm run build --workspace @endfield/domain && npm run build --workspace @endfield/data && npm run build --workspace @endfield/optimizer",
+    "build:apps": "npm run build --workspace @endfield/cli && npm run build --workspace @endfield/web",
+    "check:catalog": "tsx scripts/check-catalog-coverage.ts",
+    "check:catalog:release": "tsx scripts/check-catalog-coverage.ts --release",
+    "dev:cli": "npm run dev --workspace @endfield/cli",
+    "dev:web": "npm run dev --workspace @endfield/web",
+    "optimize:example": "tsx apps/cli/src/index.ts optimize --scenario scenarios/examples/current-base.simple.json --json",
+    "release:check": "npm run validate:data && npm run check:catalog:release && npm run test && npm run build",
+    "recommend:example": "tsx apps/cli/src/index.ts recommend-upgrades --scenario scenarios/examples/current-base.simple.json --json",
+    "sync:promotion-data": "tsx scripts/sync-promotion-overrides.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "validate:data": "tsx scripts/validate-data.ts",
+    "verify": "npm run validate:data && npm run check:catalog && npm run test && npm run build"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/node": "^22.13.11",
+    "@types/prompts": "^2.4.9",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.4.1",
+    "esbuild": "^0.25.1",
+    "jsdom": "^26.0.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.1",
+    "vitest": "^3.0.8"
+  }
+}

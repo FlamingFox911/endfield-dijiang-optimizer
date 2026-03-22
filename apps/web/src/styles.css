@@ -1,0 +1,229 @@
+:root {
+  color-scheme: light;
+  font-family: "Trebuchet MS", "Gill Sans", "Segoe UI Variable", sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(245, 183, 77, 0.35), transparent 28%),
+    radial-gradient(circle at top right, rgba(55, 113, 162, 0.2), transparent 24%),
+    linear-gradient(180deg, #f4ecdf 0%, #efe2cf 45%, #e6d6c3 100%);
+  color: #1f2733;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.shell {
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  padding: 28px;
+  border-radius: 28px;
+  background: rgba(255, 248, 238, 0.85);
+  border: 1px solid rgba(31, 39, 51, 0.12);
+  box-shadow: 0 20px 60px rgba(64, 49, 29, 0.12);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  color: #8d4f2f;
+}
+
+.hero h1,
+.panel h2 {
+  margin: 0;
+  font-family: "Georgia", "Times New Roman", serif;
+}
+
+.lede {
+  max-width: 52rem;
+  line-height: 1.5;
+}
+
+.heroPanel,
+.toolbar,
+.messageBar,
+.panel,
+.resultSummary,
+.roomCard,
+.resultCard,
+.operatorCard {
+  background: rgba(255, 252, 247, 0.82);
+  border: 1px solid rgba(31, 39, 51, 0.1);
+  border-radius: 22px;
+}
+
+.heroPanel {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  align-content: start;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0;
+  padding: 16px;
+}
+
+.pill,
+.toggle,
+label {
+  display: grid;
+  gap: 6px;
+}
+
+.pill,
+.toggle {
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: rgba(246, 237, 225, 0.8);
+}
+
+.toggle {
+  grid-auto-flow: column;
+  align-items: center;
+}
+
+button {
+  border: none;
+  border-radius: 999px;
+  padding: 12px 18px;
+  background: #284d70;
+  color: white;
+  cursor: pointer;
+}
+
+button.secondary,
+.upload {
+  background: #d78a43;
+  color: #1f2733;
+}
+
+.upload {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.upload input {
+  display: none;
+}
+
+.messageBar {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.messageBar.warning {
+  background: rgba(206, 99, 44, 0.15);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 16px;
+}
+
+.panel {
+  padding: 18px;
+}
+
+.panelHeader,
+.resultHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 12px;
+}
+
+.rosterList,
+.roomStack,
+.resultStack,
+.recommendationStack {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.operatorCard,
+.roomCard,
+.resultCard,
+.resultSummary {
+  padding: 14px;
+}
+
+.operatorCard.active {
+  border-color: rgba(40, 77, 112, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(40, 77, 112, 0.2);
+}
+
+.operatorName {
+  margin: 0;
+  font-weight: 700;
+}
+
+.operatorMeta,
+.status,
+.warningText {
+  color: #5f615f;
+}
+
+.numericRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.skillGrid {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(31, 39, 51, 0.14);
+  background: white;
+}
+
+dl {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+dl div {
+  display: flex;
+  justify-content: space-between;
+}
+
+@media (max-width: 1100px) {
+  .hero,
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

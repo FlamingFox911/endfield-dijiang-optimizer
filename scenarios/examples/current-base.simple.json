@@ -1,0 +1,99 @@
+{
+  "scenarioFormatVersion": 1,
+  "catalogVersion": "2026-03-20/v1.1-phase1",
+  "roster": [
+    {
+      "operatorId": "chen-qianyu",
+      "owned": true,
+      "level": 40,
+      "promotionTier": 1,
+      "trustPercent": 20,
+      "baseSkillStates": [
+        {
+          "skillId": "blade-critique",
+          "unlockedRank": 1
+        },
+        {
+          "skillId": "jadeworking",
+          "unlockedRank": 1
+        }
+      ]
+    },
+    {
+      "operatorId": "xaihi",
+      "owned": true,
+      "level": 30,
+      "promotionTier": 0,
+      "trustPercent": 10,
+      "baseSkillStates": [
+        {
+          "skillId": "standardized-scripting",
+          "unlockedRank": 1
+        }
+      ]
+    },
+    {
+      "operatorId": "snowshine",
+      "owned": true,
+      "level": 20,
+      "promotionTier": 0,
+      "trustPercent": 5,
+      "baseSkillStates": [
+        {
+          "skillId": "rescuers-perseverance",
+          "unlockedRank": 0
+        },
+        {
+          "skillId": "happy-go-lucky",
+          "unlockedRank": 0
+        }
+      ]
+    }
+  ],
+  "facilities": {
+    "controlNexus": {
+      "level": 3
+    },
+    "manufacturingCabins": [
+      {
+        "id": "mfg-1",
+        "enabled": true,
+        "level": 2,
+        "fixedRecipeId": "advanced-cognitive-carrier"
+      },
+      {
+        "id": "mfg-2",
+        "enabled": true,
+        "level": 1,
+        "fixedRecipeId": "arms-insp-set"
+      }
+    ],
+    "growthChambers": [
+      {
+        "id": "growth-1",
+        "enabled": true,
+        "level": 2,
+        "fixedRecipeId": "kalkonyx"
+      }
+    ],
+    "receptionRoom": {
+      "id": "reception-1",
+      "enabled": true,
+      "level": 1
+    },
+    "hardAssignments": [
+      {
+        "operatorId": "xaihi",
+        "roomId": "control_nexus",
+        "slotIndex": 0
+      }
+    ]
+  },
+  "options": {
+    "planningMode": "simple",
+    "horizonHours": 24,
+    "maxFacilities": false,
+    "includeReceptionRoom": true,
+    "upgradeRankingMode": "balanced"
+  }
+}

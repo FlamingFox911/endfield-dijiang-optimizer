@@ -1,0 +1,21 @@
+{
+  "name": "@endfield/cli",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "bin": {
+    "endfield-opt": "./dist/endfield-opt.cjs"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "dependencies": {
+    "commander": "^13.1.0",
+    "prompts": "^2.4.2"
+  },
+  "scripts": {
+    "build": "tsx ../../scripts/clean-dist.ts dist && node scripts/build.mjs",
+    "dev": "tsx src/index.ts"
+  }
+}

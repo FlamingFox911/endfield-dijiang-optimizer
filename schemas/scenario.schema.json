@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://endfield-dijiang-optimizer.local/schemas/scenario.schema.json",
+  "title": "Optimization Scenario",
+  "type": "object",
+  "required": [
+    "scenarioFormatVersion",
+    "catalogVersion",
+    "roster",
+    "facilities",
+    "options"
+  ],
+  "properties": {
+    "scenarioFormatVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "catalogVersion": {
+      "type": "string"
+    },
+    "roster": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "operatorId",
+          "owned",
+          "level",
+          "promotionTier",
+          "baseSkillStates"
+        ],
+        "properties": {
+          "operatorId": { "type": "string" },
+          "owned": { "type": "boolean" },
+          "level": { "type": "integer", "minimum": 1 },
+          "promotionTier": { "type": "integer", "minimum": 0, "maximum": 3 },
+          "trustPercent": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "baseSkillStates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "skillId",
+                "unlockedRank"
+              ],
+              "properties": {
+                "skillId": { "type": "string" },
+                "unlockedRank": { "type": "integer", "minimum": 0, "maximum": 2 }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "facilities": {
+      "type": "object",
+      "required": [
+        "controlNexus",
+        "manufacturingCabins",
+        "growthChambers",
+        "hardAssignments"
+      ],
+      "properties": {
+        "controlNexus": {
+          "type": "object",
+          "required": [
+            "level"
+          ],
+          "properties": {
+            "level": { "type": "integer", "minimum": 1, "maximum": 5 }
+          },
+          "additionalProperties": false
+        },
+        "manufacturingCabins": {
+          "type": "array"
+        },
+        "growthChambers": {
+          "type": "array"
+        },
+        "receptionRoom": {
+          "type": "object"
+        },
+        "hardAssignments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "operatorId",
+              "roomId"
+            ],
+            "properties": {
+              "operatorId": { "type": "string" },
+              "roomId": { "type": "string" },
+              "slotIndex": { "type": "integer", "minimum": 0 }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "options": {
+      "type": "object",
+      "required": [
+        "planningMode",
+        "horizonHours",
+        "maxFacilities",
+        "upgradeRankingMode"
+      ],
+      "properties": {
+        "planningMode": {
+          "type": "string",
+          "enum": [
+            "simple",
+            "advanced"
+          ]
+        },
+        "horizonHours": { "type": "integer", "minimum": 1 },
+        "maxFacilities": { "type": "boolean" },
+        "includeReceptionRoom": { "type": "boolean" },
+        "upgradeRankingMode": {
+          "type": "string",
+          "enum": [
+            "fastest",
+            "roi",
+            "balanced"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

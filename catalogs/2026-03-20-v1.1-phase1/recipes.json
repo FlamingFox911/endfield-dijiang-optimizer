@@ -1,0 +1,132 @@
+{
+  "catalogVersion": "2026-03-20/v1.1-phase1",
+  "recipes": [
+    {
+      "id": "advanced-cognitive-carrier",
+      "name": "Advanced Cognitive Carrier",
+      "facilityKind": "manufacturing_cabin",
+      "productKind": "operator_exp",
+      "roomLevel": 1,
+      "baseDurationMinutes": 1466.67,
+      "loadCost": 30,
+      "outputAmount": 1,
+      "sourceRefs": [
+        {
+          "id": "wiki-omv-dijiang-facility",
+          "label": "Endfield Talos Wiki OMV Dijiang Facility page",
+          "url": "https://endfield.wiki.gg/wiki/OMV_Dijiang/Facility",
+          "retrievedOn": "2026-03-20",
+          "confidence": "community"
+        },
+        {
+          "id": "game8-manufacturing-cabin",
+          "label": "Game8 Manufacturing Cabin guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/577556",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "arms-insp-set",
+      "name": "Arms INSP Set",
+      "facilityKind": "manufacturing_cabin",
+      "productKind": "weapon_exp",
+      "roomLevel": 1,
+      "baseDurationMinutes": 586.67,
+      "loadCost": 12,
+      "outputAmount": 1,
+      "sourceRefs": [
+        {
+          "id": "wiki-omv-dijiang-facility",
+          "label": "Endfield Talos Wiki OMV Dijiang Facility page",
+          "url": "https://endfield.wiki.gg/wiki/OMV_Dijiang/Facility",
+          "retrievedOn": "2026-03-20",
+          "confidence": "community"
+        },
+        {
+          "id": "game8-manufacturing-cabin",
+          "label": "Game8 Manufacturing Cabin guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/577556",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "pink-bolete",
+      "name": "Pink Bolete",
+      "facilityKind": "growth_chamber",
+      "productKind": "fungal",
+      "roomLevel": 1,
+      "baseDurationMinutes": 1041.67,
+      "outputAmount": 3,
+      "sourceRefs": [
+        {
+          "id": "wiki-omv-dijiang-facility",
+          "label": "Endfield Talos Wiki OMV Dijiang Facility page",
+          "url": "https://endfield.wiki.gg/wiki/OMV_Dijiang/Facility",
+          "retrievedOn": "2026-03-20",
+          "confidence": "community"
+        },
+        {
+          "id": "game8-growth-chamber",
+          "label": "Game8 Growth Chamber guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/577534",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "kalkodendra",
+      "name": "Kalkodendra",
+      "facilityKind": "growth_chamber",
+      "productKind": "vitrified_plant",
+      "roomLevel": 1,
+      "baseDurationMinutes": 1041.67,
+      "outputAmount": 3,
+      "sourceRefs": [
+        {
+          "id": "wiki-omv-dijiang-facility",
+          "label": "Endfield Talos Wiki OMV Dijiang Facility page",
+          "url": "https://endfield.wiki.gg/wiki/OMV_Dijiang/Facility",
+          "retrievedOn": "2026-03-20",
+          "confidence": "community"
+        },
+        {
+          "id": "game8-growth-chamber",
+          "label": "Game8 Growth Chamber guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/577534",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "kalkonyx",
+      "name": "Kalkonyx",
+      "facilityKind": "growth_chamber",
+      "productKind": "rare_mineral",
+      "roomLevel": 1,
+      "baseDurationMinutes": 1041.67,
+      "outputAmount": 3,
+      "sourceRefs": [
+        {
+          "id": "wiki-omv-dijiang-facility",
+          "label": "Endfield Talos Wiki OMV Dijiang Facility page",
+          "url": "https://endfield.wiki.gg/wiki/OMV_Dijiang/Facility",
+          "retrievedOn": "2026-03-20",
+          "confidence": "community"
+        },
+        {
+          "id": "game8-growth-chamber",
+          "label": "Game8 Growth Chamber guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/577534",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    }
+  ]
+}

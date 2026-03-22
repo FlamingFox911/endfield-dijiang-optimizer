@@ -1,0 +1,24 @@
+{
+  "name": "@endfield/data",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/data/src/index.js",
+  "types": "./dist/data/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/data/src/index.d.ts",
+      "default": "./dist/data/src/index.js"
+    },
+    "./node": {
+      "types": "./dist/data/src/node.d.ts",
+      "default": "./dist/data/src/node.js"
+    }
+  },
+  "dependencies": {
+    "@endfield/domain": "0.1.0"
+  },
+  "scripts": {
+    "build": "tsx ../../scripts/clean-dist.ts dist && tsc -p tsconfig.json"
+  }
+}

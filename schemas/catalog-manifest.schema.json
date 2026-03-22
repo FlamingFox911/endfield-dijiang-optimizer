@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://endfield-dijiang-optimizer.local/schemas/catalog-manifest.schema.json",
+  "title": "Catalog Manifest",
+  "type": "object",
+  "required": [
+    "catalogId",
+    "catalogVersion",
+    "gameVersion",
+    "snapshotDate",
+    "files"
+  ],
+  "properties": {
+    "catalogId": {
+      "type": "string"
+    },
+    "catalogVersion": {
+      "type": "string"
+    },
+    "gameVersion": {
+      "type": "string"
+    },
+    "snapshotDate": {
+      "type": "string"
+    },
+    "appCompatibility": {
+      "type": "object"
+    },
+    "files": {
+      "type": "object",
+      "required": [
+        "operators",
+        "facilities",
+        "recipes",
+        "sources",
+        "gaps",
+        "assets"
+      ],
+      "properties": {
+        "operators": { "type": "string" },
+        "facilities": { "type": "string" },
+        "recipes": { "type": "string" },
+        "sources": { "type": "string" },
+        "gaps": { "type": "string" },
+        "assets": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "counts": {
+      "type": "object"
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

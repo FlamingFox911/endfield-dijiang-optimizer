@@ -1,0 +1,289 @@
+{
+  "catalogVersion": "2026-03-20/v1.1-phase1",
+  "facilities": [
+    {
+      "id": "control_nexus",
+      "name": "Control Nexus",
+      "kind": "control_nexus",
+      "unlockHint": "Activated during the Maintenance Progress main mission in Chapter 1 - Progress 2 after Xaihi guides you through the OMV Dijiang.",
+      "levels": [
+        {
+          "level": 1,
+          "slotCap": 1,
+          "sourceRefs": [
+            {
+              "id": "game8-control-nexus",
+              "label": "Game8 Control Nexus guide",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/575985",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "slotCap": 2,
+          "sourceRefs": [
+            {
+              "id": "game8-control-nexus",
+              "label": "Game8 Control Nexus guide",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/575985",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "slotCap": 3,
+          "sourceRefs": [
+            {
+              "id": "game8-control-nexus",
+              "label": "Game8 Control Nexus guide",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/575985",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "slotCap": 3,
+          "sourceRefs": [
+            {
+              "id": "game8-control-nexus",
+              "label": "Game8 Control Nexus guide",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/575985",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "slotCap": 3,
+          "sourceRefs": [
+            {
+              "id": "game8-control-nexus",
+              "label": "Game8 Control Nexus guide",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/575985",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ]
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-maintenance-progress",
+          "label": "Game8 Maintenance Progress main mission guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/575874",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        },
+        {
+          "id": "game8-control-nexus",
+          "label": "Game8 Control Nexus guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/575985",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "manufacturing_cabin",
+      "name": "Manufacturing Cabin",
+      "kind": "manufacturing_cabin",
+      "unlockHint": "Unlocked during the Maintenance Progress main mission in Chapter 1 - Progress 2; the second cabin becomes available after reaching Control Nexus level 3.",
+      "levels": [
+        {
+          "level": 1,
+          "slotCap": 1,
+          "sourceRefs": [
+            {
+              "id": "game8-manufacturing-cabin",
+              "label": "Game8 Manufacturing Cabin guide",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/577556",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "unresolvedFields": [
+            "productCapacity"
+          ]
+        },
+        {
+          "level": 2,
+          "slotCap": 2,
+          "sourceRefs": [
+            {
+              "id": "game8-manufacturing-cabin",
+              "label": "Game8 Manufacturing Cabin guide",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/577556",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "unresolvedFields": [
+            "productCapacity"
+          ]
+        },
+        {
+          "level": 3,
+          "slotCap": 3,
+          "sourceRefs": [
+            {
+              "id": "game8-manufacturing-cabin",
+              "label": "Game8 Manufacturing Cabin guide",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/577556",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "unresolvedFields": [
+            "productCapacity"
+          ]
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-manufacturing-cabin",
+          "label": "Game8 Manufacturing Cabin guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/577556",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "growth_chamber",
+      "name": "Growth Chamber",
+      "kind": "growth_chamber",
+      "unlockHint": "Unlocked through the Dijiang Upgrade and Maintenance II mission and upgraded through the normal Dijiang progression flow; max growth slots are known to reach 9.",
+      "levels": [
+        {
+          "level": 1,
+          "slotCap": 1,
+          "sourceRefs": [
+            {
+              "id": "game8-growth-chamber",
+              "label": "Game8 Growth Chamber guide",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/577534",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "unresolvedFields": [
+            "growthSlotCap"
+          ]
+        },
+        {
+          "level": 2,
+          "slotCap": 2,
+          "sourceRefs": [
+            {
+              "id": "game8-growth-chamber",
+              "label": "Game8 Growth Chamber guide",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/577534",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "unresolvedFields": [
+            "growthSlotCap"
+          ]
+        },
+        {
+          "level": 3,
+          "slotCap": 3,
+          "growthSlotCap": 9,
+          "sourceRefs": [
+            {
+              "id": "game8-growth-chamber",
+              "label": "Game8 Growth Chamber guide",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/577534",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "unresolvedFields": []
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-growth-chamber",
+          "label": "Game8 Growth Chamber guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/577534",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "reception_room",
+      "name": "Reception Room",
+      "kind": "reception_room",
+      "unlockHint": "Unlocked during the Maintenance Progress main mission inside the OMV Dijiang.",
+      "levels": [
+        {
+          "level": 1,
+          "slotCap": 1,
+          "sourceRefs": [
+            {
+              "id": "gamewith-dijiang-overview",
+              "label": "GameWith Dijiang overview",
+              "url": "https://gamewith.net/akendfield/72893",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "unresolvedFields": []
+        },
+        {
+          "level": 2,
+          "slotCap": 2,
+          "sourceRefs": [
+            {
+              "id": "gamewith-dijiang-overview",
+              "label": "GameWith Dijiang overview",
+              "url": "https://gamewith.net/akendfield/72893",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "unresolvedFields": []
+        },
+        {
+          "level": 3,
+          "slotCap": 3,
+          "sourceRefs": [
+            {
+              "id": "gamewith-dijiang-overview",
+              "label": "GameWith Dijiang overview",
+              "url": "https://gamewith.net/akendfield/72893",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "unresolvedFields": []
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-reception-room",
+          "label": "Game8 Reception Room guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/576633",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        },
+        {
+          "id": "gamewith-dijiang-overview",
+          "label": "GameWith Dijiang overview",
+          "url": "https://gamewith.net/akendfield/72893",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    }
+  ]
+}

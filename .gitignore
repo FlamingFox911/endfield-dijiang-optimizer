@@ -1,0 +1,7 @@
+node_modules/
+dist/
+coverage/
+apps/web/public/catalogs/
+.DS_Store
+*.log
+*.tgz
