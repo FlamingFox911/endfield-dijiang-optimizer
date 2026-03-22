@@ -34,7 +34,6 @@
           "owned": { "type": "boolean" },
           "level": { "type": "integer", "minimum": 1 },
           "promotionTier": { "type": "integer", "minimum": 0, "maximum": 3 },
-          "trustPercent": { "type": "integer", "minimum": 0, "maximum": 100 },
           "baseSkillStates": {
             "type": "array",
             "items": {

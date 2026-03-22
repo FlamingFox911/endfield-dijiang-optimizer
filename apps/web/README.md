@@ -20,13 +20,13 @@ Current repo status:
 ## Primary screens
 
 - Roster
-  Portrait grid, operator search, rarity filters, level steppers, trust input, and explicit base-skill rank controls.
+  Portrait grid, operator search, rarity filters, level and promotion controls, and explicit base-skill rank controls.
 - Dijiang
   Visual cards for Control Nexus, Manufacturing Cabins, Growth Chamber, and Reception Room, including room levels and hard assignments.
 - Priorities
   Per-room recipe pickers, saved with the scenario for future reuse.
 - Results
-  Best assignments, expected output mix, trust-farming tradeoffs, and recommended upgrades.
+  Best assignments, expected output mix, hard-assignment tradeoffs, and recommended upgrades.
 
 ## Control choices
 

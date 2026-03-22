@@ -7,7 +7,6 @@
       "owned": true,
       "level": 40,
       "promotionTier": 1,
-      "trustPercent": 20,
       "baseSkillStates": [
         {
           "skillId": "blade-critique",
@@ -24,7 +23,6 @@
       "owned": true,
       "level": 30,
       "promotionTier": 0,
-      "trustPercent": 10,
       "baseSkillStates": [
         {
           "skillId": "standardized-scripting",
@@ -37,7 +35,6 @@
       "owned": true,
       "level": 20,
       "promotionTier": 0,
-      "trustPercent": 5,
       "baseSkillStates": [
         {
           "skillId": "rescuers-perseverance",
@@ -73,7 +70,17 @@
         "id": "growth-1",
         "enabled": true,
         "level": 3,
-        "fixedRecipeId": "kalkonyx"
+        "fixedRecipeIds": [
+          "kalkonyx",
+          "auronyx",
+          "umbronyx",
+          "kalkodendra",
+          "chrysodendra",
+          "vitrodendra",
+          "pink-bolete",
+          "red-bolete",
+          "ruby-bolete"
+        ]
       }
     ],
     "receptionRoom": {

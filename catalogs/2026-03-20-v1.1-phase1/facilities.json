@@ -10,6 +10,7 @@
         {
           "level": 1,
           "slotCap": 1,
+          "growthSlotCap": 3,
           "sourceRefs": [
             {
               "id": "game8-control-nexus",
@@ -173,13 +174,12 @@
               "confidence": "guide_site"
             }
           ],
-          "unresolvedFields": [
-            "growthSlotCap"
-          ]
+          "unresolvedFields": []
         },
         {
           "level": 2,
           "slotCap": 2,
+          "growthSlotCap": 6,
           "sourceRefs": [
             {
               "id": "game8-growth-chamber",
@@ -189,9 +189,7 @@
               "confidence": "guide_site"
             }
           ],
-          "unresolvedFields": [
-            "growthSlotCap"
-          ]
+          "unresolvedFields": []
         },
         {
           "level": 3,

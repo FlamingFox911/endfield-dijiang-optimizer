@@ -1,6 +1,5 @@
 import type {
   AssignmentExplanation,
-  BaseSkillDefinition,
   BaseSkillRankDefinition,
   DataConfidence,
   FacilityKind,
@@ -14,7 +13,7 @@ import type {
   ScoreBreakdown,
 } from "@endfield/domain";
 
-import { createProjectedOutputs, getMaxFacilityRoomCounts, getRoomSlotCap } from "@endfield/data";
+import { createProjectedOutputs, getGrowthSlotCap, getMaxFacilityRoomCounts, getRoomSlotCap } from "@endfield/data";
 
 import { SUPPORT_WEIGHTS } from "./config.js";
 
@@ -23,8 +22,8 @@ interface NormalizedRoom {
   roomKind: FacilityKind;
   level: number;
   slotCap: number;
-  fixedRecipeId?: string;
-  recipe?: RecipeDefinition;
+  fixedRecipeIds: string[];
+  recipes: RecipeDefinition[];
 }
 
 export interface NormalizedScenarioResult {
@@ -34,12 +33,29 @@ export interface NormalizedScenarioResult {
 }
 
 interface OperatorRoomEvaluation {
-  directPercent: number;
+  directScore: number;
   supportScore: number;
   crossRoomScore: number;
   reasons: string[];
   usedFallbackHeuristics: boolean;
   dataConfidence: DataConfidence;
+}
+
+function getRecipeBaseUnits(recipe: RecipeDefinition, horizonHours: number, warnings: string[]) {
+  const duration = recipe.baseDurationMinutes ?? 0;
+  const outputAmount = recipe.outputAmount ?? 1;
+
+  if (recipe.baseDurationMinutes == null) {
+    warnings.push(`Recipe '${recipe.id}' is missing duration data; assuming one baseline run per horizon.`);
+  }
+  if (recipe.outputAmount == null) {
+    warnings.push(`Recipe '${recipe.id}' is missing output amount; assuming one baseline unit.`);
+  }
+  if (duration <= 0) {
+    return outputAmount;
+  }
+
+  return (horizonHours * 60 / duration) * outputAmount;
 }
 
 function uniqueWarnings(warnings: string[]): string[] {
@@ -88,7 +104,7 @@ export function applyMaxFacilitiesOverlay(scenario: OptimizationScenario): Optim
       id: `growth-${normalized.facilities.growthChambers.length + 1}`,
       enabled: true,
       level: 3,
-      fixedRecipeId: normalized.facilities.growthChambers[0]?.fixedRecipeId,
+      fixedRecipeIds: [...(normalized.facilities.growthChambers[0]?.fixedRecipeIds ?? [])],
     });
   }
 
@@ -118,7 +134,7 @@ export function normalizeScenario(
     roomId: string,
     roomKind: FacilityKind,
     level: number,
-    fixedRecipeId?: string,
+    fixedRecipeIds: string[] = [],
   ) => {
     const slotCap = getRoomSlotCap(
       catalog,
@@ -129,24 +145,29 @@ export function normalizeScenario(
     if (slotCap <= 0) {
       warnings.push(`Room '${roomId}' resolved to slot cap 0 and will be skipped by assignment search.`);
     }
-    const recipe = fixedRecipeId ? recipesById.get(fixedRecipeId) : undefined;
-    if ((roomKind === "manufacturing_cabin" || roomKind === "growth_chamber") && !fixedRecipeId) {
+    const recipes = fixedRecipeIds
+      .map((recipeId) => recipesById.get(recipeId))
+      .filter((recipe): recipe is RecipeDefinition => Boolean(recipe));
+    if ((roomKind === "manufacturing_cabin" || roomKind === "growth_chamber") && fixedRecipeIds.length === 0) {
       warnings.push(`Room '${roomId}' has no selected recipe and will contribute no production.`);
     }
-    rooms.push({ roomId, roomKind, level, slotCap, fixedRecipeId, recipe });
+    if (roomKind === "growth_chamber" && fixedRecipeIds.length > getGrowthSlotCap(catalog, level)) {
+      warnings.push(`Growth chamber '${roomId}' has more selected materials than its level supports; extra selections may be invalid.`);
+    }
+    rooms.push({ roomId, roomKind, level, slotCap, fixedRecipeIds, recipes });
   };
 
   addRoom("control_nexus", "control_nexus", normalizedScenario.facilities.controlNexus.level);
 
   for (const room of normalizedScenario.facilities.manufacturingCabins) {
     if (room.enabled) {
-      addRoom(room.id, "manufacturing_cabin", room.level, room.fixedRecipeId);
+      addRoom(room.id, "manufacturing_cabin", room.level, room.fixedRecipeId ? [room.fixedRecipeId] : []);
     }
   }
 
   for (const room of normalizedScenario.facilities.growthChambers) {
     if (room.enabled) {
-      addRoom(room.id, "growth_chamber", room.level, room.fixedRecipeId);
+      addRoom(room.id, "growth_chamber", room.level, room.fixedRecipeIds ?? []);
     }
   }
 
@@ -178,44 +199,48 @@ function getUnlockedRank(ownedOperator: OptimizationScenario["roster"][number], 
 }
 
 function getBaseRoomUnits(room: NormalizedRoom, horizonHours: number, warnings: string[]) {
-  if (!room.recipe) {
-    return 0;
-  }
-  const duration = room.recipe.baseDurationMinutes ?? 0;
-  const outputAmount = room.recipe.outputAmount ?? 1;
-
-  if (room.recipe.baseDurationMinutes == null) {
-    warnings.push(`Recipe '${room.recipe.id}' is missing duration data; assuming one baseline run per horizon.`);
-  }
-  if (room.recipe.outputAmount == null) {
-    warnings.push(`Recipe '${room.recipe.id}' is missing output amount; assuming one baseline unit.`);
-  }
-  if (duration <= 0) {
-    return outputAmount;
-  }
-
-  return (horizonHours * 60 / duration) * outputAmount;
+  return room.recipes.reduce(
+    (sum, recipe) => sum + getRecipeBaseUnits(recipe, horizonHours, warnings),
+    0,
+  );
 }
 
-function evaluateRankModifiers(rankDef: BaseSkillRankDefinition, room: NormalizedRoom): OperatorRoomEvaluation {
-  let directPercent = 0;
+function getMatchingBaseUnits(
+  room: NormalizedRoom,
+  horizonHours: number,
+  warnings: string[],
+  appliesTo: ProductKind | "all",
+) {
+  return room.recipes.reduce((sum, recipe) => {
+    if (appliesTo !== "all" && recipe.productKind !== appliesTo) {
+      return sum;
+    }
+    return sum + getRecipeBaseUnits(recipe, horizonHours, warnings);
+  }, 0);
+}
+
+function evaluateRankModifiers(
+  rankDef: BaseSkillRankDefinition,
+  room: NormalizedRoom,
+  horizonHours: number,
+  warnings: string[],
+): OperatorRoomEvaluation {
+  let directScore = 0;
   let supportScore = 0;
   let crossRoomScore = 0;
   const reasons: string[] = [];
+  const totalBaseUnits = getBaseRoomUnits(room, horizonHours, warnings);
 
   for (const modifier of rankDef.modifiers) {
-    if (
-      modifier.appliesTo !== "all" &&
-      room.recipe?.productKind &&
-      modifier.appliesTo !== room.recipe.productKind
-    ) {
+    const matchingBaseUnits = getMatchingBaseUnits(room, horizonHours, warnings, modifier.appliesTo);
+    if (modifier.appliesTo !== "all" && matchingBaseUnits <= 0) {
       continue;
     }
 
     switch (modifier.metric) {
       case "production_efficiency":
       case "growth_rate":
-        directPercent += modifier.value;
+        directScore += matchingBaseUnits * (modifier.value / 100);
         reasons.push(`${modifier.metric} +${modifier.value}%`);
         break;
       case "mood_regen":
@@ -223,10 +248,10 @@ function evaluateRankModifiers(rankDef: BaseSkillRankDefinition, room: Normalize
           crossRoomScore += modifier.value * SUPPORT_WEIGHTS.controlNexusMoodRegenWeight;
           reasons.push(`control support +${(modifier.value * SUPPORT_WEIGHTS.controlNexusMoodRegenWeight).toFixed(1)}`);
         } else if (room.roomKind === "manufacturing_cabin") {
-          directPercent += modifier.value * SUPPORT_WEIGHTS.manufacturingMoodSustainFactor;
+          directScore += totalBaseUnits * ((modifier.value * SUPPORT_WEIGHTS.manufacturingMoodSustainFactor) / 100);
           reasons.push(`mood sustain +${(modifier.value * SUPPORT_WEIGHTS.manufacturingMoodSustainFactor).toFixed(1)}%`);
         } else if (room.roomKind === "growth_chamber") {
-          directPercent += modifier.value * SUPPORT_WEIGHTS.growthMoodSustainFactor;
+          directScore += totalBaseUnits * ((modifier.value * SUPPORT_WEIGHTS.growthMoodSustainFactor) / 100);
           reasons.push(`growth sustain +${(modifier.value * SUPPORT_WEIGHTS.growthMoodSustainFactor).toFixed(1)}%`);
         } else {
           supportScore += modifier.value * SUPPORT_WEIGHTS.offRoomClueWeight;
@@ -238,10 +263,10 @@ function evaluateRankModifiers(rankDef: BaseSkillRankDefinition, room: Normalize
           crossRoomScore += modifier.value * SUPPORT_WEIGHTS.controlNexusMoodDropReductionWeight;
           reasons.push(`cross-room sustain +${(modifier.value * SUPPORT_WEIGHTS.controlNexusMoodDropReductionWeight).toFixed(1)}`);
         } else if (room.roomKind === "manufacturing_cabin") {
-          directPercent += modifier.value * SUPPORT_WEIGHTS.manufacturingMoodSustainFactor;
+          directScore += totalBaseUnits * ((modifier.value * SUPPORT_WEIGHTS.manufacturingMoodSustainFactor) / 100);
           reasons.push(`room sustain +${(modifier.value * SUPPORT_WEIGHTS.manufacturingMoodSustainFactor).toFixed(1)}%`);
         } else if (room.roomKind === "growth_chamber") {
-          directPercent += modifier.value * SUPPORT_WEIGHTS.growthMoodSustainFactor;
+          directScore += totalBaseUnits * ((modifier.value * SUPPORT_WEIGHTS.growthMoodSustainFactor) / 100);
           reasons.push(`room sustain +${(modifier.value * SUPPORT_WEIGHTS.growthMoodSustainFactor).toFixed(1)}%`);
         }
         break;
@@ -262,7 +287,7 @@ function evaluateRankModifiers(rankDef: BaseSkillRankDefinition, room: Normalize
   }
 
   return {
-    directPercent,
+    directScore,
     supportScore,
     crossRoomScore,
     reasons,
@@ -275,10 +300,12 @@ function fallbackEvaluation(
   operatorDef: OperatorDefinition,
   unlockedRank: number,
   room: NormalizedRoom,
+  horizonHours: number,
+  warnings: string[],
 ): OperatorRoomEvaluation {
   if (room.roomKind === "control_nexus" || room.roomKind === "reception_room") {
     return {
-      directPercent: 0,
+      directScore: 0,
       supportScore:
         room.roomKind === "reception_room"
           ? unlockedRank * SUPPORT_WEIGHTS.fallbackSupportPercentPerRank
@@ -293,8 +320,9 @@ function fallbackEvaluation(
     };
   }
 
+  const baseUnits = getBaseRoomUnits(room, horizonHours, warnings);
   return {
-    directPercent: unlockedRank * SUPPORT_WEIGHTS.fallbackProductionPercentPerRank,
+    directScore: baseUnits * ((unlockedRank * SUPPORT_WEIGHTS.fallbackProductionPercentPerRank) / 100),
     supportScore: 0,
     crossRoomScore: 0,
     reasons: [`${operatorDef.name} uses fallback production scoring because precise modifiers are missing.`],
@@ -307,8 +335,10 @@ function evaluateOperatorForRoom(
   operatorDef: OperatorDefinition,
   ownedOperator: OptimizationScenario["roster"][number],
   room: NormalizedRoom,
+  horizonHours: number,
+  warnings: string[],
 ): OperatorRoomEvaluation {
-  let directPercent = 0;
+  let directScore = 0;
   let supportScore = 0;
   let crossRoomScore = 0;
   let usedFallbackHeuristics = false;
@@ -327,8 +357,8 @@ function evaluateOperatorForRoom(
 
     const rankDef = skill.ranks.find((entry) => entry.rank === unlockedRank);
     if (!rankDef || rankDef.modifiers.length === 0) {
-      const fallback = fallbackEvaluation(operatorDef, unlockedRank, room);
-      directPercent += fallback.directPercent;
+      const fallback = fallbackEvaluation(operatorDef, unlockedRank, room, horizonHours, warnings);
+      directScore += fallback.directScore;
       supportScore += fallback.supportScore;
       crossRoomScore += fallback.crossRoomScore;
       usedFallbackHeuristics ||= fallback.usedFallbackHeuristics;
@@ -337,8 +367,8 @@ function evaluateOperatorForRoom(
       continue;
     }
 
-    const evaluation = evaluateRankModifiers(rankDef, room);
-    directPercent += evaluation.directPercent;
+    const evaluation = evaluateRankModifiers(rankDef, room, horizonHours, warnings);
+    directScore += evaluation.directScore;
     supportScore += evaluation.supportScore;
     crossRoomScore += evaluation.crossRoomScore;
     usedFallbackHeuristics ||= evaluation.usedFallbackHeuristics;
@@ -350,7 +380,7 @@ function evaluateOperatorForRoom(
   }
 
   return {
-    directPercent,
+    directScore,
     supportScore,
     crossRoomScore,
     reasons,
@@ -430,13 +460,13 @@ function cloneAssignedByRoom(assignedByRoom: Map<string, Array<string | null>>) 
 function buildScoreBreakdown(
   room: NormalizedRoom,
   baseUnits: number,
-  aggregateDirectPercent: number,
+  aggregateDirectScore: number,
   aggregateSupportScore: number,
   aggregateCrossRoomScore: number,
 ): ScoreBreakdown {
   const directProductionScore =
     room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber"
-      ? baseUnits * (1 + aggregateDirectPercent / 100)
+      ? baseUnits + aggregateDirectScore
       : 0;
   const supportRoomScore = room.roomKind === "reception_room" ? aggregateSupportScore : 0;
   const crossRoomBonusContribution = room.roomKind === "control_nexus" ? aggregateCrossRoomScore : 0;
@@ -462,11 +492,15 @@ function computeRoomPlan(
   const explanations: AssignmentExplanation[] = [];
   const baseUnits = getBaseRoomUnits(room, horizonHours, warnings);
 
-  let aggregateDirectPercent = 0;
+  let aggregateDirectScore = 0;
   let aggregateSupportScore = 0;
   let aggregateCrossRoomScore = 0;
   let usedFallbackHeuristics = false;
-  let dataConfidence: DataConfidence = room.recipe?.dataConfidence ?? "verified";
+  let dataConfidence: DataConfidence = room.recipes.some((recipe) => recipe.dataConfidence === "heuristic")
+    ? "heuristic"
+    : room.recipes.some((recipe) => recipe.dataConfidence === "provisional")
+      ? "provisional"
+      : "verified";
 
   for (const operatorId of assignedOperatorIds.filter(Boolean) as string[]) {
     const operatorDef = operatorDefs.get(operatorId);
@@ -475,8 +509,8 @@ function computeRoomPlan(
       continue;
     }
 
-    const evaluation = evaluateOperatorForRoom(operatorDef, ownedOperator, room);
-    aggregateDirectPercent += evaluation.directPercent;
+    const evaluation = evaluateOperatorForRoom(operatorDef, ownedOperator, room, horizonHours, warnings);
+    aggregateDirectScore += evaluation.directScore;
     aggregateSupportScore += evaluation.supportScore;
     aggregateCrossRoomScore += evaluation.crossRoomScore;
     usedFallbackHeuristics ||= evaluation.usedFallbackHeuristics;
@@ -491,7 +525,7 @@ function computeRoomPlan(
       roomId: room.roomId,
       projectedContribution:
         room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber"
-          ? baseUnits * (evaluation.directPercent / 100)
+          ? evaluation.directScore
           : evaluation.supportScore + evaluation.crossRoomScore,
       reasons:
         evaluation.reasons.length > 0
@@ -504,13 +538,18 @@ function computeRoomPlan(
   const scoreBreakdown = buildScoreBreakdown(
     room,
     baseUnits,
-    aggregateDirectPercent,
+    aggregateDirectScore,
     aggregateSupportScore,
     aggregateCrossRoomScore,
   );
 
-  if (room.recipe && (room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber")) {
-    projectedOutputs[room.recipe.productKind] += scoreBreakdown.directProductionScore;
+  if (room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber") {
+    const roomDirectBonus = Math.max(scoreBreakdown.directProductionScore - baseUnits, 0);
+    for (const recipe of room.recipes) {
+      const recipeBaseUnits = getRecipeBaseUnits(recipe, horizonHours, warnings);
+      const recipeShare = baseUnits > 0 ? recipeBaseUnits / baseUnits : 0;
+      projectedOutputs[recipe.productKind] += recipeBaseUnits + (roomDirectBonus * recipeShare);
+    }
   }
 
   return {
@@ -518,8 +557,8 @@ function computeRoomPlan(
       roomId: room.roomId,
       roomKind: room.roomKind,
       roomLevel: room.level,
-      chosenRecipeId: room.fixedRecipeId,
-      chosenProductKind: room.recipe?.productKind,
+      chosenRecipeIds: room.fixedRecipeIds,
+      chosenProductKind: room.recipes.length === 1 ? room.recipes[0]?.productKind : undefined,
       assignedOperatorIds: assignedOperatorIds.filter(Boolean) as string[],
       scoreBreakdown,
       projectedScore: scoreBreakdown.totalScore,
@@ -542,9 +581,9 @@ function summarizePlans(roomPlans: RoomPlan[]) {
     for (const [productKind, value] of Object.entries(roomPlan.projectedOutputs) as Array<[ProductKind, number]>) {
       projectedOutputs[productKind] += value;
     }
-    if (roomPlan.chosenRecipeId) {
-      projectedRecipeOutputs[roomPlan.chosenRecipeId] =
-        (projectedRecipeOutputs[roomPlan.chosenRecipeId] ?? 0) + roomPlan.scoreBreakdown.directProductionScore;
+    for (const recipeId of roomPlan.chosenRecipeIds ?? []) {
+      projectedRecipeOutputs[recipeId] =
+        (projectedRecipeOutputs[recipeId] ?? 0) + roomPlan.scoreBreakdown.directProductionScore / Math.max(roomPlan.chosenRecipeIds?.length ?? 1, 1);
     }
   }
 
@@ -588,11 +627,16 @@ export function solveNormalizedScenario(
     let bestContribution = 0;
 
     for (const room of rooms) {
-      const evaluation = evaluateOperatorForRoom(operatorDef, ownedOperator, room);
-      const baseUnits = getBaseRoomUnits(room, normalizedScenarioResult.scenario.options.horizonHours, warnings);
+      const evaluation = evaluateOperatorForRoom(
+        operatorDef,
+        ownedOperator,
+        room,
+        normalizedScenarioResult.scenario.options.horizonHours,
+        warnings,
+      );
       const contribution =
         room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber"
-          ? baseUnits * (evaluation.directPercent / 100)
+          ? evaluation.directScore
           : evaluation.supportScore + evaluation.crossRoomScore;
       if (contribution > bestContribution) {
         bestContribution = contribution;
@@ -635,11 +679,16 @@ export function solveNormalizedScenario(
 
       const operatorDef = operatorDefs.get(operatorId)!;
       const ownedOperator = ownedOperators.get(operatorId)!;
-      const evaluation = evaluateOperatorForRoom(operatorDef, ownedOperator, room);
-      const baseUnits = getBaseRoomUnits(room, normalizedScenarioResult.scenario.options.horizonHours, warnings);
+      const evaluation = evaluateOperatorForRoom(
+        operatorDef,
+        ownedOperator,
+        room,
+        normalizedScenarioResult.scenario.options.horizonHours,
+        warnings,
+      );
       const addedScore =
         room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber"
-          ? baseUnits * (evaluation.directPercent / 100)
+          ? evaluation.directScore
           : evaluation.supportScore + evaluation.crossRoomScore;
 
       dfs(

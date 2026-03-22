@@ -7,7 +7,6 @@
       "owned": true,
       "level": 40,
       "promotionTier": 1,
-      "trustPercent": 20,
       "baseSkillStates": [
         {
           "skillId": "blade-critique",
@@ -24,7 +23,6 @@
       "owned": true,
       "level": 30,
       "promotionTier": 0,
-      "trustPercent": 10,
       "baseSkillStates": [
         {
           "skillId": "standardized-scripting",
@@ -37,7 +35,6 @@
       "owned": true,
       "level": 20,
       "promotionTier": 0,
-      "trustPercent": 5,
       "baseSkillStates": [
         {
           "skillId": "rescuers-perseverance",
@@ -59,13 +56,13 @@
         "id": "mfg-1",
         "enabled": true,
         "level": 2,
-        "fixedRecipeId": "advanced-cognitive-carrier"
+        "fixedRecipeId": "elementary-cognitive-carrier"
       },
       {
         "id": "mfg-2",
         "enabled": true,
         "level": 1,
-        "fixedRecipeId": "arms-insp-set"
+        "fixedRecipeId": "arms-inspector"
       }
     ],
     "growthChambers": [
@@ -73,7 +70,11 @@
         "id": "growth-1",
         "enabled": true,
         "level": 2,
-        "fixedRecipeId": "kalkonyx"
+        "fixedRecipeIds": [
+          "kalkonyx",
+          "kalkodendra",
+          "pink-bolete"
+        ]
       }
     ],
     "receptionRoom": {

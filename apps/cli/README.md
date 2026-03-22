@@ -35,7 +35,7 @@ Current repo status:
 - Searchable operator selection.
 - Menu-driven recipe selection for each room.
 - In `simple` mode, recipe input stays menu-only.
-- Numeric steppers for levels, trust, and room levels.
+- Numeric steppers for levels, promotion tiers, and room levels.
 - Table output grouped by room.
 - Optional JSON output for scripting.
 
@@ -50,7 +50,6 @@ Current repo status:
       "owned": true,
       "level": 40,
       "promotionTier": 1,
-      "trustPercent": 20,
       "baseSkillStates": [
         { "skillId": "blade-critique", "unlockedRank": 1 },
         { "skillId": "jadeworking", "unlockedRank": 1 }

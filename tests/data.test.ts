@@ -6,6 +6,8 @@ import {
   estimateLevelingRequirement,
   getCatalogBundleStatus,
   getPromotionTierRequirement,
+  hydrateScenarioForCatalog,
+  listSelectableRecipes,
   migrateScenario,
   validateScenarioAgainstCatalog,
 } from "@endfield/data";
@@ -50,6 +52,22 @@ describe("data services", () => {
 
     expect(validation.ok).toBe(true);
     expect(validation.issues).toHaveLength(0);
+  });
+
+  it("hydrates partial scenarios with the active catalog for editor use", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = await loadScenarioFile(resolveRepoPath("scenarios", "examples", "current-base.simple.json"));
+
+    scenario.roster[0]!.baseSkillStates = [{ skillId: "blade-critique", unlockedRank: 1 }];
+
+    const hydration = hydrateScenarioForCatalog(catalog, scenario);
+    const chen = hydration.scenario.roster.find((entry) => entry.operatorId === "chen-qianyu");
+
+    expect(hydration.hydrated).toBe(true);
+    expect(hydration.stats.addedOperators).toBe(catalog.operators.length - scenario.roster.length);
+    expect(hydration.stats.addedBaseSkillStates).toBe(2);
+    expect(chen?.baseSkillStates.map((entry) => entry.skillId)).toContain("jadeworking");
+    expect(hydration.scenario.roster.length).toBe(catalog.operators.length);
   });
 
   it("expands shared progression defaults into runtime Base Skill costs and unlock hints", async () => {
@@ -119,6 +137,110 @@ describe("data services", () => {
     expect(validation.ok).toBe(false);
     expect(validation.issues.some((issue) => issue.code === "invalid_recipe_room_kind")).toBe(true);
     expect(validation.issues.some((issue) => issue.code === "hard_assignment_slot_oob")).toBe(true);
+  });
+
+  it("uses the verified Manufacturing Cabin recipe unlock tiers", async () => {
+    const catalog = await loadDefaultCatalog();
+
+    expect(listSelectableRecipes(catalog, "manufacturing_cabin", 1).map((recipe) => recipe.name)).toEqual([
+      "Arms Inspector",
+      "Elementary Combat Record",
+    ]);
+    expect(listSelectableRecipes(catalog, "manufacturing_cabin", 2).map((recipe) => recipe.name)).toEqual([
+      "ARMS INSP Kit",
+      "Arms Inspector",
+      "Elementary Cognitive Carrier",
+      "Elementary Combat Record",
+      "Intermediate Combat Record",
+    ]);
+    expect(listSelectableRecipes(catalog, "manufacturing_cabin", 3).map((recipe) => recipe.name)).toEqual([
+      "Advanced Cognitive Carrier",
+      "Advanced Combat Record",
+      "ARMS INSP Kit",
+      "Arms INSP Set",
+      "Arms Inspector",
+      "Elementary Cognitive Carrier",
+      "Elementary Combat Record",
+      "Intermediate Combat Record",
+    ]);
+  });
+
+  it("stores exact Manufacturing Cabin load and duration values from in-game screenshots", async () => {
+    const catalog = await loadDefaultCatalog();
+    const indexed = new Map(catalog.recipes.map((recipe) => [recipe.id, recipe]));
+
+    expect(indexed.get("elementary-combat-record")?.loadCost).toBe(1);
+    expect(indexed.get("elementary-combat-record")?.baseDurationMinutes).toBe(15.33);
+    expect(indexed.get("intermediate-combat-record")?.loadCost).toBe(2);
+    expect(indexed.get("intermediate-combat-record")?.baseDurationMinutes).toBe(70);
+    expect(indexed.get("elementary-cognitive-carrier")?.loadCost).toBe(5);
+    expect(indexed.get("elementary-cognitive-carrier")?.baseDurationMinutes).toBe(175);
+    expect(indexed.get("advanced-combat-record")?.loadCost).toBe(12);
+    expect(indexed.get("advanced-combat-record")?.baseDurationMinutes).toBe(586.67);
+    expect(indexed.get("advanced-cognitive-carrier")?.loadCost).toBe(30);
+    expect(indexed.get("advanced-cognitive-carrier")?.baseDurationMinutes).toBe(1466.67);
+    expect(indexed.get("arms-inspector")?.loadCost).toBe(1);
+    expect(indexed.get("arms-inspector")?.baseDurationMinutes).toBe(15.33);
+    expect(indexed.get("arms-insp-kit")?.loadCost).toBe(2);
+    expect(indexed.get("arms-insp-kit")?.baseDurationMinutes).toBe(70);
+    expect(indexed.get("arms-insp-set")?.loadCost).toBe(12);
+    expect(indexed.get("arms-insp-set")?.baseDurationMinutes).toBe(586.67);
+  });
+
+  it("uses the verified Growth Chamber recipe unlock tiers", async () => {
+    const catalog = await loadDefaultCatalog();
+
+    expect(listSelectableRecipes(catalog, "growth_chamber", 1).map((recipe) => recipe.name)).toEqual([
+      "Kalkodendra",
+      "Kalkonyx",
+      "Pink Bolete",
+    ]);
+    expect(listSelectableRecipes(catalog, "growth_chamber", 2).map((recipe) => recipe.name)).toEqual([
+      "Auronyx",
+      "Chrysodendra",
+      "Kalkodendra",
+      "Kalkonyx",
+      "Pink Bolete",
+      "Red Bolete",
+    ]);
+    expect(listSelectableRecipes(catalog, "growth_chamber", 3).map((recipe) => recipe.name)).toEqual([
+      "Auronyx",
+      "Blighted Jadeleaf",
+      "Bloodcap",
+      "Chrysodendra",
+      "Cosmagaric",
+      "False Aggela",
+      "Igneosite",
+      "Kalkodendra",
+      "Kalkonyx",
+      "Pink Bolete",
+      "Red Bolete",
+      "Ruby Bolete",
+      "Umbronyx",
+      "Vitrodendra",
+      "Wulingstone",
+    ]);
+  });
+
+  it("stores exact Growth Chamber durations and outputs from rebuild data", async () => {
+    const catalog = await loadDefaultCatalog();
+    const indexed = new Map(catalog.recipes.map((recipe) => [recipe.id, recipe]));
+
+    expect(indexed.get("pink-bolete")).toMatchObject({ roomLevel: 1, baseDurationMinutes: 1041.67, outputAmount: 1 });
+    expect(indexed.get("kalkonyx")).toMatchObject({ roomLevel: 1, baseDurationMinutes: 1041.67, outputAmount: 1 });
+    expect(indexed.get("kalkodendra")).toMatchObject({ roomLevel: 1, baseDurationMinutes: 1041.67, outputAmount: 3 });
+    expect(indexed.get("red-bolete")).toMatchObject({ roomLevel: 2, baseDurationMinutes: 1666.67, outputAmount: 1 });
+    expect(indexed.get("auronyx")).toMatchObject({ roomLevel: 2, baseDurationMinutes: 1666.67, outputAmount: 1 });
+    expect(indexed.get("chrysodendra")).toMatchObject({ roomLevel: 2, baseDurationMinutes: 1666.67, outputAmount: 3 });
+    expect(indexed.get("wulingstone")).toMatchObject({ roomLevel: 3, baseDurationMinutes: 7500, outputAmount: 1 });
+    expect(indexed.get("igneosite")).toMatchObject({ roomLevel: 3, baseDurationMinutes: 7500, outputAmount: 1 });
+    expect(indexed.get("umbronyx")).toMatchObject({ roomLevel: 3, baseDurationMinutes: 3666.67, outputAmount: 1 });
+    expect(indexed.get("false-aggela")).toMatchObject({ roomLevel: 3, baseDurationMinutes: 7500, outputAmount: 3 });
+    expect(indexed.get("blighted-jadeleaf")).toMatchObject({ roomLevel: 3, baseDurationMinutes: 7500, outputAmount: 3 });
+    expect(indexed.get("vitrodendra")).toMatchObject({ roomLevel: 3, baseDurationMinutes: 3666.67, outputAmount: 3 });
+    expect(indexed.get("cosmagaric")).toMatchObject({ roomLevel: 3, baseDurationMinutes: 7500, outputAmount: 1 });
+    expect(indexed.get("bloodcap")).toMatchObject({ roomLevel: 3, baseDurationMinutes: 7500, outputAmount: 1 });
+    expect(indexed.get("ruby-bolete")).toMatchObject({ roomLevel: 3, baseDurationMinutes: 3666.67, outputAmount: 1 });
   });
 
   it("distinguishes catalog integrity from release completeness", async () => {

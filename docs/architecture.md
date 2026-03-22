@@ -95,7 +95,7 @@ Core catalog entities:
 Core user-scenario entities:
 
 - Owned operator state
-  Includes current level, promotion tier, trust, and explicit base-skill rank per skill, all supplied manually by the user.
+  Includes current level, promotion tier, and explicit base-skill rank per skill, all supplied manually by the user.
 - Facility state
   Includes room levels, enabled rooms, user-selected room recipes where applicable, and hard assignments.
 - Production plan
@@ -137,7 +137,7 @@ The result payload returns:
 - Recommended operator assignments per room.
 - The room recipe plan used for the run.
 - Estimated output by exact recipe and by broader product family.
-- Opportunity-cost warnings when hard-assigned trust farming reduces production.
+- Opportunity-cost warnings when hard assignments reduce production.
 - The source catalog version used for the run.
 
 ## Why not start with CP-SAT
@@ -200,7 +200,7 @@ This produces a clean answer to two separate questions:
 
 Hard assignment is a first-class constraint, not an afterthought.
 
-The user can hard-assign specific operators to any valid room slot, including Control Nexus for trust farming or Reception Room for clue preference. The solver then treats those placements as fixed and optimizes the remaining slots around them.
+The user can hard-assign specific operators to any valid room slot, including Control Nexus or Reception Room when they want to preserve a manual assignment. The solver then treats those placements as fixed and optimizes the remaining slots around them.
 
 Validation rules:
 
@@ -266,7 +266,7 @@ Controls:
 
 - in `Simple` mode: recipe pickers only, one recipe per room, with no extra granular inputs
 - in `Advanced` mode: the same room recipe picks plus more detailed hard-assignment and low-level scenario controls
-- stepper arrows for operator level, trust, and room level
+- stepper arrows for operator level, promotion tier, and room level
 - toggles for `current facilities` vs `max facilities`
 - searchable global hard-assignment picker for any room
 - explicit base-skill rank controls so the user can override level-based assumptions

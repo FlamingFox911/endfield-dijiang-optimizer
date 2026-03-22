@@ -7,6 +7,7 @@ import prompts from "prompts";
 import {
   createStarterScenario,
   formatValidationIssues,
+  hydrateScenarioForCatalog,
   migrateScenario,
   validateScenarioAgainstCatalog,
 } from "@endfield/data";
@@ -45,10 +46,11 @@ async function loadPreparedScenario(scenarioPath: string) {
   const catalog = await loadDefaultCatalog();
   const originalScenario = await loadScenarioFile(scenarioPath);
   const migration = migrateScenario(originalScenario);
-  const scenario = migration.scenario;
+  const hydration = hydrateScenarioForCatalog(catalog, migration.scenario);
+  const scenario = hydration.scenario;
   const validation = validateScenarioAgainstCatalog(catalog, scenario);
 
-  return { catalog, scenario, validation, migration };
+  return { catalog, scenario, validation, migration, hydration };
 }
 
 function printJson(value: unknown) {
@@ -83,7 +85,7 @@ program
   .option("--json", "Emit JSON output")
   .action(async (options) => {
     const scenarioPath = await resolveScenarioPath(options.scenario);
-    const { catalog, scenario, validation, migration } = await loadPreparedScenario(scenarioPath);
+    const { catalog, scenario, validation, migration, hydration } = await loadPreparedScenario(scenarioPath);
     if (!migration.ok) {
       console.error(formatValidationIssues(migration.warnings));
       process.exitCode = 1;
@@ -111,7 +113,12 @@ program
     if (migration.migrated) {
       console.log(`Migrated scenario in memory from format ${migration.fromFormatVersion} to ${migration.toFormatVersion}.`);
     }
-    console.log(formatOptimizationResultText(result));
+    if (hydration.hydrated) {
+      console.log(
+        `Hydrated scenario in memory with ${hydration.stats.addedOperators} operator(s) and ${hydration.stats.addedBaseSkillStates} Base Skill state(s) from catalog ${catalog.version}.`,
+      );
+    }
+    console.log(formatOptimizationResultText(result, catalog));
   });
 
 program
@@ -122,7 +129,7 @@ program
   .option("--json", "Emit JSON output")
   .action(async (options) => {
     const scenarioPath = await resolveScenarioPath(options.scenario);
-    const { catalog, scenario, validation, migration } = await loadPreparedScenario(scenarioPath);
+    const { catalog, scenario, validation, migration, hydration } = await loadPreparedScenario(scenarioPath);
     if (!migration.ok) {
       console.error(formatValidationIssues(migration.warnings));
       process.exitCode = 1;
@@ -147,7 +154,12 @@ program
     if (migration.migrated) {
       console.log(`Migrated scenario in memory from format ${migration.fromFormatVersion} to ${migration.toFormatVersion}.`);
     }
-    console.log(formatUpgradeRecommendationsText(result));
+    if (hydration.hydrated) {
+      console.log(
+        `Hydrated scenario in memory with ${hydration.stats.addedOperators} operator(s) and ${hydration.stats.addedBaseSkillStates} Base Skill state(s) from catalog ${catalog.version}.`,
+      );
+    }
+    console.log(formatUpgradeRecommendationsText(result, catalog));
   });
 
 program

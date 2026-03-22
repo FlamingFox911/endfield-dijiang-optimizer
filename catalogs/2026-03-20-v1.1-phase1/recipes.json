@@ -6,7 +6,7 @@
       "name": "Advanced Cognitive Carrier",
       "facilityKind": "manufacturing_cabin",
       "productKind": "operator_exp",
-      "roomLevel": 1,
+      "roomLevel": 3,
       "baseDurationMinutes": 1466.67,
       "loadCost": 30,
       "outputAmount": 1,
@@ -24,6 +24,14 @@
           "url": "https://game8.co/games/Arknights-Endfield/archives/577556",
           "retrievedOn": "2026-03-20",
           "confidence": "guide_site"
+        },
+        {
+          "id": "user-manufacturing-cabin-screenshots-2026-03-21",
+          "label": "User Manufacturing Cabin screenshots",
+          "url": "local-user-supplied",
+          "retrievedOn": "2026-03-21",
+          "confidence": "manual_override",
+          "notes": "Exact Manufacturing Cabin MFG load and duration values captured from in-game screenshots."
         }
       ]
     },
@@ -32,7 +40,7 @@
       "name": "Arms INSP Set",
       "facilityKind": "manufacturing_cabin",
       "productKind": "weapon_exp",
-      "roomLevel": 1,
+      "roomLevel": 3,
       "baseDurationMinutes": 586.67,
       "loadCost": 12,
       "outputAmount": 1,
@@ -50,6 +58,224 @@
           "url": "https://game8.co/games/Arknights-Endfield/archives/577556",
           "retrievedOn": "2026-03-20",
           "confidence": "guide_site"
+        },
+        {
+          "id": "user-manufacturing-cabin-screenshots-2026-03-21",
+          "label": "User Manufacturing Cabin screenshots",
+          "url": "local-user-supplied",
+          "retrievedOn": "2026-03-21",
+          "confidence": "manual_override",
+          "notes": "Exact Manufacturing Cabin MFG load and duration values captured from in-game screenshots."
+        }
+      ]
+    },
+    {
+      "id": "advanced-combat-record",
+      "name": "Advanced Combat Record",
+      "facilityKind": "manufacturing_cabin",
+      "productKind": "operator_exp",
+      "roomLevel": 3,
+      "baseDurationMinutes": 586.67,
+      "loadCost": 12,
+      "outputAmount": 1,
+      "sourceRefs": [
+        {
+          "id": "wiki-omv-dijiang-facility",
+          "label": "Endfield Talos Wiki OMV Dijiang Facility page",
+          "url": "https://endfield.wiki.gg/wiki/OMV_Dijiang/Facility",
+          "retrievedOn": "2026-03-20",
+          "confidence": "community"
+        },
+        {
+          "id": "game8-manufacturing-cabin",
+          "label": "Game8 Manufacturing Cabin guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/577556",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site",
+          "notes": "Recipe family listed in guide; exact unlock tiers verified from in-game player save rebuild."
+        },
+        {
+          "id": "user-manufacturing-cabin-screenshots-2026-03-21",
+          "label": "User Manufacturing Cabin screenshots",
+          "url": "local-user-supplied",
+          "retrievedOn": "2026-03-21",
+          "confidence": "manual_override",
+          "notes": "Exact Manufacturing Cabin MFG load and duration values captured from in-game screenshots."
+        }
+      ]
+    },
+    {
+      "id": "arms-insp-kit",
+      "name": "ARMS INSP Kit",
+      "facilityKind": "manufacturing_cabin",
+      "productKind": "weapon_exp",
+      "roomLevel": 2,
+      "baseDurationMinutes": 70,
+      "loadCost": 2,
+      "outputAmount": 1,
+      "sourceRefs": [
+        {
+          "id": "wiki-omv-dijiang-facility",
+          "label": "Endfield Talos Wiki OMV Dijiang Facility page",
+          "url": "https://endfield.wiki.gg/wiki/OMV_Dijiang/Facility",
+          "retrievedOn": "2026-03-20",
+          "confidence": "community"
+        },
+        {
+          "id": "game8-manufacturing-cabin",
+          "label": "Game8 Manufacturing Cabin guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/577556",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site",
+          "notes": "Recipe family listed in guide; exact unlock tiers verified from in-game player save rebuild."
+        },
+        {
+          "id": "user-manufacturing-cabin-screenshots-2026-03-21",
+          "label": "User Manufacturing Cabin screenshots",
+          "url": "local-user-supplied",
+          "retrievedOn": "2026-03-21",
+          "confidence": "manual_override",
+          "notes": "Exact Manufacturing Cabin MFG load and duration values captured from in-game screenshots."
+        }
+      ]
+    },
+    {
+      "id": "arms-inspector",
+      "name": "Arms Inspector",
+      "facilityKind": "manufacturing_cabin",
+      "productKind": "weapon_exp",
+      "roomLevel": 1,
+      "baseDurationMinutes": 15.33,
+      "loadCost": 1,
+      "outputAmount": 1,
+      "sourceRefs": [
+        {
+          "id": "wiki-omv-dijiang-facility",
+          "label": "Endfield Talos Wiki OMV Dijiang Facility page",
+          "url": "https://endfield.wiki.gg/wiki/OMV_Dijiang/Facility",
+          "retrievedOn": "2026-03-20",
+          "confidence": "community"
+        },
+        {
+          "id": "game8-manufacturing-cabin",
+          "label": "Game8 Manufacturing Cabin guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/577556",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site",
+          "notes": "Recipe family listed in guide; exact unlock tiers verified from in-game player save rebuild."
+        },
+        {
+          "id": "user-manufacturing-cabin-screenshots-2026-03-21",
+          "label": "User Manufacturing Cabin screenshots",
+          "url": "local-user-supplied",
+          "retrievedOn": "2026-03-21",
+          "confidence": "manual_override",
+          "notes": "Exact Manufacturing Cabin MFG load and duration values captured from in-game screenshots."
+        }
+      ]
+    },
+    {
+      "id": "elementary-cognitive-carrier",
+      "name": "Elementary Cognitive Carrier",
+      "facilityKind": "manufacturing_cabin",
+      "productKind": "operator_exp",
+      "roomLevel": 2,
+      "baseDurationMinutes": 175,
+      "loadCost": 5,
+      "outputAmount": 1,
+      "sourceRefs": [
+        {
+          "id": "wiki-omv-dijiang-facility",
+          "label": "Endfield Talos Wiki OMV Dijiang Facility page",
+          "url": "https://endfield.wiki.gg/wiki/OMV_Dijiang/Facility",
+          "retrievedOn": "2026-03-20",
+          "confidence": "community"
+        },
+        {
+          "id": "game8-manufacturing-cabin",
+          "label": "Game8 Manufacturing Cabin guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/577556",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site",
+          "notes": "Recipe family listed in guide; exact unlock tiers verified from in-game player save rebuild."
+        },
+        {
+          "id": "user-manufacturing-cabin-screenshots-2026-03-21",
+          "label": "User Manufacturing Cabin screenshots",
+          "url": "local-user-supplied",
+          "retrievedOn": "2026-03-21",
+          "confidence": "manual_override",
+          "notes": "Exact Manufacturing Cabin MFG load and duration values captured from in-game screenshots."
+        }
+      ]
+    },
+    {
+      "id": "elementary-combat-record",
+      "name": "Elementary Combat Record",
+      "facilityKind": "manufacturing_cabin",
+      "productKind": "operator_exp",
+      "roomLevel": 1,
+      "baseDurationMinutes": 15.33,
+      "loadCost": 1,
+      "outputAmount": 1,
+      "sourceRefs": [
+        {
+          "id": "wiki-omv-dijiang-facility",
+          "label": "Endfield Talos Wiki OMV Dijiang Facility page",
+          "url": "https://endfield.wiki.gg/wiki/OMV_Dijiang/Facility",
+          "retrievedOn": "2026-03-20",
+          "confidence": "community"
+        },
+        {
+          "id": "game8-manufacturing-cabin",
+          "label": "Game8 Manufacturing Cabin guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/577556",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site",
+          "notes": "Recipe family listed in guide; exact unlock tiers verified from in-game player save rebuild."
+        },
+        {
+          "id": "user-manufacturing-cabin-screenshots-2026-03-21",
+          "label": "User Manufacturing Cabin screenshots",
+          "url": "local-user-supplied",
+          "retrievedOn": "2026-03-21",
+          "confidence": "manual_override",
+          "notes": "Exact Manufacturing Cabin MFG load and duration values captured from in-game screenshots."
+        }
+      ]
+    },
+    {
+      "id": "intermediate-combat-record",
+      "name": "Intermediate Combat Record",
+      "facilityKind": "manufacturing_cabin",
+      "productKind": "operator_exp",
+      "roomLevel": 2,
+      "baseDurationMinutes": 70,
+      "loadCost": 2,
+      "outputAmount": 1,
+      "sourceRefs": [
+        {
+          "id": "wiki-omv-dijiang-facility",
+          "label": "Endfield Talos Wiki OMV Dijiang Facility page",
+          "url": "https://endfield.wiki.gg/wiki/OMV_Dijiang/Facility",
+          "retrievedOn": "2026-03-20",
+          "confidence": "community"
+        },
+        {
+          "id": "game8-manufacturing-cabin",
+          "label": "Game8 Manufacturing Cabin guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/577556",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site",
+          "notes": "Recipe family listed in guide; exact unlock tiers verified from in-game player save rebuild."
+        },
+        {
+          "id": "user-manufacturing-cabin-screenshots-2026-03-21",
+          "label": "User Manufacturing Cabin screenshots",
+          "url": "local-user-supplied",
+          "retrievedOn": "2026-03-21",
+          "confidence": "manual_override",
+          "notes": "Exact Manufacturing Cabin MFG load and duration values captured from in-game screenshots."
         }
       ]
     },
@@ -60,7 +286,7 @@
       "productKind": "fungal",
       "roomLevel": 1,
       "baseDurationMinutes": 1041.67,
-      "outputAmount": 3,
+      "outputAmount": 1,
       "sourceRefs": [
         {
           "id": "wiki-omv-dijiang-facility",
@@ -75,7 +301,67 @@
           "url": "https://game8.co/games/Arknights-Endfield/archives/577534",
           "retrievedOn": "2026-03-20",
           "confidence": "guide_site"
+        },
+        {
+          "id": "user-growth-chamber-rebuild-2026-03-21",
+          "label": "User Growth Chamber rebuild findings",
+          "url": "local-user-supplied",
+          "retrievedOn": "2026-03-21",
+          "confidence": "manual_override",
+          "notes": "Exact Growth Chamber room unlock tiers, durations, and outputs verified from an in-game rebuild."
         }
+      ]
+    },
+    {
+      "id": "red-bolete",
+      "name": "Red Bolete",
+      "facilityKind": "growth_chamber",
+      "productKind": "fungal",
+      "roomLevel": 2,
+      "baseDurationMinutes": 1666.67,
+      "outputAmount": 1,
+      "sourceRefs": [
+        { "id": "game8-growth-chamber", "label": "Game8 Growth Chamber guide", "url": "https://game8.co/games/Arknights-Endfield/archives/577534", "retrievedOn": "2026-03-20", "confidence": "guide_site" },
+        { "id": "user-growth-chamber-rebuild-2026-03-21", "label": "User Growth Chamber rebuild findings", "url": "local-user-supplied", "retrievedOn": "2026-03-21", "confidence": "manual_override", "notes": "Exact Growth Chamber room unlock tiers, durations, and outputs verified from an in-game rebuild." }
+      ]
+    },
+    {
+      "id": "ruby-bolete",
+      "name": "Ruby Bolete",
+      "facilityKind": "growth_chamber",
+      "productKind": "fungal",
+      "roomLevel": 3,
+      "baseDurationMinutes": 3666.67,
+      "outputAmount": 1,
+      "sourceRefs": [
+        { "id": "game8-growth-chamber", "label": "Game8 Growth Chamber guide", "url": "https://game8.co/games/Arknights-Endfield/archives/577534", "retrievedOn": "2026-03-20", "confidence": "guide_site" },
+        { "id": "user-growth-chamber-rebuild-2026-03-21", "label": "User Growth Chamber rebuild findings", "url": "local-user-supplied", "retrievedOn": "2026-03-21", "confidence": "manual_override", "notes": "Exact Growth Chamber room unlock tiers, durations, and outputs verified from an in-game rebuild." }
+      ]
+    },
+    {
+      "id": "bloodcap",
+      "name": "Bloodcap",
+      "facilityKind": "growth_chamber",
+      "productKind": "fungal",
+      "roomLevel": 3,
+      "baseDurationMinutes": 7500,
+      "outputAmount": 1,
+      "sourceRefs": [
+        { "id": "game8-growth-chamber", "label": "Game8 Growth Chamber guide", "url": "https://game8.co/games/Arknights-Endfield/archives/577534", "retrievedOn": "2026-03-20", "confidence": "guide_site" },
+        { "id": "user-growth-chamber-rebuild-2026-03-21", "label": "User Growth Chamber rebuild findings", "url": "local-user-supplied", "retrievedOn": "2026-03-21", "confidence": "manual_override", "notes": "Exact Growth Chamber room unlock tiers, durations, and outputs verified from an in-game rebuild." }
+      ]
+    },
+    {
+      "id": "cosmagaric",
+      "name": "Cosmagaric",
+      "facilityKind": "growth_chamber",
+      "productKind": "fungal",
+      "roomLevel": 3,
+      "baseDurationMinutes": 7500,
+      "outputAmount": 1,
+      "sourceRefs": [
+        { "id": "game8-growth-chamber", "label": "Game8 Growth Chamber guide", "url": "https://game8.co/games/Arknights-Endfield/archives/577534", "retrievedOn": "2026-03-20", "confidence": "guide_site" },
+        { "id": "user-growth-chamber-rebuild-2026-03-21", "label": "User Growth Chamber rebuild findings", "url": "local-user-supplied", "retrievedOn": "2026-03-21", "confidence": "manual_override", "notes": "Exact Growth Chamber room unlock tiers, durations, and outputs verified from an in-game rebuild." }
       ]
     },
     {
@@ -100,7 +386,67 @@
           "url": "https://game8.co/games/Arknights-Endfield/archives/577534",
           "retrievedOn": "2026-03-20",
           "confidence": "guide_site"
+        },
+        {
+          "id": "user-growth-chamber-rebuild-2026-03-21",
+          "label": "User Growth Chamber rebuild findings",
+          "url": "local-user-supplied",
+          "retrievedOn": "2026-03-21",
+          "confidence": "manual_override",
+          "notes": "Exact Growth Chamber room unlock tiers, durations, and outputs verified from an in-game rebuild."
         }
+      ]
+    },
+    {
+      "id": "chrysodendra",
+      "name": "Chrysodendra",
+      "facilityKind": "growth_chamber",
+      "productKind": "vitrified_plant",
+      "roomLevel": 2,
+      "baseDurationMinutes": 1666.67,
+      "outputAmount": 3,
+      "sourceRefs": [
+        { "id": "game8-growth-chamber", "label": "Game8 Growth Chamber guide", "url": "https://game8.co/games/Arknights-Endfield/archives/577534", "retrievedOn": "2026-03-20", "confidence": "guide_site" },
+        { "id": "user-growth-chamber-rebuild-2026-03-21", "label": "User Growth Chamber rebuild findings", "url": "local-user-supplied", "retrievedOn": "2026-03-21", "confidence": "manual_override", "notes": "Exact Growth Chamber room unlock tiers, durations, and outputs verified from an in-game rebuild." }
+      ]
+    },
+    {
+      "id": "vitrodendra",
+      "name": "Vitrodendra",
+      "facilityKind": "growth_chamber",
+      "productKind": "vitrified_plant",
+      "roomLevel": 3,
+      "baseDurationMinutes": 3666.67,
+      "outputAmount": 3,
+      "sourceRefs": [
+        { "id": "game8-growth-chamber", "label": "Game8 Growth Chamber guide", "url": "https://game8.co/games/Arknights-Endfield/archives/577534", "retrievedOn": "2026-03-20", "confidence": "guide_site" },
+        { "id": "user-growth-chamber-rebuild-2026-03-21", "label": "User Growth Chamber rebuild findings", "url": "local-user-supplied", "retrievedOn": "2026-03-21", "confidence": "manual_override", "notes": "Exact Growth Chamber room unlock tiers, durations, and outputs verified from an in-game rebuild." }
+      ]
+    },
+    {
+      "id": "false-aggela",
+      "name": "False Aggela",
+      "facilityKind": "growth_chamber",
+      "productKind": "vitrified_plant",
+      "roomLevel": 3,
+      "baseDurationMinutes": 7500,
+      "outputAmount": 3,
+      "sourceRefs": [
+        { "id": "game8-growth-chamber", "label": "Game8 Growth Chamber guide", "url": "https://game8.co/games/Arknights-Endfield/archives/577534", "retrievedOn": "2026-03-20", "confidence": "guide_site" },
+        { "id": "user-growth-chamber-rebuild-2026-03-21", "label": "User Growth Chamber rebuild findings", "url": "local-user-supplied", "retrievedOn": "2026-03-21", "confidence": "manual_override", "notes": "Exact Growth Chamber room unlock tiers, durations, and outputs verified from an in-game rebuild." }
+      ]
+    },
+    {
+      "id": "blighted-jadeleaf",
+      "name": "Blighted Jadeleaf",
+      "facilityKind": "growth_chamber",
+      "productKind": "vitrified_plant",
+      "roomLevel": 3,
+      "baseDurationMinutes": 7500,
+      "outputAmount": 3,
+      "sourceRefs": [
+        { "id": "game8-growth-chamber", "label": "Game8 Growth Chamber guide", "url": "https://game8.co/games/Arknights-Endfield/archives/577534", "retrievedOn": "2026-03-20", "confidence": "guide_site" },
+        { "id": "user-growth-chamber-rebuild-2026-03-21", "label": "User Growth Chamber rebuild findings", "url": "local-user-supplied", "retrievedOn": "2026-03-21", "confidence": "manual_override", "notes": "Exact Growth Chamber room unlock tiers, durations, and outputs verified from an in-game rebuild." }
       ]
     },
     {
@@ -110,7 +456,7 @@
       "productKind": "rare_mineral",
       "roomLevel": 1,
       "baseDurationMinutes": 1041.67,
-      "outputAmount": 3,
+      "outputAmount": 1,
       "sourceRefs": [
         {
           "id": "wiki-omv-dijiang-facility",
@@ -125,7 +471,67 @@
           "url": "https://game8.co/games/Arknights-Endfield/archives/577534",
           "retrievedOn": "2026-03-20",
           "confidence": "guide_site"
+        },
+        {
+          "id": "user-growth-chamber-rebuild-2026-03-21",
+          "label": "User Growth Chamber rebuild findings",
+          "url": "local-user-supplied",
+          "retrievedOn": "2026-03-21",
+          "confidence": "manual_override",
+          "notes": "Exact Growth Chamber room unlock tiers, durations, and outputs verified from an in-game rebuild."
         }
+      ]
+    },
+    {
+      "id": "auronyx",
+      "name": "Auronyx",
+      "facilityKind": "growth_chamber",
+      "productKind": "rare_mineral",
+      "roomLevel": 2,
+      "baseDurationMinutes": 1666.67,
+      "outputAmount": 1,
+      "sourceRefs": [
+        { "id": "game8-growth-chamber", "label": "Game8 Growth Chamber guide", "url": "https://game8.co/games/Arknights-Endfield/archives/577534", "retrievedOn": "2026-03-20", "confidence": "guide_site" },
+        { "id": "user-growth-chamber-rebuild-2026-03-21", "label": "User Growth Chamber rebuild findings", "url": "local-user-supplied", "retrievedOn": "2026-03-21", "confidence": "manual_override", "notes": "Exact Growth Chamber room unlock tiers, durations, and outputs verified from an in-game rebuild." }
+      ]
+    },
+    {
+      "id": "umbronyx",
+      "name": "Umbronyx",
+      "facilityKind": "growth_chamber",
+      "productKind": "rare_mineral",
+      "roomLevel": 3,
+      "baseDurationMinutes": 3666.67,
+      "outputAmount": 1,
+      "sourceRefs": [
+        { "id": "game8-growth-chamber", "label": "Game8 Growth Chamber guide", "url": "https://game8.co/games/Arknights-Endfield/archives/577534", "retrievedOn": "2026-03-20", "confidence": "guide_site" },
+        { "id": "user-growth-chamber-rebuild-2026-03-21", "label": "User Growth Chamber rebuild findings", "url": "local-user-supplied", "retrievedOn": "2026-03-21", "confidence": "manual_override", "notes": "Exact Growth Chamber room unlock tiers, durations, and outputs verified from an in-game rebuild." }
+      ]
+    },
+    {
+      "id": "igneosite",
+      "name": "Igneosite",
+      "facilityKind": "growth_chamber",
+      "productKind": "rare_mineral",
+      "roomLevel": 3,
+      "baseDurationMinutes": 7500,
+      "outputAmount": 1,
+      "sourceRefs": [
+        { "id": "game8-growth-chamber", "label": "Game8 Growth Chamber guide", "url": "https://game8.co/games/Arknights-Endfield/archives/577534", "retrievedOn": "2026-03-20", "confidence": "guide_site" },
+        { "id": "user-growth-chamber-rebuild-2026-03-21", "label": "User Growth Chamber rebuild findings", "url": "local-user-supplied", "retrievedOn": "2026-03-21", "confidence": "manual_override", "notes": "Exact Growth Chamber room unlock tiers, durations, and outputs verified from an in-game rebuild." }
+      ]
+    },
+    {
+      "id": "wulingstone",
+      "name": "Wulingstone",
+      "facilityKind": "growth_chamber",
+      "productKind": "rare_mineral",
+      "roomLevel": 3,
+      "baseDurationMinutes": 7500,
+      "outputAmount": 1,
+      "sourceRefs": [
+        { "id": "game8-growth-chamber", "label": "Game8 Growth Chamber guide", "url": "https://game8.co/games/Arknights-Endfield/archives/577534", "retrievedOn": "2026-03-20", "confidence": "guide_site" },
+        { "id": "user-growth-chamber-rebuild-2026-03-21", "label": "User Growth Chamber rebuild findings", "url": "local-user-supplied", "retrievedOn": "2026-03-21", "confidence": "manual_override", "notes": "Exact Growth Chamber room unlock tiers, durations, and outputs verified from an in-game rebuild." }
       ]
     }
   ]

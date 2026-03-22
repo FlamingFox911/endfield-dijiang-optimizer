@@ -292,7 +292,6 @@ export interface OwnedOperatorState {
   owned: boolean;
   level: number;
   promotionTier: 0 | 1 | 2 | 3 | 4;
-  trustPercent?: number;
   baseSkillStates: OwnedBaseSkillState[];
 }
 
@@ -311,7 +310,7 @@ export interface GrowthChamberState {
   id: string;
   enabled: boolean;
   level: 1 | 2 | 3;
-  fixedRecipeId?: string;
+  fixedRecipeIds?: string[];
 }
 
 export interface ReceptionRoomState {
@@ -396,7 +395,7 @@ export interface RoomPlan {
   roomId: string;
   roomKind: FacilityKind;
   roomLevel: number;
-  chosenRecipeId?: string;
+  chosenRecipeIds?: string[];
   chosenProductKind?: ProductKind;
   assignedOperatorIds: string[];
   scoreBreakdown: ScoreBreakdown;

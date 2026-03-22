@@ -20,6 +20,7 @@ import type {
   UpgradeRankingMode,
   ValidationIssue,
   ValidationResult,
+  MigrationChange,
   MigrationResult,
 } from "@endfield/domain";
 
@@ -56,12 +57,27 @@ export interface CatalogBundleStatus {
   releaseReady: boolean;
 }
 
+export interface CatalogHydrationStats {
+  addedOperators: number;
+  addedBaseSkillStates: number;
+  preservedUnknownOperators: number;
+}
+
+export interface CatalogHydrationResult {
+  scenario: OptimizationScenario;
+  hydrated: boolean;
+  changes: MigrationChange[];
+  stats: CatalogHydrationStats;
+}
+
 const DEFAULT_SLOT_CAPS = {
   control_nexus: { 1: 1, 2: 2, 3: 3, 4: 3, 5: 3 },
   manufacturing_cabin: { 1: 1, 2: 2, 3: 3 },
   growth_chamber: { 1: 1, 2: 2, 3: 3 },
   reception_room: { 1: 1, 2: 2, 3: 3 },
 } as const;
+
+const DEFAULT_GROWTH_SLOT_CAPS = { 1: 3, 2: 6, 3: 9 } as const;
 
 const MAX_LAYOUT_DEFAULTS = {
   manufacturing_cabin: 2,
@@ -963,6 +979,17 @@ export function getMaxFacilityRoomCounts(): typeof MAX_LAYOUT_DEFAULTS {
   return MAX_LAYOUT_DEFAULTS;
 }
 
+export function getGrowthSlotCap(
+  catalog: GameCatalog,
+  roomLevel: number,
+): number {
+  return (
+    getFacilityLevelDefinition(catalog, "growth_chamber", roomLevel)?.growthSlotCap ??
+    DEFAULT_GROWTH_SLOT_CAPS[roomLevel as 1 | 2 | 3] ??
+    0
+  );
+}
+
 export function createStarterScenario(catalog: GameCatalog): OptimizationScenario {
   const firstManufacturingRecipe = listSelectableRecipes(catalog, "manufacturing_cabin", 1)[0];
   const firstGrowthRecipe = listSelectableRecipes(catalog, "growth_chamber", 1)[0];
@@ -975,7 +1002,6 @@ export function createStarterScenario(catalog: GameCatalog): OptimizationScenari
       owned: false,
       level: 1,
       promotionTier: 0,
-      trustPercent: 0,
       baseSkillStates: operator.baseSkills.map((skill) => ({
         skillId: skill.id,
         unlockedRank: 0,
@@ -996,7 +1022,7 @@ export function createStarterScenario(catalog: GameCatalog): OptimizationScenari
           id: "growth-1",
           enabled: true,
           level: 1,
-          fixedRecipeId: firstGrowthRecipe?.id,
+          fixedRecipeIds: firstGrowthRecipe ? [firstGrowthRecipe.id] : [],
         },
       ],
       receptionRoom: {
@@ -1013,6 +1039,95 @@ export function createStarterScenario(catalog: GameCatalog): OptimizationScenari
       includeReceptionRoom: true,
       upgradeRankingMode: "balanced",
     },
+  };
+}
+
+function createRosterEntryForOperator(
+  operator: OperatorDefinition,
+): OptimizationScenario["roster"][number] {
+  return {
+    operatorId: operator.id,
+    owned: false,
+    level: 1,
+    promotionTier: 0,
+    baseSkillStates: operator.baseSkills.map((skill) => ({
+      skillId: skill.id,
+      unlockedRank: 0,
+    })),
+  };
+}
+
+export function hydrateScenarioForCatalog(
+  catalog: GameCatalog,
+  scenario: OptimizationScenario,
+): CatalogHydrationResult {
+  const nextScenario = structuredClone(scenario);
+  const changes: MigrationChange[] = [];
+  const stats: CatalogHydrationStats = {
+    addedOperators: 0,
+    addedBaseSkillStates: 0,
+    preservedUnknownOperators: 0,
+  };
+
+  const rosterById = new Map(nextScenario.roster.map((entry) => [entry.operatorId, entry]));
+  const catalogOperatorIds = new Set(catalog.operators.map((operator) => operator.id));
+  const unknownOperators = nextScenario.roster.filter((entry) => !catalogOperatorIds.has(entry.operatorId));
+
+  nextScenario.roster = catalog.operators.map((operator) => {
+    const existing = rosterById.get(operator.id);
+    if (!existing) {
+      stats.addedOperators += 1;
+      changes.push({
+        path: `roster.${operator.id}`,
+        message: `Added missing operator '${operator.name}' from catalog '${catalog.version}'.`,
+      });
+      return createRosterEntryForOperator(operator);
+    }
+
+    const skillStateById = new Map(existing.baseSkillStates.map((state) => [state.skillId, state]));
+    const extraSkillStates = existing.baseSkillStates.filter(
+      (state) => !operator.baseSkills.some((skill) => skill.id === state.skillId),
+    );
+    const baseSkillStates = operator.baseSkills.map((skill) => {
+      const existingState = skillStateById.get(skill.id);
+      if (existingState) {
+        return existingState;
+      }
+
+      stats.addedBaseSkillStates += 1;
+      changes.push({
+        path: `roster.${operator.id}.baseSkillStates.${skill.id}`,
+        message: `Added missing Base Skill state '${skill.name}' for '${operator.name}'.`,
+      });
+      return {
+        skillId: skill.id,
+        unlockedRank: 0 as const,
+      };
+    });
+
+    return {
+      operatorId: existing.operatorId,
+      owned: existing.owned,
+      level: existing.level,
+      promotionTier: existing.promotionTier,
+      baseSkillStates: [...baseSkillStates, ...extraSkillStates],
+    };
+  });
+
+  if (unknownOperators.length > 0) {
+    stats.preservedUnknownOperators = unknownOperators.length;
+    changes.push({
+      path: "roster",
+      message: `Preserved ${unknownOperators.length} operator entr${unknownOperators.length === 1 ? "y" : "ies"} that are not present in catalog '${catalog.version}'.`,
+    });
+    nextScenario.roster.push(...unknownOperators);
+  }
+
+  return {
+    scenario: nextScenario,
+    hydrated: changes.length > 0,
+    changes,
+    stats,
   };
 }
 
@@ -1104,6 +1219,27 @@ export function migrateScenario(input: unknown): MigrationResult {
       path: "facilities.growthChambers",
       message: "Defaulted missing growthChambers to an empty array.",
     });
+  }
+  else {
+    for (const room of facilities.growthChambers) {
+      if (isObject(room) && Array.isArray(room.fixedRecipeIds)) {
+        continue;
+      }
+      if (isObject(room) && typeof room.fixedRecipeId === "string") {
+        room.fixedRecipeIds = [room.fixedRecipeId];
+        delete room.fixedRecipeId;
+        changes.push({
+          path: "facilities.growthChambers[].fixedRecipeIds",
+          message: "Migrated Growth Chamber fixedRecipeId to fixedRecipeIds[].",
+        });
+      } else if (isObject(room) && room.fixedRecipeIds == null) {
+        room.fixedRecipeIds = [];
+        changes.push({
+          path: "facilities.growthChambers[].fixedRecipeIds",
+          message: "Defaulted missing Growth Chamber fixedRecipeIds to an empty array.",
+        });
+      }
+    }
   }
 
   if (!Array.isArray(facilities.hardAssignments)) {
@@ -1275,23 +1411,34 @@ export function validateScenarioAgainstCatalog(
         scenario.facilities.controlNexus.level,
       ),
     });
-    if (room.fixedRecipeId && !recipeIds.has(room.fixedRecipeId)) {
+    const growthSlotCap = getGrowthSlotCap(catalog, room.level);
+    if ((room.fixedRecipeIds?.length ?? 0) > growthSlotCap) {
       issues.push(
         makeIssue(
-          "unknown_recipe",
-          `facilities.growthChambers.${room.id}.fixedRecipeId`,
-          `Scenario room '${room.id}' references unknown recipe '${room.fixedRecipeId}'.`,
+          "growth_slot_overflow",
+          `facilities.growthChambers.${room.id}.fixedRecipeIds`,
+          `Growth chamber '${room.id}' has ${(room.fixedRecipeIds?.length ?? 0)} selected growth materials, but level ${room.level} only supports ${growthSlotCap} growth slots.`,
         ),
       );
     }
-    if (room.fixedRecipeId) {
-      const recipe = recipesById.get(room.fixedRecipeId);
+    for (const [recipeIndex, recipeId] of (room.fixedRecipeIds ?? []).entries()) {
+      if (!recipeIds.has(recipeId)) {
+        issues.push(
+          makeIssue(
+            "unknown_recipe",
+            `facilities.growthChambers.${room.id}.fixedRecipeIds.${recipeIndex}`,
+            `Scenario room '${room.id}' references unknown recipe '${recipeId}'.`,
+          ),
+        );
+        continue;
+      }
+      const recipe = recipesById.get(recipeId);
       if (recipe && recipe.facilityKind !== "growth_chamber") {
         issues.push(
           makeIssue(
             "invalid_recipe_room_kind",
-            `facilities.growthChambers.${room.id}.fixedRecipeId`,
-            `Recipe '${room.fixedRecipeId}' is not valid for growth chamber '${room.id}'.`,
+            `facilities.growthChambers.${room.id}.fixedRecipeIds.${recipeIndex}`,
+            `Recipe '${recipeId}' is not valid for growth chamber '${room.id}'.`,
           ),
         );
       }
@@ -1299,8 +1446,8 @@ export function validateScenarioAgainstCatalog(
         issues.push(
           makeIssue(
             "recipe_level_too_high",
-            `facilities.growthChambers.${room.id}.fixedRecipeId`,
-            `Recipe '${room.fixedRecipeId}' requires room level ${recipe.roomLevel}, but '${room.id}' is level ${room.level}.`,
+            `facilities.growthChambers.${room.id}.fixedRecipeIds.${recipeIndex}`,
+            `Recipe '${recipeId}' requires room level ${recipe.roomLevel}, but '${room.id}' is level ${room.level}.`,
           ),
         );
       }

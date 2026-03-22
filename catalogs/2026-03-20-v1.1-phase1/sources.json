@@ -205,6 +205,22 @@
       "confidence": "guide_site"
     },
     {
+      "id": "user-growth-chamber-rebuild-2026-03-21",
+      "label": "User Growth Chamber rebuild findings",
+      "url": "local-user-supplied",
+      "retrievedOn": "2026-03-21",
+      "confidence": "manual_override",
+      "notes": "User-supplied in-game rebuild data confirming Growth Chamber unlock tiers, durations, and outputs."
+    },
+    {
+      "id": "user-manufacturing-cabin-screenshots-2026-03-21",
+      "label": "User Manufacturing Cabin screenshots",
+      "url": "local-user-supplied",
+      "retrievedOn": "2026-03-21",
+      "confidence": "manual_override",
+      "notes": "User-supplied in-game screenshots confirming Manufacturing Cabin recipe durations and MFG load values."
+    },
+    {
       "id": "official-release-2026-01-20",
       "label": "Official release notice",
       "url": "https://endfield.gryphline.com/news/9574",

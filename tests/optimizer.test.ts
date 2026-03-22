@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import { createStarterScenario } from "@endfield/data";
 import { loadDefaultCatalog, loadScenarioFile, resolveRepoPath } from "@endfield/data/node";
-import { applyMaxFacilitiesOverlay, normalizeScenario, recommendUpgrades, solveScenario } from "@endfield/optimizer";
+import {
+  applyMaxFacilitiesOverlay,
+  formatOptimizationResultText,
+  formatUpgradeRecommendationsText,
+  normalizeScenario,
+  recommendUpgrades,
+  solveScenario,
+} from "@endfield/optimizer";
 
 describe("optimizer runtime", () => {
   it("returns rich room score breakdowns", async () => {
@@ -88,5 +95,20 @@ describe("optimizer runtime", () => {
     const mfg2 = normalized.rooms.find((room) => room.roomId === "mfg-2");
 
     expect(mfg2?.slotCap).toBe(1);
+  });
+
+  it("formats results and recommendations with catalog-backed names", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = await loadScenarioFile(resolveRepoPath("scenarios", "examples", "current-base.simple.json"));
+    const optimization = solveScenario(catalog, scenario);
+    const upgrades = recommendUpgrades(catalog, scenario);
+
+    const optimizationText = formatOptimizationResultText(optimization, catalog);
+    const upgradeText = formatUpgradeRecommendationsText(upgrades, catalog);
+
+    expect(optimizationText).toContain("Chen Qianyu");
+    expect(optimizationText).toContain("Elementary Cognitive Carrier");
+    expect(upgradeText).toContain("Chen Qianyu");
+    expect(upgradeText).toContain("Blade Critique");
   });
 });

@@ -182,6 +182,13 @@ Each scenario contains:
 
 The room recipe plan is user-owned scenario data. The solver does not choose recipes in v1; it optimizes operator placement around the user's exact per-room recipe choices.
 
+Owned operator state records only the values that affect planning in v1:
+
+- ownership
+- current level
+- current promotion tier
+- explicit Base Skill rank state
+
 ## Planning mode semantics
 
 - `simple`
