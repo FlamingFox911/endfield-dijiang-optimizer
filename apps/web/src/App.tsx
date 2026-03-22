@@ -27,12 +27,14 @@ import {
   OPTIMIZATION_PROFILE_EFFORTS,
   clampOptimizationEffort,
   getOptimizationSearchConfig,
-  recommendUpgrades,
 } from "@endfield/optimizer";
 
 import { createOptimizerWorker } from "./optimizer.worker.client";
 import type { OptimizerWorkerResponse } from "./optimizer-worker-types";
-import type { OptimizationProgressSnapshot } from "@endfield/optimizer";
+import type {
+  OptimizationProgressSnapshot,
+  UpgradeRecommendationProgressSnapshot,
+} from "@endfield/optimizer";
 
 const DRAFT_KEY = "endfield-dijiang-optimizer:draft";
 const OPTIMIZATION_PROFILES: OptimizationProfile[] = ["fast", "balanced", "thorough", "exhaustive"];
@@ -41,6 +43,12 @@ interface OptimizationRunState {
   runId: number;
   startedAt: number;
   progress: OptimizationProgressSnapshot;
+}
+
+interface RecommendationRunState {
+  runId: number;
+  startedAt: number;
+  progress: UpgradeRecommendationProgressSnapshot;
 }
 
 function sanitizeScenarioForPersistence(scenario: OptimizationScenario): OptimizationScenario {
@@ -147,6 +155,17 @@ function getOptimizationProfileSummary(profile: OptimizationProfile): string {
   }
 }
 
+function getUpgradeRankingModeSummary(mode: "balanced" | "roi" | "fastest"): string {
+  switch (mode) {
+    case "balanced":
+      return "For Recommend unlocks: sort by score gain first, then ROI, then estimated time.";
+    case "roi":
+      return "For Recommend unlocks: sort by payoff per effort spent.";
+    case "fastest":
+      return "For Recommend unlocks: sort by shortest estimated unlock time, then impact.";
+  }
+}
+
 function App() {
   const [catalog, setCatalog] = useState<GameCatalog | null>(null);
   const [scenario, setScenario] = useState<OptimizationScenario | null>(null);
@@ -156,9 +175,11 @@ function App() {
   const [search, setSearch] = useState("");
   const [messages, setMessages] = useState<string[]>([]);
   const [optimizationRun, setOptimizationRun] = useState<OptimizationRunState | null>(null);
+  const [recommendationRun, setRecommendationRun] = useState<RecommendationRunState | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
   const workerRef = useRef<Worker | null>(null);
   const activeRunIdRef = useRef<number | null>(null);
+  const activeRunKindRef = useRef<"optimization" | "recommendations" | null>(null);
   const nextRunIdRef = useRef(1);
 
   useEffect(() => {
@@ -212,6 +233,7 @@ function App() {
     workerRef.current?.terminate();
     workerRef.current = null;
     activeRunIdRef.current = null;
+    activeRunKindRef.current = null;
   }, []);
 
   useEffect(() => {
@@ -234,18 +256,19 @@ function App() {
   }, [scenario]);
 
   useEffect(() => {
-    if (!optimizationRun) {
+    const activeRun = optimizationRun ?? recommendationRun;
+    if (!activeRun) {
       setElapsedMs(0);
       return;
     }
 
-    setElapsedMs(Date.now() - optimizationRun.startedAt);
+    setElapsedMs(Date.now() - activeRun.startedAt);
     const timer = window.setInterval(() => {
-      setElapsedMs(Date.now() - optimizationRun.startedAt);
+      setElapsedMs(Date.now() - activeRun.startedAt);
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [optimizationRun]);
+  }, [optimizationRun, recommendationRun]);
 
   const deferredSearch = useDeferredValue(search);
 
@@ -319,6 +342,7 @@ function App() {
     workerRef.current?.terminate();
     workerRef.current = null;
     activeRunIdRef.current = null;
+    activeRunKindRef.current = null;
   };
 
   const runOptimization = () => {
@@ -336,6 +360,7 @@ function App() {
     const worker = createOptimizerWorker();
     workerRef.current = worker;
     activeRunIdRef.current = runId;
+    activeRunKindRef.current = "optimization";
 
     const startingProgress: OptimizationProgressSnapshot = {
       phase: "Queueing optimization",
@@ -353,6 +378,7 @@ function App() {
       startedAt: Date.now(),
       progress: startingProgress,
     });
+    setRecommendationRun(null);
 
     worker.onmessage = (event: MessageEvent<OptimizerWorkerResponse>) => {
       const message = event.data;
@@ -360,14 +386,14 @@ function App() {
         return;
       }
 
-      if (message.type === "started" || message.type === "progress") {
+      if (message.type === "optimization-started" || message.type === "optimization-progress") {
         setOptimizationRun((current) => current && current.runId === message.runId
           ? { ...current, progress: message.progress }
           : current);
         return;
       }
 
-      if (message.type === "completed") {
+      if (message.type === "optimization-completed") {
         stopActiveWorker();
         setOptimizationRun(null);
         setMessages(message.result.warnings);
@@ -375,23 +401,42 @@ function App() {
         return;
       }
 
+      if (message.type === "recommendations-started" || message.type === "recommendations-progress") {
+        setRecommendationRun((current) => current && current.runId === message.runId
+          ? { ...current, progress: message.progress }
+          : current);
+        return;
+      }
+
+      if (message.type === "recommendations-completed") {
+        stopActiveWorker();
+        setRecommendationRun(null);
+        setRecommendations(message.result);
+        setMessages([]);
+        return;
+      }
+
       if (message.type === "canceled") {
+        const runKind = activeRunKindRef.current;
         stopActiveWorker();
         setOptimizationRun(null);
-        setMessages(["Optimization canceled."]);
+        setRecommendationRun(null);
+        setMessages([runKind === "recommendations" ? "Recommendations canceled." : "Optimization canceled."]);
         return;
       }
 
       stopActiveWorker();
       setOptimizationRun(null);
+      setRecommendationRun(null);
       setMessages([message.message]);
     };
 
-    worker.postMessage({ type: "start", runId, catalog, scenario, searchConfig });
+    worker.postMessage({ type: "start-optimization", runId, catalog, scenario, searchConfig });
   };
 
   const cancelOptimization = () => {
     const runId = activeRunIdRef.current;
+    const runKind = activeRunKindRef.current;
     if (runId == null) {
       return;
     }
@@ -399,7 +444,8 @@ function App() {
     workerRef.current?.postMessage({ type: "cancel", runId });
     stopActiveWorker();
     setOptimizationRun(null);
-    setMessages(["Optimization canceled."]);
+    setRecommendationRun(null);
+    setMessages([runKind === "recommendations" ? "Recommendations canceled." : "Optimization canceled."]);
   };
 
   const runRecommendations = () => {
@@ -408,7 +454,67 @@ function App() {
       setMessages(nextValidation.issues.map((issue) => issue.message));
       return;
     }
-    setRecommendations(recommendUpgrades(catalog, scenario));
+
+    stopActiveWorker();
+
+    const runId = nextRunIdRef.current;
+    nextRunIdRef.current += 1;
+    const worker = createOptimizerWorker();
+    workerRef.current = worker;
+    activeRunIdRef.current = runId;
+    activeRunKindRef.current = "recommendations";
+
+    setRecommendationRun({
+      runId,
+      startedAt: Date.now(),
+      progress: {
+        phase: "Queueing recommendations",
+        completedCandidates: 0,
+        totalCandidates: 0,
+        baselineScore: 0,
+        bestScoreDelta: 0,
+      },
+    });
+    setOptimizationRun(null);
+
+    worker.onmessage = (event: MessageEvent<OptimizerWorkerResponse>) => {
+      const message = event.data;
+      if (message.runId !== activeRunIdRef.current) {
+        return;
+      }
+
+      if (message.type === "recommendations-started" || message.type === "recommendations-progress") {
+        setRecommendationRun((current) => current && current.runId === message.runId
+          ? { ...current, progress: message.progress }
+          : current);
+        return;
+      }
+
+      if (message.type === "recommendations-completed") {
+        stopActiveWorker();
+        setRecommendationRun(null);
+        setRecommendations(message.result);
+        setMessages([]);
+        return;
+      }
+
+      if (message.type === "canceled") {
+        stopActiveWorker();
+        setRecommendationRun(null);
+        setMessages(["Recommendations canceled."]);
+        return;
+      }
+
+      if (message.type === "optimization-started" || message.type === "optimization-progress") {
+        return;
+      }
+
+      stopActiveWorker();
+      setRecommendationRun(null);
+      setMessages([message.message]);
+    };
+
+    worker.postMessage({ type: "start-recommendations", runId, catalog, scenario });
   };
 
   const exportScenario = () => {
@@ -464,7 +570,21 @@ function App() {
             <div><span>Gaps</span><strong>{catalog.gaps.length}</strong></div>
           </div>
           <label className="pill"><span>Mode</span><select value={scenario.options.planningMode} onChange={(event) => updateScenario((current) => ({ ...current, options: { ...current.options, planningMode: event.target.value as "simple" | "advanced" } }))}><option value="simple">Simple</option><option value="advanced">Advanced</option></select></label>
-          <label className="pill"><span>Ranking</span><select value={scenario.options.upgradeRankingMode ?? "balanced"} onChange={(event) => updateScenario((current) => ({ ...current, options: { ...current.options, upgradeRankingMode: event.target.value as "fastest" | "roi" | "balanced" } }))}><option value="balanced">Balanced</option><option value="roi">ROI</option><option value="fastest">Fastest</option></select></label>
+          <label className="pill">
+            <span className="labelWithHelp">
+              <span>Recommend Unlocks Ranking</span>
+              <span
+                className="helpBadge"
+                role="img"
+                aria-label={`Controls how Recommend unlocks sorts results. Balanced ranks by score gain first, then ROI, then estimated time. ROI ranks by payoff per effort. Fastest ranks by estimated unlock time first. Current mode: ${formatLabel(scenario.options.upgradeRankingMode ?? "balanced")}.`}
+                title={`Controls how Recommend unlocks sorts results.\n\nBalanced: highest score gain first, then ROI, then estimated time.\nROI: best payoff per effort.\nFastest: quickest estimated unlock first, then impact.`}
+              >
+                ?
+              </span>
+            </span>
+            <select value={scenario.options.upgradeRankingMode ?? "balanced"} onChange={(event) => updateScenario((current) => ({ ...current, options: { ...current.options, upgradeRankingMode: event.target.value as "fastest" | "roi" | "balanced" } }))}><option value="balanced">Balanced</option><option value="roi">ROI</option><option value="fastest">Fastest</option></select>
+            <small>{getUpgradeRankingModeSummary(scenario.options.upgradeRankingMode ?? "balanced")}</small>
+          </label>
         </div>
       </header>
 
@@ -475,8 +595,8 @@ function App() {
         <label className="pill rangePill"><span>Search effort</span><input type="range" min={1} max={MAX_OPTIMIZATION_EFFORT} value={clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)} onChange={(event) => setOptimizationEffort(Number(event.target.value))} /><strong>{clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)}/{MAX_OPTIMIZATION_EFFORT}</strong><small>{getOptimizationProfileSummary(scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE)}</small></label>
         <label className="toggle"><input type="checkbox" checked={scenario.options.maxFacilities} onChange={(event) => updateScenario((current) => ({ ...current, options: { ...current.options, maxFacilities: event.target.checked } }))} /><span>Max facilities overlay</span></label>
         <label className="toggle"><input type="checkbox" checked={scenario.options.includeReceptionRoom !== false} onChange={(event) => updateScenario((current) => ({ ...current, options: { ...current.options, includeReceptionRoom: event.target.checked } }))} /><span>Include reception room</span></label>
-        <button onClick={runOptimization} disabled={optimizationRun != null}>Optimize</button>
-        <button className="secondary" onClick={runRecommendations}>Recommend unlocks</button>
+        <button onClick={runOptimization} disabled={optimizationRun != null || recommendationRun != null}>Optimize</button>
+        <button className="secondary" onClick={runRecommendations} disabled={optimizationRun != null || recommendationRun != null}>Recommend unlocks</button>
         <button className="secondary" onClick={exportScenario}>Export JSON</button>
         <label className="secondary upload">Import JSON<input type="file" accept="application/json" onChange={importScenario} /></label>
       </section>
@@ -501,6 +621,27 @@ function App() {
               <div><span>Effort</span><strong>{optimizationRun.progress.effort}/{MAX_OPTIMIZATION_EFFORT}</strong></div>
             </div>
             <p className="warningText">{getOptimizationProfileSummary(optimizationRun.progress.profileLabel)}</p>
+            <button type="button" onClick={cancelOptimization}>Cancel</button>
+          </div>
+        </section>
+      )}
+
+      {recommendationRun && (
+        <section className="modalBackdrop">
+          <div className="modalCard" role="dialog" aria-modal="true" aria-label="Recommendation progress">
+            <div className="panelHeader">
+              <div>
+                <p className="eyebrow">Recommendation progress</p>
+                <h2>Unlock ranking</h2>
+              </div>
+              <span className="miniStat">{formatElapsedTime(elapsedMs)}</span>
+            </div>
+            <p className="status">{recommendationRun.progress.phase}</p>
+            <div className="heroMetaGrid modalStats">
+              <div><span>Candidates</span><strong>{recommendationRun.progress.completedCandidates} / {recommendationRun.progress.totalCandidates}</strong></div>
+              <div><span>Baseline score</span><strong>{recommendationRun.progress.baselineScore.toFixed(2)}</strong></div>
+              <div><span>Best delta</span><strong>{recommendationRun.progress.bestScoreDelta.toFixed(2)}</strong></div>
+            </div>
             <button type="button" onClick={cancelOptimization}>Cancel</button>
           </div>
         </section>

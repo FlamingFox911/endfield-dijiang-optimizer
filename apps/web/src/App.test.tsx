@@ -93,7 +93,7 @@ describe("App", () => {
 
     act(() => {
       workerInstances[0]!.emit({
-        type: "completed",
+        type: "optimization-completed",
         runId: 1,
         result: {
           catalogVersion: "2026-03-20/v1.1-phase1",
@@ -129,6 +129,46 @@ describe("App", () => {
     const ownedToggles = await screen.findAllByRole("checkbox", { name: "Owned" });
     await userEvent.click(ownedToggles[0]!);
     await userEvent.click(screen.getByRole("button", { name: "Recommend unlocks" }));
+
+    expect(screen.getByRole("dialog", { name: "Recommendation progress" })).toBeInTheDocument();
+
+    act(() => {
+      workerInstances[0]!.emit({
+        type: "recommendations-completed",
+        runId: 1,
+        result: {
+          catalogVersion: "2026-03-20/v1.1-phase1",
+          baselineScore: 1,
+          rankingMode: "balanced",
+          recommendations: [
+            {
+              action: {
+                operatorId: "chen-qianyu",
+                skillId: "blade-critique",
+                targetRank: 1,
+                currentLevel: 1,
+                currentPromotionTier: 0,
+                requiredLevel: 20,
+                requiredPromotionTier: 1,
+                levelsToGain: 19,
+                levelExpCost: 0,
+                levelTCredCost: 0,
+                levelMaterialCosts: [],
+                levelCostIsUpperBound: false,
+                promotionMaterialCosts: [],
+                skillMaterialCosts: [],
+                materialCosts: [],
+                unlockHint: "test",
+              },
+              scoreDelta: 1,
+              roi: 1,
+              estimatedDaysToUnlock: 1,
+              notes: [],
+            },
+          ],
+        },
+      });
+    });
 
     await waitFor(() => {
       expect(screen.getByText("Next unlocks")).toBeInTheDocument();
@@ -255,7 +295,7 @@ describe("App", () => {
 
     act(() => {
       workerInstances[0]!.emit({
-        type: "completed",
+        type: "optimization-completed",
         runId: 1,
         result: {
           catalogVersion: "2026-03-20/v1.1-phase1",

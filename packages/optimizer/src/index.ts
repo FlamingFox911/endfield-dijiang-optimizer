@@ -18,12 +18,14 @@ export {
   solveNormalizedScenario,
   solveScenario,
 } from "./solver.js";
-export { recommendUpgrades } from "./upgrade.js";
+export { recommendUpgrades, UpgradeRecommendationsCancelledError } from "./upgrade.js";
 export type {
   AssignmentSolver,
   OptimizationProgressSnapshot,
   OptimizationSearchConfig,
+  RecommendUpgradesOptions,
   SolveScenarioOptions,
   SolverStrategy,
+  UpgradeRecommendationProgressSnapshot,
   UpgradeAdvisor,
 } from "./types.js";

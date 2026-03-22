@@ -18,6 +18,14 @@ import {
 
 import { SUPPORT_WEIGHTS } from "./config.js";
 import { solveScenario } from "./solver.js";
+import type { RecommendUpgradesOptions } from "./types.js";
+
+export class UpgradeRecommendationsCancelledError extends Error {
+  constructor(message = "Upgrade recommendations canceled.") {
+    super(message);
+    this.name = "UpgradeRecommendationsCancelledError";
+  }
+}
 
 function getUnlockedRank(
   ownedOperator: OptimizationScenario["roster"][number],
@@ -225,20 +233,43 @@ export function recommendUpgrades(
   catalog: GameCatalog,
   scenario: OptimizationScenario,
   baselineResult?: OptimizationResult,
+  options?: RecommendUpgradesOptions,
 ): UpgradeRecommendationResult {
-  const rankingMode = resolveRankingMode(scenario.options.upgradeRankingMode);
-  const baseline = baselineResult ?? solveScenario(catalog, scenario);
-  const operatorDefs = new Map(catalog.operators.map((operator) => [operator.id, operator]));
+  const shouldCancel = options?.shouldCancel;
+  const maybeCancel = () => {
+    if (shouldCancel?.()) {
+      throw new UpgradeRecommendationsCancelledError();
+    }
+  };
 
-  const recommendations = getNextUpgradeActions(catalog, scenario)
+  const rankingMode = resolveRankingMode(scenario.options.upgradeRankingMode);
+  maybeCancel();
+  const baseline = options?.baselineResult ?? baselineResult ?? solveScenario(catalog, scenario, { shouldCancel });
+  const operatorDefs = new Map(catalog.operators.map((operator) => [operator.id, operator]));
+  const actions = getNextUpgradeActions(catalog, scenario);
+  let completedCandidates = 0;
+  let bestScoreDelta = Number.NEGATIVE_INFINITY;
+
+  options?.onProgress?.({
+    phase: "Evaluating unlock candidates",
+    completedCandidates,
+    totalCandidates: actions.length,
+    baselineScore: baseline.totalScore,
+    bestScoreDelta: 0,
+  });
+
+  const recommendations = actions
     .map((action) => {
+      maybeCancel();
       const upgradedScenario = applyUpgradeActionToScenario(scenario, action);
-      const upgradedResult = solveScenario(catalog, upgradedScenario);
+      const upgradedResult = solveScenario(catalog, upgradedScenario, { shouldCancel });
       const scoreDelta = upgradedResult.totalScore - baseline.totalScore;
       const effortScore = scoreUpgradeEffort(action);
       const operatorDef = operatorDefs.get(action.operatorId);
       const estimatedDaysToUnlock = effortScore / SUPPORT_WEIGHTS.estimatedEffortPerDay;
       const notes = operatorDef ? [`Operator: ${operatorDef.name}`] : [];
+      completedCandidates += 1;
+      bestScoreDelta = Math.max(bestScoreDelta, scoreDelta);
 
       if (action.unlockHint) {
         notes.push(action.unlockHint);
@@ -274,6 +305,14 @@ export function recommendUpgrades(
       if (scoreDelta <= 0) {
         notes.push("This unlock does not improve the current assignment result immediately.");
       }
+
+      options?.onProgress?.({
+        phase: "Evaluating unlock candidates",
+        completedCandidates,
+        totalCandidates: actions.length,
+        baselineScore: baseline.totalScore,
+        bestScoreDelta: Number.isFinite(bestScoreDelta) ? bestScoreDelta : 0,
+      });
 
       return {
         action,

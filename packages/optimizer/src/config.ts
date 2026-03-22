@@ -3,9 +3,10 @@ import type { OptimizationProfile } from "@endfield/domain";
 import type { OptimizationSearchConfig } from "./types.js";
 
 export const SUPPORT_WEIGHTS = {
-  version: "2026-03-21-v2",
+  version: "2026-03-22-v3",
   controlNexusMoodRegenWeight: 0.55,
   controlNexusMoodDropReductionWeight: 0.45,
+  assignedOperatorProductionEfficiencyPercent: 40,
   manufacturingMoodSustainFactor: 0.25,
   growthMoodSustainFactor: 0.25,
   receptionClueCollectionWeight: 0.75,

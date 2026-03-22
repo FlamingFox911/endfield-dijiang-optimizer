@@ -1,12 +1,28 @@
-import type { GameCatalog, OptimizationResult, OptimizationScenario } from "@endfield/domain";
-import type { OptimizationProgressSnapshot, OptimizationSearchConfig } from "@endfield/optimizer";
+import type {
+  GameCatalog,
+  OptimizationResult,
+  OptimizationScenario,
+  UpgradeRecommendationResult,
+} from "@endfield/domain";
+import type {
+  OptimizationProgressSnapshot,
+  OptimizationSearchConfig,
+  UpgradeRecommendationProgressSnapshot,
+} from "@endfield/optimizer";
 
 export interface StartOptimizationMessage {
-  type: "start";
+  type: "start-optimization";
   runId: number;
   catalog: GameCatalog;
   scenario: OptimizationScenario;
   searchConfig: OptimizationSearchConfig;
+}
+
+export interface StartRecommendationsMessage {
+  type: "start-recommendations";
+  runId: number;
+  catalog: GameCatalog;
+  scenario: OptimizationScenario;
 }
 
 export interface CancelOptimizationMessage {
@@ -14,24 +30,45 @@ export interface CancelOptimizationMessage {
   runId: number;
 }
 
-export type OptimizerWorkerRequest = StartOptimizationMessage | CancelOptimizationMessage;
+export type OptimizerWorkerRequest =
+  | StartOptimizationMessage
+  | StartRecommendationsMessage
+  | CancelOptimizationMessage;
 
 export interface OptimizerWorkerStartedMessage {
-  type: "started";
+  type: "optimization-started";
   runId: number;
   progress: OptimizationProgressSnapshot;
 }
 
 export interface OptimizerWorkerProgressMessage {
-  type: "progress";
+  type: "optimization-progress";
   runId: number;
   progress: OptimizationProgressSnapshot;
 }
 
 export interface OptimizerWorkerCompletedMessage {
-  type: "completed";
+  type: "optimization-completed";
   runId: number;
   result: OptimizationResult;
+}
+
+export interface RecommendationWorkerStartedMessage {
+  type: "recommendations-started";
+  runId: number;
+  progress: UpgradeRecommendationProgressSnapshot;
+}
+
+export interface RecommendationWorkerProgressMessage {
+  type: "recommendations-progress";
+  runId: number;
+  progress: UpgradeRecommendationProgressSnapshot;
+}
+
+export interface RecommendationWorkerCompletedMessage {
+  type: "recommendations-completed";
+  runId: number;
+  result: UpgradeRecommendationResult;
 }
 
 export interface OptimizerWorkerCanceledMessage {
@@ -49,5 +86,8 @@ export type OptimizerWorkerResponse =
   | OptimizerWorkerStartedMessage
   | OptimizerWorkerProgressMessage
   | OptimizerWorkerCompletedMessage
+  | RecommendationWorkerStartedMessage
+  | RecommendationWorkerProgressMessage
+  | RecommendationWorkerCompletedMessage
   | OptimizerWorkerCanceledMessage
   | OptimizerWorkerErrorMessage;

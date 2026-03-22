@@ -240,6 +240,22 @@ function getBaseRoomUnits(room: NormalizedRoom, horizonHours: number, warnings: 
   );
 }
 
+function getProductionOccupancyBonusUnits(
+  room: NormalizedRoom,
+  baseUnits: number,
+  assignedOperatorCount: number,
+) {
+  if (
+    baseUnits <= 0
+    || assignedOperatorCount <= 0
+    || (room.roomKind !== "manufacturing_cabin" && room.roomKind !== "growth_chamber")
+  ) {
+    return 0;
+  }
+
+  return baseUnits * ((assignedOperatorCount * SUPPORT_WEIGHTS.assignedOperatorProductionEfficiencyPercent) / 100);
+}
+
 function getMatchingBaseUnits(
   room: NormalizedRoom,
   horizonHours: number,
@@ -488,13 +504,14 @@ function cloneAssignedByRoom(assignedByRoom: Map<string, Array<string | null>>) 
 function buildScoreBreakdown(
   room: NormalizedRoom,
   baseUnits: number,
+  occupancyBonusUnits: number,
   aggregateDirectScore: number,
   aggregateSupportScore: number,
   aggregateCrossRoomScore: number,
 ): ScoreBreakdown {
   const directProductionScore =
     room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber"
-      ? baseUnits + aggregateDirectScore
+      ? baseUnits + occupancyBonusUnits + aggregateDirectScore
       : 0;
   const supportRoomScore = room.roomKind === "reception_room" ? aggregateSupportScore : 0;
   const crossRoomBonusContribution = room.roomKind === "control_nexus" ? aggregateCrossRoomScore : 0;
@@ -519,6 +536,8 @@ function computeRoomPlan(
   const projectedOutputs = createProjectedOutputs();
   const explanations: AssignmentExplanation[] = [];
   const baseUnits = getBaseRoomUnits(room, horizonHours, warnings);
+  const assignedOperatorCount = assignedOperatorIds.filter(Boolean).length;
+  const occupancyBonusUnits = getProductionOccupancyBonusUnits(room, baseUnits, assignedOperatorCount);
 
   let aggregateDirectScore = 0;
   let aggregateSupportScore = 0;
@@ -566,6 +585,7 @@ function computeRoomPlan(
   const scoreBreakdown = buildScoreBreakdown(
     room,
     baseUnits,
+    occupancyBonusUnits,
     aggregateDirectScore,
     aggregateSupportScore,
     aggregateCrossRoomScore,

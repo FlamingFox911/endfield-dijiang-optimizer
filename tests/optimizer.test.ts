@@ -26,6 +26,33 @@ describe("optimizer runtime", () => {
     expect(result.supportWeightsVersion).toBeTruthy();
   });
 
+  it("applies the baseline production efficiency from assigned production-room seats", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    const recipe = catalog.recipes.find((entry) => entry.id === scenario.facilities.manufacturingCabins[0]?.fixedRecipeId);
+    const snowshine = scenario.roster.find((operator) => operator.operatorId === "snowshine");
+
+    expect(recipe).toBeDefined();
+    expect(snowshine).toBeDefined();
+
+    snowshine!.owned = true;
+    scenario.facilities.controlNexus.level = 1;
+    scenario.facilities.hardAssignments = [];
+    scenario.facilities.manufacturingCabins[0]!.enabled = true;
+    scenario.facilities.manufacturingCabins[0]!.level = 1;
+    scenario.facilities.manufacturingCabins[1]!.enabled = false;
+    scenario.facilities.growthChambers[0]!.enabled = false;
+    scenario.facilities.receptionRoom!.enabled = false;
+
+    const result = solveScenario(catalog, scenario);
+    const manufacturingPlan = result.roomPlans.find((room) => room.roomId === "mfg-1");
+    const baseUnits = (scenario.options.horizonHours * 60 / recipe!.baseDurationMinutes!) * (recipe!.outputAmount ?? 1);
+
+    expect(manufacturingPlan).toBeDefined();
+    expect(manufacturingPlan!.assignedOperatorIds).toEqual(["snowshine"]);
+    expect(manufacturingPlan!.scoreBreakdown.directProductionScore).toBeCloseTo(baseUnits * 1.4, 6);
+  });
+
   it("applies the max-facilities overlay without mutating the original scenario", async () => {
     const scenario = await loadScenarioFile(resolveRepoPath("scenarios", "examples", "current-base.simple.json"));
     const overlaid = applyMaxFacilitiesOverlay(scenario);

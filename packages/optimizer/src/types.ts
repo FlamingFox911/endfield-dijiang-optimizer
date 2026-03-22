@@ -45,8 +45,22 @@ export interface OptimizationProgressSnapshot {
   maxVisitedNodes: number;
 }
 
+export interface UpgradeRecommendationProgressSnapshot {
+  phase: string;
+  completedCandidates: number;
+  totalCandidates: number;
+  baselineScore: number;
+  bestScoreDelta: number;
+}
+
 export interface SolveScenarioOptions {
   searchConfig?: OptimizationSearchConfig;
   onProgress?: (progress: OptimizationProgressSnapshot) => void;
+  shouldCancel?: () => boolean;
+}
+
+export interface RecommendUpgradesOptions {
+  baselineResult?: OptimizationResult;
+  onProgress?: (progress: UpgradeRecommendationProgressSnapshot) => void;
   shouldCancel?: () => boolean;
 }
