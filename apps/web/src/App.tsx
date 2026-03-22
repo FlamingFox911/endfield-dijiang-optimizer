@@ -88,6 +88,84 @@ function getInitials(name: string): string {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("");
 }
 
+function compareOperatorsByDefaultOrder(
+  left: GameCatalog["operators"][number],
+  right: GameCatalog["operators"][number],
+): number {
+  if (left.rarity !== right.rarity) {
+    return right.rarity - left.rarity;
+  }
+
+  return left.name.localeCompare(right.name);
+}
+
+function getCatalogAssetUrl(catalog: GameCatalog, assetPath: string): string {
+  if (/^https?:\/\//.test(assetPath)) {
+    return assetPath;
+  }
+
+  return `/catalogs/${catalog.manifest.catalogId}/${assetPath.replace(/^\/+/, "")}`;
+}
+
+function getOperatorPortraitUrl(
+  catalog: GameCatalog,
+  operator: GameCatalog["operators"][number],
+): string | undefined {
+  const portrait = operator.images.find((image) => image.kind === "portrait");
+  return portrait ? getCatalogAssetUrl(catalog, portrait.path) : undefined;
+}
+
+function OperatorPortrait(
+  { catalog, operator }: { catalog: GameCatalog; operator: GameCatalog["operators"][number] },
+) {
+  const portraitUrl = getOperatorPortraitUrl(catalog, operator);
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <div className="avatar" data-rarity={operator.rarity}>
+      {portraitUrl && !failed
+        ? (
+            <img
+              className="avatarImage"
+              src={portraitUrl}
+              alt={`${operator.name} portrait`}
+              loading="lazy"
+              onError={() => setFailed(true)}
+            />
+          )
+        : <span>{getInitials(operator.name)}</span>}
+    </div>
+  );
+}
+
+function OperatorChip(
+  {
+    catalog,
+    operator,
+    fallbackLabel,
+    meta,
+  }: {
+    catalog: GameCatalog;
+    operator?: GameCatalog["operators"][number];
+    fallbackLabel: string;
+    meta?: string;
+  },
+) {
+  const displayName = operator?.name ?? fallbackLabel;
+
+  return (
+    <div className="operatorChip">
+      {operator
+        ? <OperatorPortrait catalog={catalog} operator={operator} />
+        : <div className="avatar"><span>{getInitials(displayName)}</span></div>}
+      <div className="operatorChipCopy">
+        <strong>{displayName}</strong>
+        {meta && <span>{meta}</span>}
+      </div>
+    </div>
+  );
+}
+
 function summarizeHydration(hydration: ReturnType<typeof hydrateScenarioForCatalog>): string[] {
   if (!hydration.hydrated) {
     return [];
@@ -281,7 +359,8 @@ function App() {
       return [];
     }
     const needle = deferredSearch.trim().toLowerCase();
-    return catalog.operators
+    return [...catalog.operators]
+      .sort(compareOperatorsByDefaultOrder)
       .filter((operator) => !needle || operator.name.toLowerCase().includes(needle) || operator.id.includes(needle))
       .map((operator) => ({ operator, owned: scenario.roster.find((entry) => entry.operatorId === operator.id) }));
   }, [catalog, deferredSearch, scenario]);
@@ -300,9 +379,9 @@ function App() {
   const receptionLevelCap = getFacilityLevelCapForControlNexus("reception_room", scenario.facilities.controlNexus.level);
   const roomOptions = [
     { id: "control_nexus", label: "Control Nexus" },
+    ...(scenario.facilities.receptionRoom ? [{ id: scenario.facilities.receptionRoom.id, label: "Reception Room" }] : []),
     ...scenario.facilities.manufacturingCabins.map((room, index) => ({ id: room.id, label: `Manufacturing ${index + 1}` })),
     ...scenario.facilities.growthChambers.map((room, index) => ({ id: room.id, label: `Growth Chamber ${index + 1}` })),
-    ...(scenario.facilities.receptionRoom ? [{ id: scenario.facilities.receptionRoom.id, label: "Reception Room" }] : []),
   ];
 
   const updateScenario = (updater: (current: OptimizationScenario) => OptimizationScenario) => {
@@ -657,7 +736,7 @@ function App() {
             {filteredOperators.map(({ operator, owned }) => (
               <article key={operator.id} className={`operatorCard ${owned?.owned ? "active" : ""}`}>
                 <div className="operatorHeader">
-                  <div className="avatar">{getInitials(operator.name)}</div>
+                  <OperatorPortrait catalog={catalog} operator={operator} />
                   <div><p className="operatorName">{operator.name}</p><p className="operatorMeta">{operator.className} | {operator.rarity} star | {operator.dataConfidence ?? "verified"}</p></div>
                   <label className="toggle inlineToggle"><input type="checkbox" checked={owned?.owned ?? false} onChange={(event) => updateScenario((current) => replaceRosterEntry(current, operator.id, (entry) => ({ ...entry, owned: event.target.checked })))} /><span>Owned</span></label>
                 </div>
@@ -691,6 +770,20 @@ function App() {
             <label className="pill compact"><span>Level</span><input type="number" min={1} max={5} value={scenario.facilities.controlNexus.level} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, controlNexus: { level: Number(event.target.value) as 1 | 2 | 3 | 4 | 5 } } }))} /></label>
           </article>
           <div className="roomStack">
+            {scenario.facilities.receptionRoom && (
+              <article className="roomCard">
+                {(() => {
+                  const roomLocked = unlockedReceptionRoomCount === 0;
+                  return (
+                    <>
+                <div className="facilityHeader"><div><h3>Reception Room</h3><p>{facilitiesByKind.get("reception_room")?.unlockHint}</p></div><span className="miniStat">{getRoomSlotCap(catalog, "reception_room", scenario.facilities.receptionRoom.level, scenario.facilities.controlNexus.level)} slots</span></div>
+                <div className="numericRow"><label><span>Enabled</span><input type="checkbox" checked={scenario.facilities.receptionRoom.enabled} disabled={roomLocked} onChange={(event) => updateScenario((current) => current.facilities.receptionRoom ? ({ ...current, facilities: { ...current.facilities, receptionRoom: { ...current.facilities.receptionRoom, enabled: event.target.checked } } }) : current)} /></label><label><span>Level</span><input type="number" min={1} max={Math.max(receptionLevelCap, 1)} value={scenario.facilities.receptionRoom.level} disabled={roomLocked} onChange={(event) => updateScenario((current) => current.facilities.receptionRoom ? ({ ...current, facilities: { ...current.facilities, receptionRoom: { ...current.facilities.receptionRoom, level: Number(event.target.value) as 1 | 2 | 3 } } }) : current)} /></label></div>
+                <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 3" : "Available for clue assignments"}</p>
+                    </>
+                  );
+                })()}
+              </article>
+            )}
             {scenario.facilities.manufacturingCabins.map((room, index) => {
               const recipe = room.fixedRecipeId ? recipesById.get(room.fixedRecipeId) : undefined;
               const roomLocked = index >= unlockedManufacturingRoomCount;
@@ -747,20 +840,6 @@ function App() {
                 </article>
               );
             })}
-            {scenario.facilities.receptionRoom && (
-              <article className="roomCard">
-                {(() => {
-                  const roomLocked = unlockedReceptionRoomCount === 0;
-                  return (
-                    <>
-                <div className="facilityHeader"><div><h3>Reception Room</h3><p>{facilitiesByKind.get("reception_room")?.unlockHint}</p></div><span className="miniStat">{getRoomSlotCap(catalog, "reception_room", scenario.facilities.receptionRoom.level, scenario.facilities.controlNexus.level)} slots</span></div>
-                <div className="numericRow"><label><span>Enabled</span><input type="checkbox" checked={scenario.facilities.receptionRoom.enabled} disabled={roomLocked} onChange={(event) => updateScenario((current) => current.facilities.receptionRoom ? ({ ...current, facilities: { ...current.facilities, receptionRoom: { ...current.facilities.receptionRoom, enabled: event.target.checked } } }) : current)} /></label><label><span>Level</span><input type="number" min={1} max={Math.max(receptionLevelCap, 1)} value={scenario.facilities.receptionRoom.level} disabled={roomLocked} onChange={(event) => updateScenario((current) => current.facilities.receptionRoom ? ({ ...current, facilities: { ...current.facilities, receptionRoom: { ...current.facilities.receptionRoom, level: Number(event.target.value) as 1 | 2 | 3 } } }) : current)} /></label></div>
-                <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 3" : "Available for clue assignments"}</p>
-                    </>
-                  );
-                })()}
-              </article>
-            )}
           </div>
           {scenario.options.planningMode === "advanced" && (
             <article className="roomCard">
@@ -792,7 +871,24 @@ function App() {
                   <article className="resultCard" key={room.roomId}>
                     <div className="resultHeader"><div><h3>{roomOptions.find((entry) => entry.id === room.roomId)?.label ?? room.roomId}</h3><p>{formatLabel(room.roomKind)} Lv{room.roomLevel}</p></div><span>{room.dataConfidence}</span></div>
                     <p className="resultLine">{recipes.length > 0 ? recipes.map((recipe) => `${recipe.name} | ${formatLabel(recipe.productKind)}`).join(" || ") : "No recipe selected"}</p>
-                    <p className="resultLine">{room.assignedOperatorIds.map((operatorId) => operatorsById.get(operatorId)?.name ?? operatorId).join(", ") || "No operators assigned"}</p>
+                    {room.assignedOperatorIds.length > 0
+                      ? (
+                          <div className="operatorChipList">
+                            {room.assignedOperatorIds.map((operatorId) => {
+                              const operator = operatorsById.get(operatorId);
+                              return (
+                                <OperatorChip
+                                  key={`${room.roomId}-${operatorId}`}
+                                  catalog={catalog}
+                                  operator={operator}
+                                  fallbackLabel={operatorId}
+                                  meta={`${operator?.className ?? "Unknown"} | ${operator?.rarity ?? "?"} star`}
+                                />
+                              );
+                            })}
+                          </div>
+                        )
+                      : <p className="resultLine">No operators assigned</p>}
                     <dl><div><dt>Direct</dt><dd>{room.scoreBreakdown.directProductionScore.toFixed(2)}</dd></div><div><dt>Support</dt><dd>{room.scoreBreakdown.supportRoomScore.toFixed(2)}</dd></div><div><dt>Cross-room</dt><dd>{room.scoreBreakdown.crossRoomBonusContribution.toFixed(2)}</dd></div></dl>
                     {room.usedFallbackHeuristics && <p className="warningText">Fallback heuristics were used for part of this room score.</p>}
                     {room.warnings.length > 0 && <p className="warningText">{room.warnings.join(" | ")}</p>}
@@ -810,7 +906,17 @@ function App() {
                 const skill = operator?.baseSkills.find((entry) => entry.id === recommendation.action.skillId);
                 return (
                   <article className="resultCard" key={`${recommendation.action.operatorId}-${recommendation.action.skillId}`}>
-                    <div className="resultHeader"><div><strong>{operator?.name ?? recommendation.action.operatorId}</strong><p>{skill?.name ?? recommendation.action.skillId}</p></div><span>{recommendation.scoreDelta.toFixed(2)} delta</span></div>
+                    <div className="resultHeader">
+                      <div>
+                        <OperatorChip
+                          catalog={catalog}
+                          operator={operator}
+                          fallbackLabel={recommendation.action.operatorId}
+                          meta={skill?.name ?? recommendation.action.skillId}
+                        />
+                      </div>
+                      <span>{recommendation.scoreDelta.toFixed(2)} delta</span>
+                    </div>
                     <p className="resultLine">Current Elite {recommendation.action.currentPromotionTier} Lv{recommendation.action.currentLevel} {"->"} target Elite {recommendation.action.requiredPromotionTier ?? recommendation.action.currentPromotionTier} Lv{recommendation.action.requiredLevel ?? recommendation.action.currentLevel}</p>
                     <p className="resultLine">{recommendation.action.unlockHint ?? "No unlock hint recorded"}</p>
                     <p className="resultLine">Leveling: {formatCosts(recommendation.action.levelMaterialCosts)}</p>

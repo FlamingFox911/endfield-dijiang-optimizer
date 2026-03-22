@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -106,7 +106,33 @@ describe("App", () => {
             vitrified_plant: 0,
             rare_mineral: 0,
           },
-          roomPlans: [],
+          roomPlans: [
+            {
+              roomId: "mfg-1",
+              roomKind: "manufacturing_cabin",
+              roomLevel: 1,
+              chosenRecipeIds: ["elementary-cognitive-carrier"],
+              chosenProductKind: "operator_exp",
+              assignedOperatorIds: ["chen-qianyu", "xaihi"],
+              scoreBreakdown: {
+                directProductionScore: 30,
+                supportRoomScore: 12,
+                crossRoomBonusContribution: 0,
+                totalScore: 42,
+              },
+              projectedScore: 42,
+              projectedOutputs: {
+                operator_exp: 30,
+                weapon_exp: 0,
+                fungal: 0,
+                vitrified_plant: 0,
+                rare_mineral: 0,
+              },
+              warnings: [],
+              usedFallbackHeuristics: false,
+              dataConfidence: "verified",
+            },
+          ],
           explanations: [],
           warnings: [],
           supportWeightsVersion: "test",
@@ -119,6 +145,48 @@ describe("App", () => {
       expect(screen.getByText("Why this wins")).toBeInTheDocument();
       expect(screen.getByText(/Total score/i)).toBeInTheDocument();
     });
+
+    const roomHeading = screen.getAllByText("Manufacturing 1").find((element) => element.closest(".resultCard"));
+    const roomCard = roomHeading?.closest(".resultCard");
+    expect(roomCard).not.toBeNull();
+    expect(within(roomCard!).getByRole("img", { name: "Chen Qianyu portrait" })).toBeInTheDocument();
+    expect(within(roomCard!).getByRole("img", { name: "Xaihi portrait" })).toBeInTheDocument();
+  });
+
+  it("renders bundled operator portraits in the roster", async () => {
+    render(<App />);
+
+    const portrait = await screen.findByRole("img", { name: "Chen Qianyu portrait" });
+
+    expect(portrait).toHaveAttribute(
+      "src",
+      "/catalogs/2026-03-20-v1.1-phase1/assets/operators/chen-qianyu.webp",
+    );
+    expect(portrait.closest(".avatar")).toHaveAttribute("data-rarity", "5");
+  });
+
+  it("orders facilities like the in-game layout and operators by rarity then name", async () => {
+    const { container } = render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    const plannerPanel = screen.getByText("Dijiang layout").closest(".plannerPanel");
+    expect(plannerPanel).not.toBeNull();
+    const facilityHeadings = within(plannerPanel!).getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent);
+    expect(facilityHeadings.slice(0, 5)).toEqual([
+      "Control Nexus",
+      "Reception Room",
+      "Manufacturing 1",
+      "Manufacturing 2",
+      "Growth Chamber 1",
+    ]);
+
+    const operatorNames = Array.from(container.querySelectorAll(".rosterList .operatorName"))
+      .map((element) => element.textContent)
+      .filter(Boolean);
+    expect(operatorNames.indexOf("Ardelia")).toBeLessThan(operatorNames.indexOf("Alesh"));
+    expect(operatorNames.indexOf("Ember")).toBeLessThan(operatorNames.indexOf("Gilberta"));
+    expect(operatorNames.indexOf("Gilberta")).toBeLessThan(operatorNames.indexOf("Tangtang"));
   });
 
   it("runs recommendations from the UI", async () => {

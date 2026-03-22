@@ -1,4 +1,10 @@
 :root {
+  --rarity-1: #9b9b9b;
+  --rarity-2: #abce42;
+  --rarity-3: #26bbfd;
+  --rarity-4: #9452fa;
+  --rarity-5: #ffbb03;
+  --rarity-6: #ff7100;
   color-scheme: light;
   font-family: "Trebuchet MS", "Gill Sans", "Segoe UI Variable", sans-serif;
   background:
@@ -256,14 +262,85 @@ button:disabled {
 }
 
 .avatar {
+  --portrait-rarity-color: #244d70;
   display: grid;
   place-items: center;
   width: 48px;
   height: 48px;
+  flex: 0 0 48px;
+  overflow: hidden;
+  padding: 2px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #244d70, #d88947);
+  border: 1px solid var(--portrait-rarity-color);
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.55), transparent 42%),
+    linear-gradient(145deg, var(--portrait-rarity-color), #2d3540 78%);
+  box-shadow: 0 10px 20px rgba(30, 39, 48, 0.12);
   color: #fff;
   font-weight: 700;
+}
+
+.avatar[data-rarity="1"] {
+  --portrait-rarity-color: var(--rarity-1);
+}
+
+.avatar[data-rarity="2"] {
+  --portrait-rarity-color: var(--rarity-2);
+}
+
+.avatar[data-rarity="3"] {
+  --portrait-rarity-color: var(--rarity-3);
+}
+
+.avatar[data-rarity="4"] {
+  --portrait-rarity-color: var(--rarity-4);
+}
+
+.avatar[data-rarity="5"] {
+  --portrait-rarity-color: var(--rarity-5);
+}
+
+.avatar[data-rarity="6"] {
+  --portrait-rarity-color: var(--rarity-6);
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 11px;
+}
+
+.operatorChipList {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.operatorChip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.operatorChipCopy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.operatorChipCopy strong,
+.operatorChipCopy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operatorChipCopy span {
+  color: #5d615e;
+  font-size: 0.88rem;
 }
 
 .numericRow {

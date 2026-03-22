@@ -1,167 +1,168 @@
 {
-  "catalogVersion": "2026-03-20/v1.1-phase1",
-  "assets": [
-    {
-      "id": "placeholder-operator-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "placeholder-facility-icon",
-      "kind": "facility",
-      "path": "assets/placeholders/facility-icon.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-chen-qianyu-portrait",
-      "kind": "portrait",
-      "path": "assets/operators/chen-qianyu.png",
-      "attribution": "TBD"
-    },
-    {
-      "id": "operator-xaihi-portrait",
-      "kind": "portrait",
-      "path": "assets/operators/xaihi.png",
-      "attribution": "TBD"
-    },
-    {
-      "id": "operator-snowshine-portrait",
-      "kind": "portrait",
-      "path": "assets/operators/snowshine.png",
-      "attribution": "TBD"
-    },
-    {
-      "id": "operator-da-pan-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-ardelia-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-akekuri-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-fluorite-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-estella-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-perlica-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-yvonne-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-antal-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-wulfgard-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-laevatain-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-last-rite-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-pogranichnik-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-gilberta-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-lifeng-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-alesh-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-arclight-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-avywenna-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-catcher-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-ember-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "operator-tangtang-portrait",
-      "kind": "portrait",
-      "path": "assets/placeholders/operator-portrait.png",
-      "attribution": "Placeholder; local bundle asset."
-    },
-    {
-      "id": "facility-control-nexus-icon",
-      "kind": "facility",
-      "path": "assets/facilities/control-nexus.png",
-      "attribution": "TBD"
-    },
-    {
-      "id": "facility-reception-room-icon",
-      "kind": "facility",
-      "path": "assets/facilities/reception-room.png",
-      "attribution": "TBD"
-    }
-  ]
+    "catalogVersion":  "2026-03-20/v1.1-phase1",
+    "assets":  [
+                   {
+                       "id":  "placeholder-operator-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/placeholders/operator-portrait.png",
+                       "attribution":  "Placeholder; local bundle asset."
+                   },
+                   {
+                       "id":  "placeholder-facility-icon",
+                       "kind":  "facility",
+                       "path":  "assets/placeholders/facility-icon.png",
+                       "attribution":  "Placeholder; local bundle asset."
+                   },
+                   {
+                       "id":  "operator-chen-qianyu-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/chen-qianyu.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/chen-qianyu.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-xaihi-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/xaihi.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/xaihi.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-snowshine-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/snowshine.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/snowshine.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-da-pan-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/da-pan.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/da-pan.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-ardelia-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/ardelia.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/ardelia.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-akekuri-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/akekuri.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/akekuri.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-fluorite-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/fluorite.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/fluorite.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-estella-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/estella.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/estella.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-perlica-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/perlica.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/perlica.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-yvonne-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/yvonne.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/yvonne.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-antal-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/antal.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/antal.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-wulfgard-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/wulfgard.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/wulfgard.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-laevatain-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/laevatain.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/laevatain.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-last-rite-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/last-rite.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/last-rite.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-pogranichnik-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/pogranichnik.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/pogranichnik.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-gilberta-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/gilberta.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/gilberta.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-lifeng-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/lifeng.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/lifeng.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-alesh-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/alesh.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/alesh.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-arclight-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/arclight.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/arclight.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-avywenna-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/avywenna.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/avywenna.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-catcher-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/catcher.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/catcher.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-ember-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/ember.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/ember.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "operator-tangtang-portrait",
+                       "kind":  "portrait",
+                       "path":  "assets/operators/tangtang.webp",
+                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/tangtang.webp), retrieved 2026-03-22."
+                   },
+                   {
+                       "id":  "facility-control-nexus-icon",
+                       "kind":  "facility",
+                       "path":  "assets/facilities/control-nexus.png",
+                       "attribution":  "TBD"
+                   },
+                   {
+                       "id":  "facility-reception-room-icon",
+                       "kind":  "facility",
+                       "path":  "assets/facilities/reception-room.png",
+                       "attribution":  "TBD"
+                   }
+               ]
 }
+
