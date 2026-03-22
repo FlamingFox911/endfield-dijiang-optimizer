@@ -15,11 +15,12 @@ The UI should expose two modes:
 Current repo status:
 
 - the shared solver and upgrade-advisor runtime already exist
-- the browser GUI now runs optimization in a Web Worker so the main UI stays responsive
+- the browser GUI now runs both optimization and unlock recommendations in a dedicated worker so the main UI stays responsive
 
-## Optimization UX
+## Run UX
 
 - `Optimize` runs in a dedicated worker and opens a progress modal instead of blocking the page.
+- `Recommend unlocks` also runs in the worker and opens its own progress modal with candidate counts, baseline score, best delta, elapsed time, and cancel.
 - The modal shows approximate node-based progress, current best score, elapsed time, and a cancel action.
 - Optimization effort is saved with the scenario draft and exported/imported JSON.
 - The UI exposes named profiles:
@@ -27,7 +28,7 @@ Current repo status:
   - `Balanced`
   - `Thorough`
   - `Exhaustive`
-- A `Search effort` slider from `1` to `20` provides granular tuning. Moving the slider away from a preset switches the scenario to `Custom`.
+- A `Search effort` slider from `1` to `100` provides granular tuning. Moving the slider away from a preset switches the scenario to `Custom`.
 - `Exhaustive` means the highest configured search budget in the app, not an unconditional guarantee of full exhaustive search on large states.
 
 ## Primary screens
@@ -48,6 +49,7 @@ Current repo status:
 - In `Simple`, preselected recipe menus only.
 - In `Advanced`, the same recipe menus plus more detailed hard-assignment and scenario controls.
 - Toggle for `Current Facilities` vs `Max Facilities`.
+- `Recommend Unlocks Ranking` control with `Balanced`, `ROI`, and `Fastest` modes plus inline help text.
 - Searchable global hard-assignment picker for any room.
 - Optional advanced table for direct JSON-like editing.
 

@@ -128,6 +128,7 @@ For each room, the solver chooses:
 The score for a room is modeled from:
 
 - Base output for the chosen recipe and room level.
+- Baseline occupancy efficiency in production rooms, currently modeled as `40%` extra base output per assigned operator seat in Manufacturing Cabin and Growth Chamber rooms.
 - Matching production or growth bonuses from assigned operators.
 - Mood sustain effects such as Control Nexus mood regen and room mood-drop reduction.
 - Reception Room and Control Nexus effects that improve clue or facility-wide value when applicable.
@@ -181,6 +182,7 @@ Current runtime status:
 - bundled level milestones and EXP item values are used to estimate the leveling gate
 - leveling costs are exact at bundled milestone caps and conservative upper bounds between those caps
 - explicit user-selectable ranking modes are implemented across CLI, shared runtime, and web
+- the web app runs both optimization and upgrade recommendation work in a dedicated worker and shows progress/cancel UI for each run
 
 ## Max-facilities scenario
 
@@ -268,6 +270,8 @@ Controls:
 - in `Advanced` mode: the same room recipe picks plus more detailed hard-assignment and low-level scenario controls
 - stepper arrows for operator level, promotion tier, and room level
 - toggles for `current facilities` vs `max facilities`
+- a `Recommend Unlocks Ranking` selector with `balanced`, `roi`, and `fastest` modes plus inline help text
+- a named optimization profile selector plus a `Search effort` slider from `1` to `100`
 - searchable global hard-assignment picker for any room
 - explicit base-skill rank controls so the user can override level-based assumptions
 

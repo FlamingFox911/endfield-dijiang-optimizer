@@ -27,6 +27,8 @@ Current repo status:
   Solve using the granular planning workflow.
 - `endfield-opt recommend-upgrades --scenario ./my-base.json`
   Rank the next Base Skill unlocks that improve Dijiang output.
+- `endfield-opt recommend-upgrades --scenario ./my-base.json --ranking roi`
+  Override the unlock ranking mode with `fastest`, `roi`, or `balanced`.
 - `endfield-opt validate-data`
   Validate the catalog and manual override bundles.
 
