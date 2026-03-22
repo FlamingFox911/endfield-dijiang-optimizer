@@ -633,6 +633,26 @@ button.secondary,
   margin: 10px 0 0;
 }
 
+.resultRecipeList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.resultRecipeChip {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: var(--panel-strong);
+}
+
+.resultRecipeChip small {
+  color: #7c5a42;
+}
+
 .miniStat {
   padding: 6px 10px;
   border-radius: 999px;

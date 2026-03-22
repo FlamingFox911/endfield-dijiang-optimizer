@@ -146,11 +146,96 @@ describe("App", () => {
       expect(screen.getByText(/Total score/i)).toBeInTheDocument();
     });
 
-    const roomHeading = screen.getAllByText("Manufacturing 1").find((element) => element.closest(".resultCard"));
+    const roomHeading = screen.getAllByText("Manufacturing Cabin 1").find((element) => element.closest(".resultCard"));
     const roomCard = roomHeading?.closest(".resultCard");
     expect(roomCard).not.toBeNull();
     expect(within(roomCard!).getByRole("img", { name: "Chen Qianyu portrait" })).toBeInTheDocument();
     expect(within(roomCard!).getByRole("img", { name: "Xaihi portrait" })).toBeInTheDocument();
+  });
+
+  it("omits empty recipe text for support rooms and renders growth recipes without pipe separators", async () => {
+    render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    await userEvent.click(screen.getByRole("button", { name: "Optimize" }));
+
+    act(() => {
+      workerInstances[0]!.emit({
+        type: "optimization-completed",
+        runId: 1,
+        result: {
+          catalogVersion: "2026-03-20/v1.1-phase1",
+          totalScore: 3,
+          projectedRecipeOutputs: {},
+          projectedOutputs: {
+            operator_exp: 0,
+            weapon_exp: 0,
+            fungal: 1,
+            vitrified_plant: 1,
+            rare_mineral: 1,
+          },
+          roomPlans: [
+            {
+              roomId: "control_nexus",
+              roomKind: "control_nexus",
+              roomLevel: 3,
+              chosenRecipeIds: [],
+              assignedOperatorIds: [],
+              scoreBreakdown: { directProductionScore: 0, supportRoomScore: 0, crossRoomBonusContribution: 0, totalScore: 0 },
+              projectedScore: 0,
+              projectedOutputs: { operator_exp: 0, weapon_exp: 0, fungal: 0, vitrified_plant: 0, rare_mineral: 0 },
+              warnings: [],
+              usedFallbackHeuristics: false,
+              dataConfidence: "verified",
+            },
+            {
+              roomId: "reception-1",
+              roomKind: "reception_room",
+              roomLevel: 1,
+              chosenRecipeIds: [],
+              assignedOperatorIds: [],
+              scoreBreakdown: { directProductionScore: 0, supportRoomScore: 0, crossRoomBonusContribution: 0, totalScore: 0 },
+              projectedScore: 0,
+              projectedOutputs: { operator_exp: 0, weapon_exp: 0, fungal: 0, vitrified_plant: 0, rare_mineral: 0 },
+              warnings: [],
+              usedFallbackHeuristics: false,
+              dataConfidence: "verified",
+            },
+            {
+              roomId: "growth-1",
+              roomKind: "growth_chamber",
+              roomLevel: 3,
+              chosenRecipeIds: ["wulingstone", "false-aggela", "cosmagaric"],
+              assignedOperatorIds: [],
+              scoreBreakdown: { directProductionScore: 3, supportRoomScore: 0, crossRoomBonusContribution: 0, totalScore: 3 },
+              projectedScore: 3,
+              projectedOutputs: { operator_exp: 0, weapon_exp: 0, fungal: 1, vitrified_plant: 1, rare_mineral: 1 },
+              warnings: [],
+              usedFallbackHeuristics: false,
+              dataConfidence: "verified",
+            },
+          ],
+          explanations: [],
+          warnings: [],
+          supportWeightsVersion: "test",
+        },
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Why this wins")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("No recipe selected")).not.toBeInTheDocument();
+
+    const growthHeading = screen.getAllByText("Growth Chamber 1").find((element) => element.closest(".resultCard"));
+    const growthCard = growthHeading?.closest(".resultCard");
+    expect(growthCard).not.toBeNull();
+    expect(growthCard).toHaveTextContent("Wulingstone");
+    expect(growthCard).toHaveTextContent("False Aggela");
+    expect(growthCard).toHaveTextContent("Cosmagaric");
+    expect(growthCard).not.toHaveTextContent("||");
   });
 
   it("renders bundled operator portraits in the roster", async () => {
@@ -231,6 +316,69 @@ describe("App", () => {
     expect(screen.getByAltText("Blade Critique icon")).toBeInTheDocument();
   });
 
+  it("removes duplicated recommendation note content from the result card", async () => {
+    render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.click(screen.getByRole("button", { name: "Recommend unlocks" }));
+
+    act(() => {
+      workerInstances[0]!.emit({
+        type: "recommendations-completed",
+        runId: 1,
+        result: {
+          catalogVersion: "2026-03-20/v1.1-phase1",
+          baselineScore: 1,
+          rankingMode: "balanced",
+          recommendations: [
+            {
+              action: {
+                operatorId: "chen-qianyu",
+                skillId: "blade-critique",
+                targetRank: 1,
+                currentLevel: 40,
+                currentPromotionTier: 1,
+                requiredLevel: 40,
+                requiredPromotionTier: 2,
+                levelsToGain: 0,
+                levelExpCost: 100,
+                levelTCredCost: 200,
+                levelMaterialCosts: [{ itemId: "advanced-combat-record", quantity: 3 }],
+                levelCostIsUpperBound: false,
+                promotionMaterialCosts: [{ itemId: "protodisk", quantity: 2 }],
+                skillMaterialCosts: [{ itemId: "protoprism", quantity: 1 }],
+                materialCosts: [],
+                unlockHint: "Unlock Blade Critique gamma.",
+              },
+              scoreDelta: 1,
+              roi: 1,
+              estimatedDaysToUnlock: 1,
+              notes: [
+                "Operator: Chen Qianyu",
+                "Unlock Blade Critique gamma.",
+                "Requires 0 level(s) of EXP progression to reach Elite 2 Level 40.",
+                "100 Operator EXP and 200 T-Creds for leveling.",
+                "Leveling materials: 3x advanced-combat-record.",
+                "Includes promotion materials: 2x protodisk.",
+                "Includes Base Skill node materials: 1x protoprism.",
+                "Approximate effort score 12.0 derived from bundled promotion costs, Base Skill costs, and level gating.",
+              ],
+            },
+          ],
+        },
+      });
+    });
+
+    const recommendationCard = (await screen.findByText("Blade Critique")).closest(".resultCard");
+    expect(recommendationCard).not.toBeNull();
+    expect(within(recommendationCard!).queryByText("Operator: Chen Qianyu")).not.toBeInTheDocument();
+    expect(within(recommendationCard!).queryByText(/Leveling materials:/)).not.toBeInTheDocument();
+    expect(within(recommendationCard!).queryByText(/Includes promotion materials:/)).not.toBeInTheDocument();
+    expect(within(recommendationCard!).queryByText(/Includes Base Skill node materials:/)).not.toBeInTheDocument();
+    expect(within(recommendationCard!).getByText("100 Operator EXP and 200 T-Creds for leveling.")).toBeInTheDocument();
+    expect(within(recommendationCard!).getByText("Approximate effort score 12.0 derived from bundled promotion costs, Base Skill costs, and level gating.")).toBeInTheDocument();
+  });
+
   it("orders facilities like the in-game layout and operators by rarity then name", async () => {
     const { container } = render(<App />);
 
@@ -250,8 +398,121 @@ describe("App", () => {
     expect(facilityHeadings.slice(0, 5)).toEqual([
       "Control Nexus",
       "Reception Room",
-      "Manufacturing 1",
-      "Manufacturing 2",
+      "Manufacturing Cabin 1",
+      "Manufacturing Cabin 2",
+      "Growth Chamber 1",
+    ]);
+  });
+
+  it("orders result facilities to match the planner layout", async () => {
+    render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    await userEvent.click(screen.getByRole("button", { name: "Optimize" }));
+
+    act(() => {
+      workerInstances[0]!.emit({
+        type: "optimization-completed",
+        runId: 1,
+        result: {
+          catalogVersion: "2026-03-20/v1.1-phase1",
+          totalScore: 10,
+          projectedRecipeOutputs: {},
+          projectedOutputs: {
+            operator_exp: 0,
+            weapon_exp: 0,
+            fungal: 0,
+            vitrified_plant: 0,
+            rare_mineral: 0,
+          },
+          roomPlans: [
+            {
+              roomId: "growth-1",
+              roomKind: "growth_chamber",
+              roomLevel: 1,
+              chosenRecipeIds: [],
+              assignedOperatorIds: [],
+              scoreBreakdown: { directProductionScore: 0, supportRoomScore: 0, crossRoomBonusContribution: 0, totalScore: 0 },
+              projectedScore: 0,
+              projectedOutputs: { operator_exp: 0, weapon_exp: 0, fungal: 0, vitrified_plant: 0, rare_mineral: 0 },
+              warnings: [],
+              usedFallbackHeuristics: false,
+              dataConfidence: "verified",
+            },
+            {
+              roomId: "mfg-1",
+              roomKind: "manufacturing_cabin",
+              roomLevel: 1,
+              chosenRecipeIds: [],
+              assignedOperatorIds: [],
+              scoreBreakdown: { directProductionScore: 0, supportRoomScore: 0, crossRoomBonusContribution: 0, totalScore: 0 },
+              projectedScore: 0,
+              projectedOutputs: { operator_exp: 0, weapon_exp: 0, fungal: 0, vitrified_plant: 0, rare_mineral: 0 },
+              warnings: [],
+              usedFallbackHeuristics: false,
+              dataConfidence: "verified",
+            },
+            {
+              roomId: "reception-1",
+              roomKind: "reception_room",
+              roomLevel: 1,
+              chosenRecipeIds: [],
+              assignedOperatorIds: [],
+              scoreBreakdown: { directProductionScore: 0, supportRoomScore: 0, crossRoomBonusContribution: 0, totalScore: 0 },
+              projectedScore: 0,
+              projectedOutputs: { operator_exp: 0, weapon_exp: 0, fungal: 0, vitrified_plant: 0, rare_mineral: 0 },
+              warnings: [],
+              usedFallbackHeuristics: false,
+              dataConfidence: "verified",
+            },
+            {
+              roomId: "control_nexus",
+              roomKind: "control_nexus",
+              roomLevel: 1,
+              chosenRecipeIds: [],
+              assignedOperatorIds: [],
+              scoreBreakdown: { directProductionScore: 0, supportRoomScore: 0, crossRoomBonusContribution: 0, totalScore: 0 },
+              projectedScore: 0,
+              projectedOutputs: { operator_exp: 0, weapon_exp: 0, fungal: 0, vitrified_plant: 0, rare_mineral: 0 },
+              warnings: [],
+              usedFallbackHeuristics: false,
+              dataConfidence: "verified",
+            },
+            {
+              roomId: "mfg-2",
+              roomKind: "manufacturing_cabin",
+              roomLevel: 1,
+              chosenRecipeIds: [],
+              assignedOperatorIds: [],
+              scoreBreakdown: { directProductionScore: 0, supportRoomScore: 0, crossRoomBonusContribution: 0, totalScore: 0 },
+              projectedScore: 0,
+              projectedOutputs: { operator_exp: 0, weapon_exp: 0, fungal: 0, vitrified_plant: 0, rare_mineral: 0 },
+              warnings: [],
+              usedFallbackHeuristics: false,
+              dataConfidence: "verified",
+            },
+          ],
+          explanations: [],
+          warnings: [],
+          supportWeightsVersion: "test",
+        },
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Why this wins")).toBeInTheDocument();
+    });
+
+    const resultHeadings = screen.getAllByRole("heading", { level: 3 })
+      .filter((heading) => heading.closest(".resultCard"))
+      .map((heading) => heading.textContent);
+
+    expect(resultHeadings.slice(0, 5)).toEqual([
+      "Control Nexus",
+      "Reception Room",
+      "Manufacturing Cabin 1",
+      "Manufacturing Cabin 2",
       "Growth Chamber 1",
     ]);
   });
@@ -476,7 +737,7 @@ describe("App", () => {
     await userEvent.click(screen.getByRole("tab", { name: /Planner/i }));
 
     await waitFor(() => {
-      expect(screen.getByText("Manufacturing 2")).toBeInTheDocument();
+      expect(screen.getByText("Manufacturing Cabin 2")).toBeInTheDocument();
       expect(getOptimizationProfileSelect()).toHaveValue("thorough");
       expect(getSearchEffortSlider()).toHaveValue("14");
     });

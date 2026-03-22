@@ -83,6 +83,33 @@ function formatCosts(costs: Array<{ itemId: string; quantity: number }>): string
   return costs.length > 0 ? costs.map((cost) => `${cost.quantity}x ${cost.itemId}`).join(", ") : "No material cost recorded";
 }
 
+function getRecommendationExtraNotes(
+  recommendation: UpgradeRecommendationResult["recommendations"][number],
+  operatorName?: string,
+): string[] {
+  return recommendation.notes.filter((note) => {
+    if (note === recommendation.action.unlockHint) {
+      return false;
+    }
+    if (operatorName && note === `Operator: ${operatorName}`) {
+      return false;
+    }
+    if (note.startsWith("Requires ")) {
+      return false;
+    }
+    if (note.startsWith("Leveling materials:") || note.startsWith("Upper-bound leveling materials:")) {
+      return false;
+    }
+    if (note.startsWith("Includes promotion materials:")) {
+      return false;
+    }
+    if (note.startsWith("Includes Base Skill node materials:")) {
+      return false;
+    }
+    return true;
+  });
+}
+
 function formatDurationMinutes(value: number | undefined): string {
   return value == null ? "Duration not recorded" : `${(value / 60).toFixed(1)}h`;
 }
@@ -508,9 +535,17 @@ function App() {
   const roomOptions = [
     { id: "control_nexus", label: "Control Nexus" },
     ...(scenario.facilities.receptionRoom ? [{ id: scenario.facilities.receptionRoom.id, label: "Reception Room" }] : []),
-    ...scenario.facilities.manufacturingCabins.map((room, index) => ({ id: room.id, label: `Manufacturing ${index + 1}` })),
+    ...scenario.facilities.manufacturingCabins.map((room, index) => ({ id: room.id, label: `Manufacturing Cabin ${index + 1}` })),
     ...scenario.facilities.growthChambers.map((room, index) => ({ id: room.id, label: `Growth Chamber ${index + 1}` })),
   ];
+  const roomOrderById = new Map(roomOptions.map((room, index) => [room.id, index]));
+  const orderedResultRoomPlans = result
+    ? [...result.roomPlans].sort((left, right) => {
+      const leftOrder = roomOrderById.get(left.roomId) ?? Number.MAX_SAFE_INTEGER;
+      const rightOrder = roomOrderById.get(right.roomId) ?? Number.MAX_SAFE_INTEGER;
+      return leftOrder - rightOrder;
+    })
+    : [];
   const selectedOperator = selectedOperatorId ? operatorsById.get(selectedOperatorId) : sortedOperators[0];
   const selectedOwnedState = selectedOperator ? rosterById.get(selectedOperator.id) : undefined;
   const completedResultsCount = (result ? 1 : 0) + (recommendations ? 1 : 0);
@@ -1208,7 +1243,7 @@ function App() {
                   <article className="roomCard" key={room.id}>
                     <div className="facilityHeader">
                       <div>
-                        <h3>Manufacturing {index + 1}</h3>
+                        <h3>Manufacturing Cabin {index + 1}</h3>
                         <p>{facilitiesByKind.get("manufacturing_cabin")?.unlockHint}</p>
                       </div>
                       <span className="miniStat">{getRoomSlotCap(catalog, "manufacturing_cabin", room.level, scenario.facilities.controlNexus.level)} slots</span>
@@ -1428,7 +1463,7 @@ function App() {
                     {Object.entries(result.projectedOutputs).filter(([, value]) => value > 0).map(([productKind, value]) => <span key={productKind}>{formatLabel(productKind)} {value.toFixed(2)}/hr</span>)}
                   </div>
                 </article>
-                {result.roomPlans.map((room) => {
+                {orderedResultRoomPlans.map((room) => {
                   const recipes = (room.chosenRecipeIds ?? [])
                     .map((recipeId) => recipesById.get(recipeId))
                     .filter((recipe): recipe is NonNullable<typeof recipe> => recipe != null);
@@ -1437,11 +1472,20 @@ function App() {
                       <div className="resultHeader">
                         <div>
                           <h3>{roomOptions.find((entry) => entry.id === room.roomId)?.label ?? room.roomId}</h3>
-                          <p>{formatLabel(room.roomKind)} Lv{room.roomLevel}</p>
+                          <p>Lv{room.roomLevel}</p>
                         </div>
                         <span>{room.dataConfidence}</span>
                       </div>
-                      <p className="resultLine">{recipes.length > 0 ? recipes.map((recipe) => `${recipe.name} | ${formatLabel(recipe.productKind)}`).join(" || ") : "No recipe selected"}</p>
+                      {recipes.length > 0 && (
+                        <div className="resultRecipeList">
+                          {recipes.map((recipe) => (
+                            <span className="resultRecipeChip" key={`${room.roomId}-${recipe.id}`}>
+                              <strong>{recipe.name}</strong>
+                              <small>{formatLabel(recipe.productKind)}</small>
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       {room.assignedOperatorIds.length > 0
                         ? (
                             <div className="operatorChipList">
@@ -1481,6 +1525,7 @@ function App() {
                 {recommendations.recommendations.map((recommendation) => {
                   const operator = operatorsById.get(recommendation.action.operatorId);
                   const skill = operator?.baseSkills.find((entry) => entry.id === recommendation.action.skillId);
+                  const extraNotes = getRecommendationExtraNotes(recommendation, operator?.name);
                   return (
                     <article className="resultCard" key={`${recommendation.action.operatorId}-${recommendation.action.skillId}`}>
                       <div className="resultHeader">
@@ -1507,11 +1552,18 @@ function App() {
                         <span>{recommendation.scoreDelta.toFixed(2)} delta</span>
                       </div>
                       <p className="resultLine">Current Elite {recommendation.action.currentPromotionTier} Lv{recommendation.action.currentLevel} {"->"} target Elite {recommendation.action.requiredPromotionTier ?? recommendation.action.currentPromotionTier} Lv{recommendation.action.requiredLevel ?? recommendation.action.currentLevel}</p>
-                      <p className="resultLine">{recommendation.action.unlockHint ?? "No unlock hint recorded"}</p>
+                      {recommendation.action.unlockHint && <p className="resultLine">{recommendation.action.unlockHint}</p>}
                       <p className="resultLine">Leveling: {formatCosts(recommendation.action.levelMaterialCosts)}</p>
                       <p className="resultLine">Promotion: {formatCosts(recommendation.action.promotionMaterialCosts)}</p>
                       <p className="resultLine">Skill: {formatCosts(recommendation.action.skillMaterialCosts)}</p>
-                      <p className="warningText">{recommendation.notes.join(" | ")}</p>
+                      {extraNotes.map((note) => (
+                        <p
+                          className={note.includes("does not improve") || note.includes("No bundled upgrade cost") ? "warningText" : "resultLine"}
+                          key={`${recommendation.action.operatorId}-${recommendation.action.skillId}-${note}`}
+                        >
+                          {note}
+                        </p>
+                      ))}
                     </article>
                   );
                 })}
