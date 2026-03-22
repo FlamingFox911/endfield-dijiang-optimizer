@@ -1,10 +1,11 @@
-import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import type {
   GameCatalog,
   OptimizationProfile,
   OptimizationResult,
   OptimizationScenario,
+  SkillRank,
   UpgradeRecommendationResult,
 } from "@endfield/domain";
 
@@ -37,7 +38,9 @@ import type {
 } from "@endfield/optimizer";
 
 const DRAFT_KEY = "endfield-dijiang-optimizer:draft";
-const OPTIMIZATION_PROFILES: OptimizationProfile[] = ["fast", "balanced", "thorough", "exhaustive"];
+const OPTIMIZATION_PROFILES: Exclude<OptimizationProfile, "custom">[] = ["fast", "balanced", "thorough", "exhaustive"];
+
+type AppTab = "roster" | "planner" | "results";
 
 interface OptimizationRunState {
   runId: number;
@@ -115,14 +118,116 @@ function getOperatorPortraitUrl(
   return portrait ? getCatalogAssetUrl(catalog, portrait.path) : undefined;
 }
 
+function getBaseSkillIconUrl(
+  catalog: GameCatalog,
+  skill: GameCatalog["operators"][number]["baseSkills"][number],
+): string | undefined {
+  return skill.icon ? getCatalogAssetUrl(catalog, skill.icon.path) : undefined;
+}
+
+function getPromotionTierLabel(promotionTier: 0 | 1 | 2 | 3 | 4): string {
+  return promotionTier === 0 ? "Base" : `Elite ${promotionTier}`;
+}
+
+function getSkillRankLabel(
+  skill: GameCatalog["operators"][number]["baseSkills"][number],
+  rank: SkillRank,
+): string {
+  if (rank === 0) {
+    return "Locked";
+  }
+
+  return skill.ranks.find((entry) => entry.rank === rank)?.label.toUpperCase() ?? `RANK ${rank}`;
+}
+
+function getSkillBadgeLabel(
+  skill: GameCatalog["operators"][number]["baseSkills"][number],
+  rank: SkillRank,
+): string {
+  if (rank === 0) {
+    return "-";
+  }
+
+  const label = skill.ranks.find((entry) => entry.rank === rank)?.label;
+  switch (label) {
+    case "alpha":
+      return "\u03b1";
+    case "beta":
+      return "\u03b2";
+    case "gamma":
+      return "\u03b3";
+    default:
+      return getSkillRankLabel(skill, rank).charAt(0).toLowerCase();
+  }
+}
+
+function getSkillBadgeTitle(
+  skill: GameCatalog["operators"][number]["baseSkills"][number],
+  rank: SkillRank,
+): string {
+  return `${skill.name}: ${getSkillRankLabel(skill, rank)}`;
+}
+
+function SkillIconBadge(
+  {
+    catalog,
+    skill,
+    rank,
+    className,
+    showOverlay = true,
+    hideWhenLocked = false,
+  }: {
+    catalog: GameCatalog;
+    skill: GameCatalog["operators"][number]["baseSkills"][number];
+    rank: SkillRank;
+    className?: string;
+    showOverlay?: boolean;
+    hideWhenLocked?: boolean;
+  },
+) {
+  if (hideWhenLocked && rank === 0) {
+    return null;
+  }
+
+  const iconUrl = getBaseSkillIconUrl(catalog, skill);
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <span
+      className={`skillBadge ${rank > 0 ? "unlocked" : "locked"} ${failed || !iconUrl ? "fallback" : "withIcon"} ${showOverlay ? "" : "plain"} ${className ?? ""}`.trim()}
+      title={getSkillBadgeTitle(skill, rank)}
+      aria-label={getSkillBadgeTitle(skill, rank)}
+    >
+      {iconUrl && !failed && (
+        <img
+          className="skillBadgeImage"
+          src={iconUrl}
+          alt={`${skill.name} icon`}
+          loading="lazy"
+          onError={() => setFailed(true)}
+        />
+      )}
+      {showOverlay && <span className="skillBadgeOverlay">{getSkillBadgeLabel(skill, rank)}</span>}
+    </span>
+  );
+}
+
 function OperatorPortrait(
-  { catalog, operator }: { catalog: GameCatalog; operator: GameCatalog["operators"][number] },
+  {
+    catalog,
+    operator,
+    className,
+  }: {
+    catalog: GameCatalog;
+    operator: GameCatalog["operators"][number];
+    className?: string;
+  },
 ) {
   const portraitUrl = getOperatorPortraitUrl(catalog, operator);
   const [failed, setFailed] = useState(false);
 
   return (
-    <div className="avatar" data-rarity={operator.rarity}>
+    <div className={`avatar ${className ?? ""}`.trim()} data-rarity={operator.rarity}>
       {portraitUrl && !failed
         ? (
             <img
@@ -148,7 +253,7 @@ function OperatorChip(
     catalog: GameCatalog;
     operator?: GameCatalog["operators"][number];
     fallbackLabel: string;
-    meta?: string;
+    meta?: ReactNode;
   },
 ) {
   const displayName = operator?.name ?? fallbackLabel;
@@ -160,7 +265,7 @@ function OperatorChip(
         : <div className="avatar"><span>{getInitials(displayName)}</span></div>}
       <div className="operatorChipCopy">
         <strong>{displayName}</strong>
-        {meta && <span>{meta}</span>}
+        {meta && <div className="operatorChipMeta">{meta}</div>}
       </div>
     </div>
   );
@@ -194,7 +299,12 @@ function getRankLabel(
   skill: GameCatalog["operators"][number]["baseSkills"][number],
   rank: 1 | 2,
 ): string {
-  return skill.ranks.find((entry) => entry.rank === rank)?.label.toUpperCase() ?? `RANK ${rank}`;
+  const label = skill.ranks.find((entry) => entry.rank === rank)?.label;
+  if (!label) {
+    return `Rank ${rank} (${getSkillBadgeLabel(skill, rank)})`;
+  }
+
+  return `${label.charAt(0).toUpperCase()}${label.slice(1)} (${getSkillBadgeLabel(skill, rank)})`;
 }
 
 function getCanonicalEffortForProfile(profile: Exclude<OptimizationProfile, "custom">): number {
@@ -255,6 +365,8 @@ function App() {
   const [optimizationRun, setOptimizationRun] = useState<OptimizationRunState | null>(null);
   const [recommendationRun, setRecommendationRun] = useState<RecommendationRunState | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [activeTab, setActiveTab] = useState<AppTab>("roster");
+  const [selectedOperatorId, setSelectedOperatorId] = useState<string | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const activeRunIdRef = useRef<number | null>(null);
   const activeRunKindRef = useRef<"optimization" | "recommendations" | null>(null);
@@ -350,20 +462,36 @@ function App() {
 
   const deferredSearch = useDeferredValue(search);
 
+  const sortedOperators = useMemo(
+    () => [...(catalog?.operators ?? [])].sort(compareOperatorsByDefaultOrder),
+    [catalog],
+  );
   const operatorsById = useMemo(() => new Map(catalog?.operators.map((operator) => [operator.id, operator]) ?? []), [catalog]);
+  const rosterById = useMemo(() => new Map(scenario?.roster.map((entry) => [entry.operatorId, entry]) ?? []), [scenario]);
   const recipesById = useMemo(() => new Map(catalog?.recipes.map((recipe) => [recipe.id, recipe]) ?? []), [catalog]);
   const facilitiesByKind = useMemo(() => new Map(catalog?.facilities.map((facility) => [facility.kind, facility]) ?? []), [catalog]);
 
-  const filteredOperators = useMemo(() => {
-    if (!catalog || !scenario) {
-      return [];
+  useEffect(() => {
+    if (sortedOperators.length === 0) {
+      setSelectedOperatorId(null);
+      return;
     }
+
+    setSelectedOperatorId((current) => {
+      if (current && operatorsById.has(current)) {
+        return current;
+      }
+
+      return sortedOperators[0]?.id ?? null;
+    });
+  }, [operatorsById, sortedOperators]);
+
+  const filteredOperators = useMemo(() => {
     const needle = deferredSearch.trim().toLowerCase();
-    return [...catalog.operators]
-      .sort(compareOperatorsByDefaultOrder)
+    return sortedOperators
       .filter((operator) => !needle || operator.name.toLowerCase().includes(needle) || operator.id.includes(needle))
-      .map((operator) => ({ operator, owned: scenario.roster.find((entry) => entry.operatorId === operator.id) }));
-  }, [catalog, deferredSearch, scenario]);
+      .map((operator) => ({ operator, owned: rosterById.get(operator.id) }));
+  }, [deferredSearch, rosterById, sortedOperators]);
 
   if (loading || !catalog || !scenario) {
     return <main className="shell"><p className="status">Loading bundled catalog...</p></main>;
@@ -383,6 +511,9 @@ function App() {
     ...scenario.facilities.manufacturingCabins.map((room, index) => ({ id: room.id, label: `Manufacturing ${index + 1}` })),
     ...scenario.facilities.growthChambers.map((room, index) => ({ id: room.id, label: `Growth Chamber ${index + 1}` })),
   ];
+  const selectedOperator = selectedOperatorId ? operatorsById.get(selectedOperatorId) : sortedOperators[0];
+  const selectedOwnedState = selectedOperator ? rosterById.get(selectedOperator.id) : undefined;
+  const completedResultsCount = (result ? 1 : 0) + (recommendations ? 1 : 0);
 
   const updateScenario = (updater: (current: OptimizationScenario) => OptimizationScenario) => {
     startTransition(() => setScenario((current) => (current ? updater(current) : current)));
@@ -477,6 +608,7 @@ function App() {
         setOptimizationRun(null);
         setMessages(message.result.warnings);
         setResult(message.result);
+        setActiveTab("results");
         return;
       }
 
@@ -492,6 +624,7 @@ function App() {
         setRecommendationRun(null);
         setRecommendations(message.result);
         setMessages([]);
+        setActiveTab("results");
         return;
       }
 
@@ -507,7 +640,7 @@ function App() {
       stopActiveWorker();
       setOptimizationRun(null);
       setRecommendationRun(null);
-      setMessages([message.message]);
+      setMessages(["message" in message ? message.message : "Optimization failed."]);
     };
 
     worker.postMessage({ type: "start-optimization", runId, catalog, scenario, searchConfig });
@@ -574,6 +707,7 @@ function App() {
         setRecommendationRun(null);
         setRecommendations(message.result);
         setMessages([]);
+        setActiveTab("results");
         return;
       }
 
@@ -590,7 +724,7 @@ function App() {
 
       stopActiveWorker();
       setRecommendationRun(null);
-      setMessages([message.message]);
+      setMessages(["message" in message ? message.message : "Recommendations failed."]);
     };
 
     worker.postMessage({ type: "start-recommendations", runId, catalog, scenario });
@@ -627,13 +761,19 @@ function App() {
     }
   };
 
+  const tabOptions: Array<{ id: AppTab; label: string; detail: string }> = [
+    { id: "roster", label: "Roster", detail: `${ownedOperators.length} owned` },
+    { id: "planner", label: "Planner", detail: `${roomOptions.length} rooms` },
+    { id: "results", label: "Results", detail: completedResultsCount > 0 ? `${completedResultsCount} pane${completedResultsCount === 1 ? "" : "s"} ready` : "Waiting to run" },
+  ];
+
   return (
     <main className="shell">
       <header className="hero">
         <div className="heroCopy">
           <p className="eyebrow">Local-first optimizer</p>
           <h1>Endfield Dijiang Optimizer</h1>
-          <p className="lede">The editor now hydrates older drafts against the active catalog and surfaces more of the bundled room, recipe, and upgrade data directly in the UI.</p>
+          <p className="lede">The editor now uses a tabbed workspace and a portrait-driven roster so you can configure operators without the roster dominating the page.</p>
           <div className="heroStats">
             <article><span>Catalog</span><strong>{CURRENT_CATALOG_VERSION}</strong></article>
             <article><span>Game version</span><strong>{catalog.manifest.gameVersion}</strong></article>
@@ -648,7 +788,22 @@ function App() {
             <div><span>Sources</span><strong>{catalog.sources.length}</strong></div>
             <div><span>Gaps</span><strong>{catalog.gaps.length}</strong></div>
           </div>
-          <label className="pill"><span>Mode</span><select value={scenario.options.planningMode} onChange={(event) => updateScenario((current) => ({ ...current, options: { ...current.options, planningMode: event.target.value as "simple" | "advanced" } }))}><option value="simple">Simple</option><option value="advanced">Advanced</option></select></label>
+          <label className="pill">
+            <span>Mode</span>
+            <select
+              value={scenario.options.planningMode}
+              onChange={(event) => updateScenario((current) => ({
+                ...current,
+                options: {
+                  ...current.options,
+                  planningMode: event.target.value as "simple" | "advanced",
+                },
+              }))}
+            >
+              <option value="simple">Simple</option>
+              <option value="advanced">Advanced</option>
+            </select>
+          </label>
           <label className="pill">
             <span className="labelWithHelp">
               <span>Recommend Unlocks Ranking</span>
@@ -661,19 +816,88 @@ function App() {
                 ?
               </span>
             </span>
-            <select value={scenario.options.upgradeRankingMode ?? "balanced"} onChange={(event) => updateScenario((current) => ({ ...current, options: { ...current.options, upgradeRankingMode: event.target.value as "fastest" | "roi" | "balanced" } }))}><option value="balanced">Balanced</option><option value="roi">ROI</option><option value="fastest">Fastest</option></select>
+            <select
+              value={scenario.options.upgradeRankingMode ?? "balanced"}
+              onChange={(event) => updateScenario((current) => ({
+                ...current,
+                options: {
+                  ...current.options,
+                  upgradeRankingMode: event.target.value as "fastest" | "roi" | "balanced",
+                },
+              }))}
+            >
+              <option value="balanced">Balanced</option>
+              <option value="roi">ROI</option>
+              <option value="fastest">Fastest</option>
+            </select>
             <small>{getUpgradeRankingModeSummary(scenario.options.upgradeRankingMode ?? "balanced")}</small>
           </label>
         </div>
       </header>
 
       <section className="toolbar">
-        <label className="pill grow"><span>Search roster</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Chen Qianyu" /></label>
-        <label className="pill compact"><span>Horizon hours</span><input type="number" min={1} value={scenario.options.horizonHours} onChange={(event) => updateScenario((current) => ({ ...current, options: { ...current.options, horizonHours: Number(event.target.value) || 24 } }))} /></label>
-        <label className="pill compact"><span>Optimization profile</span><select value={scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE} onChange={(event) => setOptimizationProfile(event.target.value as OptimizationProfile)}>{OPTIMIZATION_PROFILES.map((profile) => <option key={profile} value={profile}>{formatLabel(profile)}</option>)}<option value="custom">Custom</option></select></label>
-        <label className="pill rangePill"><span>Search effort</span><input type="range" min={1} max={MAX_OPTIMIZATION_EFFORT} value={clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)} onChange={(event) => setOptimizationEffort(Number(event.target.value))} /><strong>{clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)}/{MAX_OPTIMIZATION_EFFORT}</strong><small>{getOptimizationProfileSummary(scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE)}</small></label>
-        <label className="toggle"><input type="checkbox" checked={scenario.options.maxFacilities} onChange={(event) => updateScenario((current) => ({ ...current, options: { ...current.options, maxFacilities: event.target.checked } }))} /><span>Max facilities overlay</span></label>
-        <label className="toggle"><input type="checkbox" checked={scenario.options.includeReceptionRoom !== false} onChange={(event) => updateScenario((current) => ({ ...current, options: { ...current.options, includeReceptionRoom: event.target.checked } }))} /><span>Include reception room</span></label>
+        <label className="pill compact">
+          <span>Horizon hours</span>
+          <input
+            type="number"
+            min={1}
+            value={scenario.options.horizonHours}
+            onChange={(event) => updateScenario((current) => ({
+              ...current,
+              options: {
+                ...current.options,
+                horizonHours: Number(event.target.value) || 24,
+              },
+            }))}
+          />
+        </label>
+        <label className="pill compact">
+          <span>Optimization profile</span>
+          <select value={scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE} onChange={(event) => setOptimizationProfile(event.target.value as OptimizationProfile)}>
+            {OPTIMIZATION_PROFILES.map((profile) => <option key={profile} value={profile}>{formatLabel(profile)}</option>)}
+            <option value="custom">Custom</option>
+          </select>
+        </label>
+        <label className="pill rangePill">
+          <span>Search effort</span>
+          <input
+            type="range"
+            min={1}
+            max={MAX_OPTIMIZATION_EFFORT}
+            value={clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)}
+            onChange={(event) => setOptimizationEffort(Number(event.target.value))}
+          />
+          <strong>{clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)}/{MAX_OPTIMIZATION_EFFORT}</strong>
+          <small>{getOptimizationProfileSummary(scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE)}</small>
+        </label>
+        <label className="toggle">
+          <input
+            type="checkbox"
+            checked={scenario.options.maxFacilities}
+            onChange={(event) => updateScenario((current) => ({
+              ...current,
+              options: {
+                ...current.options,
+                maxFacilities: event.target.checked,
+              },
+            }))}
+          />
+          <span>Max facilities overlay</span>
+        </label>
+        <label className="toggle">
+          <input
+            type="checkbox"
+            checked={scenario.options.includeReceptionRoom !== false}
+            onChange={(event) => updateScenario((current) => ({
+              ...current,
+              options: {
+                ...current.options,
+                includeReceptionRoom: event.target.checked,
+              },
+            }))}
+          />
+          <span>Include reception room</span>
+        </label>
         <button onClick={runOptimization} disabled={optimizationRun != null || recommendationRun != null}>Optimize</button>
         <button className="secondary" onClick={runRecommendations} disabled={optimizationRun != null || recommendationRun != null}>Recommend unlocks</button>
         <button className="secondary" onClick={exportScenario}>Export JSON</button>
@@ -729,206 +953,608 @@ function App() {
       {messages.length > 0 && <section className="messageBar">{messages.map((message) => <p key={message}>{message}</p>)}</section>}
       {!validation.ok && <section className="messageBar warning">{validation.issues.map((issue) => <p key={`${issue.path}-${issue.message}`}>{issue.message}</p>)}</section>}
 
-      <section className="grid">
-        <section className="panel rosterPanel">
-          <div className="panelHeader"><div><p className="eyebrow">Roster</p><h2>Operators</h2></div><span>{ownedOperators.length} owned / {catalog.operators.length} bundled</span></div>
-          <div className="rosterList">
-            {filteredOperators.map(({ operator, owned }) => (
-              <article key={operator.id} className={`operatorCard ${owned?.owned ? "active" : ""}`}>
-                <div className="operatorHeader">
-                  <OperatorPortrait catalog={catalog} operator={operator} />
-                  <div><p className="operatorName">{operator.name}</p><p className="operatorMeta">{operator.className} | {operator.rarity} star | {operator.dataConfidence ?? "verified"}</p></div>
-                  <label className="toggle inlineToggle"><input type="checkbox" checked={owned?.owned ?? false} onChange={(event) => updateScenario((current) => replaceRosterEntry(current, operator.id, (entry) => ({ ...entry, owned: event.target.checked })))} /><span>Owned</span></label>
+      <section className="tabShell">
+        <div className="tabBar" role="tablist" aria-label="Workspace sections">
+          {tabOptions.map((tab) => (
+            <button
+              key={tab.id}
+              id={`${tab.id}-tab`}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              aria-controls={`${tab.id}-panel`}
+              className={`tabButton ${activeTab === tab.id ? "active" : ""}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              <span>{tab.label}</span>
+              <small>{tab.detail}</small>
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "roster" && selectedOperator && (
+          <section id="roster-panel" role="tabpanel" aria-labelledby="roster-tab" className="workspacePanel">
+            <div className="panelHeader panelHeaderWide">
+              <div>
+                <p className="eyebrow">Roster</p>
+                <h2>Operator portraits</h2>
+              </div>
+              <span>{ownedOperators.length} owned / {catalog.operators.length} bundled</span>
+            </div>
+
+            <div className="rosterWorkspace">
+              <div className="rosterBrowser">
+                <label className="pill grow">
+                  <span>Search roster</span>
+                  <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Ardelia" />
+                </label>
+
+                <div className="rosterStats">
+                  <article><span>Showing</span><strong>{filteredOperators.length}</strong></article>
+                  <article><span>Owned</span><strong>{ownedOperators.length}</strong></article>
+                  <article><span>Selected</span><strong>{selectedOperator.name}</strong></article>
                 </div>
+
+                <div className="portraitGrid">
+                  {filteredOperators.map(({ operator, owned }) => (
+                    <button
+                      key={operator.id}
+                      type="button"
+                      className={`portraitTile ${selectedOperator.id === operator.id ? "active" : ""} ${owned?.owned ? "owned" : "unowned"}`}
+                      onClick={() => setSelectedOperatorId(operator.id)}
+                    >
+                      <div className="portraitFrame">
+                        <OperatorPortrait catalog={catalog} operator={operator} className="portraitAvatar" />
+                        <span className={`portraitCorner portraitStatus ${owned?.owned ? "level" : "locked"}`}>
+                          {owned?.owned ? owned.level : "\uD83D\uDD12"}
+                        </span>
+                        <span className="portraitCorner portraitSkills">
+                          {operator.baseSkills.map((skill) => {
+                            const skillRank = owned?.baseSkillStates.find((entry) => entry.skillId === skill.id)?.unlockedRank ?? 0;
+                            return (
+                              <SkillIconBadge
+                                key={`${operator.id}-${skill.id}`}
+                                catalog={catalog}
+                                skill={skill}
+                                rank={skillRank}
+                                hideWhenLocked
+                              />
+                            );
+                          })}
+                        </span>
+                      </div>
+                      <span className="portraitLabel">{operator.name}</span>
+                      <span className="portraitMeta">{operator.className} | {getPromotionTierLabel(owned?.promotionTier ?? 0)}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <aside className="operatorEditor">
+                <div className="operatorEditorHeader">
+                  <div className="operatorEditorIdentity">
+                    <OperatorPortrait catalog={catalog} operator={selectedOperator} className="detailAvatar" />
+                    <div>
+                      <p className="operatorName">{selectedOperator.name}</p>
+                      <p className="operatorMeta">{selectedOperator.className} | {selectedOperator.rarity} star | {selectedOperator.dataConfidence ?? "verified"}</p>
+                    </div>
+                  </div>
+                  <label className="toggle editorToggle">
+                    <input
+                      type="checkbox"
+                      checked={selectedOwnedState?.owned ?? false}
+                      onChange={(event) => updateScenario((current) => replaceRosterEntry(current, selectedOperator.id, (entry) => ({
+                        ...entry,
+                        owned: event.target.checked,
+                      })))}
+                    />
+                    <span>Owned</span>
+                  </label>
+                </div>
+
+                <div className="editorStats">
+                  <article><span>Status</span><strong>{selectedOwnedState?.owned ? "Owned" : "Unowned"}</strong></article>
+                  <article><span>Promotion</span><strong>{getPromotionTierLabel(selectedOwnedState?.promotionTier ?? 0)}</strong></article>
+                  <article><span>Unlocked skills</span><strong>{selectedOwnedState?.baseSkillStates.filter((entry) => entry.unlockedRank > 0).length ?? 0}/{selectedOperator.baseSkills.length}</strong></article>
+                </div>
+
+                {!selectedOwnedState?.owned && (
+                  <p className="editorHint">Mark the operator as owned to set their level, promotion, and active Base Skills.</p>
+                )}
+
                 <div className="numericRow">
-                  <label><span>Level</span><input type="number" min={1} value={owned?.level ?? 1} onChange={(event) => updateScenario((current) => replaceRosterEntry(current, operator.id, (entry) => ({ ...entry, level: Number(event.target.value) || 1 })))} /></label>
-                  <label><span>Promotion</span><select value={owned?.promotionTier ?? 0} onChange={(event) => updateScenario((current) => replaceRosterEntry(current, operator.id, (entry) => ({ ...entry, promotionTier: Number(event.target.value) as 0 | 1 | 2 | 3 | 4 })))}><option value={0}>Base</option><option value={1}>Elite 1</option><option value={2}>Elite 2</option><option value={3}>Elite 3</option><option value={4}>Elite 4</option></select></label>
+                  <label>
+                    <span>Level</span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={selectedOwnedState?.level ?? 1}
+                      disabled={!selectedOwnedState?.owned}
+                      onChange={(event) => updateScenario((current) => replaceRosterEntry(current, selectedOperator.id, (entry) => ({
+                        ...entry,
+                        level: Number(event.target.value) || 1,
+                      })))}
+                    />
+                  </label>
+                  <label>
+                    <span>Promotion</span>
+                    <select
+                      value={selectedOwnedState?.promotionTier ?? 0}
+                      disabled={!selectedOwnedState?.owned}
+                      onChange={(event) => updateScenario((current) => replaceRosterEntry(current, selectedOperator.id, (entry) => ({
+                        ...entry,
+                        promotionTier: Number(event.target.value) as 0 | 1 | 2 | 3 | 4,
+                      })))}
+                    >
+                      <option value={0}>Base</option>
+                      <option value={1}>Elite 1</option>
+                      <option value={2}>Elite 2</option>
+                      <option value={3}>Elite 3</option>
+                      <option value={4}>Elite 4</option>
+                    </select>
+                  </label>
                 </div>
-                <div className="skillGrid">
-                  {operator.baseSkills.map((skill) => {
-                    const state = owned?.baseSkillStates.find((entry) => entry.skillId === skill.id);
+
+                <div className="skillGrid editorSkillGrid">
+                  {selectedOperator.baseSkills.map((skill) => {
+                    const state = selectedOwnedState?.baseSkillStates.find((entry) => entry.skillId === skill.id);
                     return (
                       <article key={skill.id} className="skillCard">
                         <div className="skillHeader">
-                          <div><strong>{skill.name}</strong><p>{formatLabel(skill.facilityKind)} | {skill.dataConfidence ?? "verified"}</p></div>
-                          <select value={state?.unlockedRank ?? 0} onChange={(event) => updateScenario((current) => replaceRosterEntry(current, operator.id, (entry) => ({ ...entry, baseSkillStates: entry.baseSkillStates.map((baseSkill) => baseSkill.skillId === skill.id ? { ...baseSkill, unlockedRank: Number(event.target.value) as 0 | 1 | 2 } : baseSkill) })))}><option value={0}>Locked</option><option value={1}>{getRankLabel(skill, 1)}</option><option value={2}>{getRankLabel(skill, 2)}</option></select>
+                          <div className="skillSummary">
+                            <SkillIconBadge
+                              catalog={catalog}
+                              skill={skill}
+                              rank={state?.unlockedRank ?? 0}
+                              className="skillBadgeLarge skillBadgePlain"
+                              showOverlay={false}
+                            />
+                            <div>
+                              <strong>{skill.name}</strong>
+                              <p>{formatLabel(skill.facilityKind)} | {skill.dataConfidence ?? "verified"}</p>
+                            </div>
+                          </div>
+                          <select
+                            value={state?.unlockedRank ?? 0}
+                            disabled={!selectedOwnedState?.owned}
+                            onChange={(event) => updateScenario((current) => replaceRosterEntry(current, selectedOperator.id, (entry) => ({
+                              ...entry,
+                              baseSkillStates: entry.baseSkillStates.map((baseSkill) => baseSkill.skillId === skill.id
+                                ? { ...baseSkill, unlockedRank: Number(event.target.value) as 0 | 1 | 2 }
+                                : baseSkill),
+                            })))}
+                          >
+                            <option value={0}>Locked (-)</option>
+                            <option value={1}>{getRankLabel(skill, 1)}</option>
+                            <option value={2}>{getRankLabel(skill, 2)}</option>
+                          </select>
                         </div>
                         <p className="skillBody">{describeSkill(skill)}</p>
                       </article>
                     );
                   })}
                 </div>
-              </article>
-            ))}
-          </div>
-        </section>
+              </aside>
+            </div>
+          </section>
+        )}
 
-        <section className="panel plannerPanel">
-          <div className="panelHeader"><div><p className="eyebrow">Planner</p><h2>Dijiang layout</h2></div><span>{scenario.options.planningMode} mode</span></div>
-          <article className="roomCard">
-            <div className="facilityHeader"><div><h3>Control Nexus</h3><p>{facilitiesByKind.get("control_nexus")?.unlockHint}</p></div><span className="miniStat">{getRoomSlotCap(catalog, "control_nexus", scenario.facilities.controlNexus.level, scenario.facilities.controlNexus.level)} slots</span></div>
-            <label className="pill compact"><span>Level</span><input type="number" min={1} max={5} value={scenario.facilities.controlNexus.level} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, controlNexus: { level: Number(event.target.value) as 1 | 2 | 3 | 4 | 5 } } }))} /></label>
-          </article>
-          <div className="roomStack">
-            {scenario.facilities.receptionRoom && (
-              <article className="roomCard">
-                {(() => {
-                  const roomLocked = unlockedReceptionRoomCount === 0;
-                  return (
-                    <>
-                <div className="facilityHeader"><div><h3>Reception Room</h3><p>{facilitiesByKind.get("reception_room")?.unlockHint}</p></div><span className="miniStat">{getRoomSlotCap(catalog, "reception_room", scenario.facilities.receptionRoom.level, scenario.facilities.controlNexus.level)} slots</span></div>
-                <div className="numericRow"><label><span>Enabled</span><input type="checkbox" checked={scenario.facilities.receptionRoom.enabled} disabled={roomLocked} onChange={(event) => updateScenario((current) => current.facilities.receptionRoom ? ({ ...current, facilities: { ...current.facilities, receptionRoom: { ...current.facilities.receptionRoom, enabled: event.target.checked } } }) : current)} /></label><label><span>Level</span><input type="number" min={1} max={Math.max(receptionLevelCap, 1)} value={scenario.facilities.receptionRoom.level} disabled={roomLocked} onChange={(event) => updateScenario((current) => current.facilities.receptionRoom ? ({ ...current, facilities: { ...current.facilities, receptionRoom: { ...current.facilities.receptionRoom, level: Number(event.target.value) as 1 | 2 | 3 } } }) : current)} /></label></div>
-                <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 3" : "Available for clue assignments"}</p>
-                    </>
-                  );
-                })()}
-              </article>
-            )}
-            {scenario.facilities.manufacturingCabins.map((room, index) => {
-              const recipe = room.fixedRecipeId ? recipesById.get(room.fixedRecipeId) : undefined;
-              const roomLocked = index >= unlockedManufacturingRoomCount;
-              return (
-                <article className="roomCard" key={room.id}>
-                  <div className="facilityHeader"><div><h3>Manufacturing {index + 1}</h3><p>{facilitiesByKind.get("manufacturing_cabin")?.unlockHint}</p></div><span className="miniStat">{getRoomSlotCap(catalog, "manufacturing_cabin", room.level, scenario.facilities.controlNexus.level)} slots</span></div>
-                  <div className="numericRow"><label><span>Enabled</span><input type="checkbox" checked={room.enabled} disabled={roomLocked} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, enabled: event.target.checked } : entry) } }))} /></label><label><span>Level</span><input type="number" min={1} max={manufacturingLevelCap} value={room.level} disabled={roomLocked} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, level: Number(event.target.value) as 1 | 2 | 3 } : entry) } }))} /></label></div>
-                  <label><span>Recipe</span><select value={room.fixedRecipeId ?? ""} disabled={roomLocked} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, fixedRecipeId: event.target.value || undefined } : entry) } }))}><option value="">No recipe</option>{catalog.recipes.filter((entry) => entry.facilityKind === "manufacturing_cabin" && entry.roomLevel <= room.level).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label>
-                  <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 3" : recipe ? `${formatLabel(recipe.productKind)} | ${formatDurationMinutes(recipe.baseDurationMinutes)} | output ${recipe.outputAmount ?? "?"}` : "No recipe selected"}</p>
+        {activeTab === "planner" && (
+          <section id="planner-panel" role="tabpanel" aria-labelledby="planner-tab" className="workspacePanel plannerPanel">
+            <div className="panelHeader panelHeaderWide">
+              <div>
+                <p className="eyebrow">Planner</p>
+                <h2>Dijiang layout</h2>
+              </div>
+              <span>{scenario.options.planningMode} mode</span>
+            </div>
+
+            <article className="roomCard">
+              <div className="facilityHeader">
+                <div>
+                  <h3>Control Nexus</h3>
+                  <p>{facilitiesByKind.get("control_nexus")?.unlockHint}</p>
+                </div>
+                <span className="miniStat">{getRoomSlotCap(catalog, "control_nexus", scenario.facilities.controlNexus.level, scenario.facilities.controlNexus.level)} slots</span>
+              </div>
+              <label className="pill compact">
+                <span>Level</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={scenario.facilities.controlNexus.level}
+                  onChange={(event) => updateScenario((current) => ({
+                    ...current,
+                    facilities: {
+                      ...current.facilities,
+                      controlNexus: { level: Number(event.target.value) as 1 | 2 | 3 | 4 | 5 },
+                    },
+                  }))}
+                />
+              </label>
+            </article>
+
+            <div className="roomStack">
+              {scenario.facilities.receptionRoom && (
+                <article className="roomCard">
+                  {(() => {
+                    const roomLocked = unlockedReceptionRoomCount === 0;
+                    return (
+                      <>
+                        <div className="facilityHeader">
+                          <div>
+                            <h3>Reception Room</h3>
+                            <p>{facilitiesByKind.get("reception_room")?.unlockHint}</p>
+                          </div>
+                          <span className="miniStat">{getRoomSlotCap(catalog, "reception_room", scenario.facilities.receptionRoom.level, scenario.facilities.controlNexus.level)} slots</span>
+                        </div>
+                        <div className="numericRow">
+                          <label>
+                            <span>Enabled</span>
+                            <input
+                              type="checkbox"
+                              checked={scenario.facilities.receptionRoom.enabled}
+                              disabled={roomLocked}
+                              onChange={(event) => updateScenario((current) => current.facilities.receptionRoom ? ({
+                                ...current,
+                                facilities: {
+                                  ...current.facilities,
+                                  receptionRoom: {
+                                    ...current.facilities.receptionRoom,
+                                    enabled: event.target.checked,
+                                  },
+                                },
+                              }) : current)}
+                            />
+                          </label>
+                          <label>
+                            <span>Level</span>
+                            <input
+                              type="number"
+                              min={1}
+                              max={Math.max(receptionLevelCap, 1)}
+                              value={scenario.facilities.receptionRoom.level}
+                              disabled={roomLocked}
+                              onChange={(event) => updateScenario((current) => current.facilities.receptionRoom ? ({
+                                ...current,
+                                facilities: {
+                                  ...current.facilities,
+                                  receptionRoom: {
+                                    ...current.facilities.receptionRoom,
+                                    level: Number(event.target.value) as 1 | 2 | 3,
+                                  },
+                                },
+                              }) : current)}
+                            />
+                          </label>
+                        </div>
+                        <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 3" : "Available for clue assignments"}</p>
+                      </>
+                    );
+                  })()}
                 </article>
-              );
-            })}
-            {scenario.facilities.growthChambers.map((room, index) => {
-              const recipes = (room.fixedRecipeIds ?? []).map((recipeId) => recipesById.get(recipeId)).filter(Boolean);
-              const growthSlotCap = getGrowthSlotCap(catalog, room.level);
-              const roomLocked = index >= unlockedGrowthRoomCount;
-              return (
-                <article className="roomCard" key={room.id}>
-                  <div className="facilityHeader"><div><h3>Growth Chamber {index + 1}</h3><p>{facilitiesByKind.get("growth_chamber")?.unlockHint}</p></div><span className="miniStat">{getRoomSlotCap(catalog, "growth_chamber", room.level, scenario.facilities.controlNexus.level)} slots</span></div>
-                  <div className="numericRow"><label><span>Enabled</span><input type="checkbox" checked={room.enabled} disabled={roomLocked} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, growthChambers: current.facilities.growthChambers.map((entry) => entry.id === room.id ? { ...entry, enabled: event.target.checked } : entry) } }))} /></label><label><span>Level</span><input type="number" min={1} max={Math.max(growthLevelCap, 1)} value={room.level} disabled={roomLocked} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, growthChambers: current.facilities.growthChambers.map((entry) => entry.id === room.id ? { ...entry, level: Number(event.target.value) as 1 | 2 | 3 } : entry) } }))} /></label></div>
-                  <div className="skillGrid">
-                    {Array.from({ length: growthSlotCap }, (_, slotIndex) => (
-                      <label key={`${room.id}-growth-slot-${slotIndex}`}>
-                        <span>Growth Slot {slotIndex + 1}</span>
-                        <select
-                          value={room.fixedRecipeIds?.[slotIndex] ?? ""}
+              )}
+
+              {scenario.facilities.manufacturingCabins.map((room, index) => {
+                const recipe = room.fixedRecipeId ? recipesById.get(room.fixedRecipeId) : undefined;
+                const roomLocked = index >= unlockedManufacturingRoomCount;
+                return (
+                  <article className="roomCard" key={room.id}>
+                    <div className="facilityHeader">
+                      <div>
+                        <h3>Manufacturing {index + 1}</h3>
+                        <p>{facilitiesByKind.get("manufacturing_cabin")?.unlockHint}</p>
+                      </div>
+                      <span className="miniStat">{getRoomSlotCap(catalog, "manufacturing_cabin", room.level, scenario.facilities.controlNexus.level)} slots</span>
+                    </div>
+                    <div className="numericRow">
+                      <label>
+                        <span>Enabled</span>
+                        <input
+                          type="checkbox"
+                          checked={room.enabled}
                           disabled={roomLocked}
                           onChange={(event) => updateScenario((current) => ({
                             ...current,
                             facilities: {
                               ...current.facilities,
-                              growthChambers: current.facilities.growthChambers.map((entry) => {
-                                if (entry.id !== room.id) {
-                                  return entry;
-                                }
-                                const nextRecipeIds = [...(entry.fixedRecipeIds ?? [])];
-                                if (event.target.value) {
-                                  nextRecipeIds[slotIndex] = event.target.value;
-                                } else {
-                                  nextRecipeIds.splice(slotIndex, 1);
-                                }
-                                return { ...entry, fixedRecipeIds: nextRecipeIds.filter(Boolean) };
-                              }),
+                              manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, enabled: event.target.checked } : entry),
                             },
                           }))}
-                        >
-                          <option value="">Empty slot</option>
-                          {catalog.recipes.filter((entry) => entry.facilityKind === "growth_chamber" && entry.roomLevel <= room.level).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
-                        </select>
-                      </label>
-                    ))}
-                  </div>
-                  <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 2" : recipes.length > 0 ? recipes.map((recipe) => `${recipe.name} (${formatLabel(recipe.productKind)})`).join(" | ") : "No growth materials selected"}</p>
-                </article>
-              );
-            })}
-          </div>
-          {scenario.options.planningMode === "advanced" && (
-            <article className="roomCard">
-              <h3>Hard assignments</h3>
-              {scenario.facilities.hardAssignments.map((assignment, index) => (
-                <div className="numericRow" key={`${assignment.operatorId}-${index}`}>
-                  <select value={assignment.operatorId} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: event.target.value, roomId: entry.roomId } : { operatorId: entry.operatorId, roomId: entry.roomId }) } }))}>{ownedOperators.map((entry) => <option key={entry.operatorId} value={entry.operatorId}>{operatorsById.get(entry.operatorId)?.name ?? entry.operatorId}</option>)}</select>
-                  <select value={assignment.roomId} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: entry.operatorId, roomId: event.target.value } : { operatorId: entry.operatorId, roomId: entry.roomId }) } }))}>{roomOptions.map((room) => <option key={room.id} value={room.id}>{room.label}</option>)}</select>
-                </div>
-              ))}
-              <button className="secondary" onClick={() => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, hardAssignments: [...current.facilities.hardAssignments, { operatorId: ownedOperators[0]?.operatorId ?? current.roster[0]?.operatorId ?? "", roomId: "control_nexus" }] } }))}>Add hard assignment</button>
-            </article>
-          )}
-        </section>
-
-        <section className="panel resultPanel">
-          <div className="panelHeader"><div><p className="eyebrow">Results</p><h2>Why this wins</h2></div></div>
-          {result ? (
-            <div className="resultStack">
-              <article className="resultSummary">
-                <p>Total score</p>
-                <strong>{result.totalScore.toFixed(2)}</strong>
-                <p>Support weights: {result.supportWeightsVersion}</p>
-                <div className="summaryOutputs">{Object.entries(result.projectedOutputs).filter(([, value]) => value > 0).map(([productKind, value]) => <span key={productKind}>{formatLabel(productKind)} {value.toFixed(2)}</span>)}</div>
-              </article>
-              {result.roomPlans.map((room) => {
-                const recipes = (room.chosenRecipeIds ?? []).map((recipeId) => recipesById.get(recipeId)).filter(Boolean);
-                return (
-                  <article className="resultCard" key={room.roomId}>
-                    <div className="resultHeader"><div><h3>{roomOptions.find((entry) => entry.id === room.roomId)?.label ?? room.roomId}</h3><p>{formatLabel(room.roomKind)} Lv{room.roomLevel}</p></div><span>{room.dataConfidence}</span></div>
-                    <p className="resultLine">{recipes.length > 0 ? recipes.map((recipe) => `${recipe.name} | ${formatLabel(recipe.productKind)}`).join(" || ") : "No recipe selected"}</p>
-                    {room.assignedOperatorIds.length > 0
-                      ? (
-                          <div className="operatorChipList">
-                            {room.assignedOperatorIds.map((operatorId) => {
-                              const operator = operatorsById.get(operatorId);
-                              return (
-                                <OperatorChip
-                                  key={`${room.roomId}-${operatorId}`}
-                                  catalog={catalog}
-                                  operator={operator}
-                                  fallbackLabel={operatorId}
-                                  meta={`${operator?.className ?? "Unknown"} | ${operator?.rarity ?? "?"} star`}
-                                />
-                              );
-                            })}
-                          </div>
-                        )
-                      : <p className="resultLine">No operators assigned</p>}
-                    <dl><div><dt>Direct</dt><dd>{room.scoreBreakdown.directProductionScore.toFixed(2)}</dd></div><div><dt>Support</dt><dd>{room.scoreBreakdown.supportRoomScore.toFixed(2)}</dd></div><div><dt>Cross-room</dt><dd>{room.scoreBreakdown.crossRoomBonusContribution.toFixed(2)}</dd></div></dl>
-                    {room.usedFallbackHeuristics && <p className="warningText">Fallback heuristics were used for part of this room score.</p>}
-                    {room.warnings.length > 0 && <p className="warningText">{room.warnings.join(" | ")}</p>}
-                  </article>
-                );
-              })}
-            </div>
-          ) : <p className="status">Run optimize to generate assignments, confidence, and recipe-backed output.</p>}
-
-          {recommendations && (
-            <div className="recommendationStack">
-              <h3>Next unlocks</h3>
-              {recommendations.recommendations.map((recommendation) => {
-                const operator = operatorsById.get(recommendation.action.operatorId);
-                const skill = operator?.baseSkills.find((entry) => entry.id === recommendation.action.skillId);
-                return (
-                  <article className="resultCard" key={`${recommendation.action.operatorId}-${recommendation.action.skillId}`}>
-                    <div className="resultHeader">
-                      <div>
-                        <OperatorChip
-                          catalog={catalog}
-                          operator={operator}
-                          fallbackLabel={recommendation.action.operatorId}
-                          meta={skill?.name ?? recommendation.action.skillId}
                         />
-                      </div>
-                      <span>{recommendation.scoreDelta.toFixed(2)} delta</span>
+                      </label>
+                      <label>
+                        <span>Level</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={manufacturingLevelCap}
+                          value={room.level}
+                          disabled={roomLocked}
+                          onChange={(event) => updateScenario((current) => ({
+                            ...current,
+                            facilities: {
+                              ...current.facilities,
+                              manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, level: Number(event.target.value) as 1 | 2 | 3 } : entry),
+                            },
+                          }))}
+                        />
+                      </label>
                     </div>
-                    <p className="resultLine">Current Elite {recommendation.action.currentPromotionTier} Lv{recommendation.action.currentLevel} {"->"} target Elite {recommendation.action.requiredPromotionTier ?? recommendation.action.currentPromotionTier} Lv{recommendation.action.requiredLevel ?? recommendation.action.currentLevel}</p>
-                    <p className="resultLine">{recommendation.action.unlockHint ?? "No unlock hint recorded"}</p>
-                    <p className="resultLine">Leveling: {formatCosts(recommendation.action.levelMaterialCosts)}</p>
-                    <p className="resultLine">Promotion: {formatCosts(recommendation.action.promotionMaterialCosts)}</p>
-                    <p className="resultLine">Skill: {formatCosts(recommendation.action.skillMaterialCosts)}</p>
-                    <p className="warningText">{recommendation.notes.join(" | ")}</p>
+                    <label>
+                      <span>Recipe</span>
+                      <select
+                        value={room.fixedRecipeId ?? ""}
+                        disabled={roomLocked}
+                        onChange={(event) => updateScenario((current) => ({
+                          ...current,
+                          facilities: {
+                            ...current.facilities,
+                            manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, fixedRecipeId: event.target.value || undefined } : entry),
+                          },
+                        }))}
+                      >
+                        <option value="">No recipe</option>
+                        {catalog.recipes.filter((entry) => entry.facilityKind === "manufacturing_cabin" && entry.roomLevel <= room.level).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
+                      </select>
+                    </label>
+                    <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 3" : recipe ? `${formatLabel(recipe.productKind)} | ${formatDurationMinutes(recipe.baseDurationMinutes)} | output ${recipe.outputAmount ?? "?"}` : "No recipe selected"}</p>
+                  </article>
+                );
+              })}
+
+              {scenario.facilities.growthChambers.map((room, index) => {
+                const recipes = (room.fixedRecipeIds ?? [])
+                  .map((recipeId) => recipesById.get(recipeId))
+                  .filter((recipe): recipe is NonNullable<typeof recipe> => recipe != null);
+                const growthSlotCap = getGrowthSlotCap(catalog, room.level);
+                const roomLocked = index >= unlockedGrowthRoomCount;
+                return (
+                  <article className="roomCard" key={room.id}>
+                    <div className="facilityHeader">
+                      <div>
+                        <h3>Growth Chamber {index + 1}</h3>
+                        <p>{facilitiesByKind.get("growth_chamber")?.unlockHint}</p>
+                      </div>
+                      <span className="miniStat">{getRoomSlotCap(catalog, "growth_chamber", room.level, scenario.facilities.controlNexus.level)} slots</span>
+                    </div>
+                    <div className="numericRow">
+                      <label>
+                        <span>Enabled</span>
+                        <input
+                          type="checkbox"
+                          checked={room.enabled}
+                          disabled={roomLocked}
+                          onChange={(event) => updateScenario((current) => ({
+                            ...current,
+                            facilities: {
+                              ...current.facilities,
+                              growthChambers: current.facilities.growthChambers.map((entry) => entry.id === room.id ? { ...entry, enabled: event.target.checked } : entry),
+                            },
+                          }))}
+                        />
+                      </label>
+                      <label>
+                        <span>Level</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={Math.max(growthLevelCap, 1)}
+                          value={room.level}
+                          disabled={roomLocked}
+                          onChange={(event) => updateScenario((current) => ({
+                            ...current,
+                            facilities: {
+                              ...current.facilities,
+                              growthChambers: current.facilities.growthChambers.map((entry) => entry.id === room.id ? { ...entry, level: Number(event.target.value) as 1 | 2 | 3 } : entry),
+                            },
+                          }))}
+                        />
+                      </label>
+                    </div>
+                    <div className="skillGrid">
+                      {Array.from({ length: growthSlotCap }, (_, slotIndex) => (
+                        <label key={`${room.id}-growth-slot-${slotIndex}`}>
+                          <span>Growth Slot {slotIndex + 1}</span>
+                          <select
+                            value={room.fixedRecipeIds?.[slotIndex] ?? ""}
+                            disabled={roomLocked}
+                            onChange={(event) => updateScenario((current) => ({
+                              ...current,
+                              facilities: {
+                                ...current.facilities,
+                                growthChambers: current.facilities.growthChambers.map((entry) => {
+                                  if (entry.id !== room.id) {
+                                    return entry;
+                                  }
+                                  const nextRecipeIds = [...(entry.fixedRecipeIds ?? [])];
+                                  if (event.target.value) {
+                                    nextRecipeIds[slotIndex] = event.target.value;
+                                  } else {
+                                    nextRecipeIds.splice(slotIndex, 1);
+                                  }
+                                  return { ...entry, fixedRecipeIds: nextRecipeIds.filter(Boolean) };
+                                }),
+                              },
+                            }))}
+                          >
+                            <option value="">Empty slot</option>
+                            {catalog.recipes.filter((entry) => entry.facilityKind === "growth_chamber" && entry.roomLevel <= room.level).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
+                          </select>
+                        </label>
+                      ))}
+                    </div>
+                    <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 2" : recipes.length > 0 ? recipes.map((recipe) => `${recipe.name} (${formatLabel(recipe.productKind)})`).join(" | ") : "No growth materials selected"}</p>
                   </article>
                 );
               })}
             </div>
-          )}
-        </section>
+
+            {scenario.options.planningMode === "advanced" && (
+              <article className="roomCard">
+                <h3>Hard assignments</h3>
+                {scenario.facilities.hardAssignments.map((assignment, index) => (
+                  <div className="numericRow" key={`${assignment.operatorId}-${index}`}>
+                    <select
+                      value={assignment.operatorId}
+                      onChange={(event) => updateScenario((current) => ({
+                        ...current,
+                        facilities: {
+                          ...current.facilities,
+                          hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: event.target.value, roomId: entry.roomId } : { operatorId: entry.operatorId, roomId: entry.roomId }),
+                        },
+                      }))}
+                    >
+                      {ownedOperators.map((entry) => <option key={entry.operatorId} value={entry.operatorId}>{operatorsById.get(entry.operatorId)?.name ?? entry.operatorId}</option>)}
+                    </select>
+                    <select
+                      value={assignment.roomId}
+                      onChange={(event) => updateScenario((current) => ({
+                        ...current,
+                        facilities: {
+                          ...current.facilities,
+                          hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: entry.operatorId, roomId: event.target.value } : { operatorId: entry.operatorId, roomId: entry.roomId }),
+                        },
+                      }))}
+                    >
+                      {roomOptions.map((room) => <option key={room.id} value={room.id}>{room.label}</option>)}
+                    </select>
+                  </div>
+                ))}
+                <button
+                  className="secondary"
+                  onClick={() => updateScenario((current) => ({
+                    ...current,
+                    facilities: {
+                      ...current.facilities,
+                      hardAssignments: [
+                        ...current.facilities.hardAssignments,
+                        {
+                          operatorId: ownedOperators[0]?.operatorId ?? current.roster[0]?.operatorId ?? "",
+                          roomId: "control_nexus",
+                        },
+                      ],
+                    },
+                  }))}
+                >
+                  Add hard assignment
+                </button>
+              </article>
+            )}
+          </section>
+        )}
+
+        {activeTab === "results" && (
+          <section id="results-panel" role="tabpanel" aria-labelledby="results-tab" className="workspacePanel resultPanel">
+            <div className="panelHeader panelHeaderWide">
+              <div>
+                <p className="eyebrow">Results</p>
+                <h2>Why this wins</h2>
+              </div>
+            </div>
+
+            {result ? (
+              <div className="resultStack">
+                <article className="resultSummary">
+                  <p>Total score</p>
+                  <strong>{result.totalScore.toFixed(2)}</strong>
+                  <p>Support weights: {result.supportWeightsVersion}</p>
+                  <div className="summaryOutputs">
+                    {Object.entries(result.projectedOutputs).filter(([, value]) => value > 0).map(([productKind, value]) => <span key={productKind}>{formatLabel(productKind)} {value.toFixed(2)}</span>)}
+                  </div>
+                </article>
+                {result.roomPlans.map((room) => {
+                  const recipes = (room.chosenRecipeIds ?? [])
+                    .map((recipeId) => recipesById.get(recipeId))
+                    .filter((recipe): recipe is NonNullable<typeof recipe> => recipe != null);
+                  return (
+                    <article className="resultCard" key={room.roomId}>
+                      <div className="resultHeader">
+                        <div>
+                          <h3>{roomOptions.find((entry) => entry.id === room.roomId)?.label ?? room.roomId}</h3>
+                          <p>{formatLabel(room.roomKind)} Lv{room.roomLevel}</p>
+                        </div>
+                        <span>{room.dataConfidence}</span>
+                      </div>
+                      <p className="resultLine">{recipes.length > 0 ? recipes.map((recipe) => `${recipe.name} | ${formatLabel(recipe.productKind)}`).join(" || ") : "No recipe selected"}</p>
+                      {room.assignedOperatorIds.length > 0
+                        ? (
+                            <div className="operatorChipList">
+                              {room.assignedOperatorIds.map((operatorId) => {
+                                const operator = operatorsById.get(operatorId);
+                                return (
+                                  <OperatorChip
+                                    key={`${room.roomId}-${operatorId}`}
+                                    catalog={catalog}
+                                    operator={operator}
+                                    fallbackLabel={operatorId}
+                                    meta={`${operator?.className ?? "Unknown"} | ${operator?.rarity ?? "?"} star`}
+                                  />
+                                );
+                              })}
+                            </div>
+                          )
+                        : <p className="resultLine">No operators assigned</p>}
+                      <dl>
+                        <div><dt>Direct</dt><dd>{room.scoreBreakdown.directProductionScore.toFixed(2)}</dd></div>
+                        <div><dt>Support</dt><dd>{room.scoreBreakdown.supportRoomScore.toFixed(2)}</dd></div>
+                        <div><dt>Cross-room</dt><dd>{room.scoreBreakdown.crossRoomBonusContribution.toFixed(2)}</dd></div>
+                      </dl>
+                      {room.usedFallbackHeuristics && <p className="warningText">Fallback heuristics were used for part of this room score.</p>}
+                      {room.warnings.length > 0 && <p className="warningText">{room.warnings.join(" | ")}</p>}
+                    </article>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="status">Run optimize to generate assignments, confidence, and recipe-backed output.</p>
+            )}
+
+            {recommendations && (
+              <div className="recommendationStack">
+                <h3>Next unlocks</h3>
+                {recommendations.recommendations.map((recommendation) => {
+                  const operator = operatorsById.get(recommendation.action.operatorId);
+                  const skill = operator?.baseSkills.find((entry) => entry.id === recommendation.action.skillId);
+                  return (
+                    <article className="resultCard" key={`${recommendation.action.operatorId}-${recommendation.action.skillId}`}>
+                      <div className="resultHeader">
+                        <div>
+                          <OperatorChip
+                            catalog={catalog}
+                            operator={operator}
+                            fallbackLabel={recommendation.action.operatorId}
+                            meta={skill
+                              ? (
+                                  <span className="recommendationSkill">
+                                    <SkillIconBadge
+                                      catalog={catalog}
+                                      skill={skill}
+                                      rank={recommendation.action.targetRank}
+                                      className="skillBadgeInline"
+                                    />
+                                    <span>{skill.name}</span>
+                                  </span>
+                                )
+                              : recommendation.action.skillId}
+                          />
+                        </div>
+                        <span>{recommendation.scoreDelta.toFixed(2)} delta</span>
+                      </div>
+                      <p className="resultLine">Current Elite {recommendation.action.currentPromotionTier} Lv{recommendation.action.currentLevel} {"->"} target Elite {recommendation.action.requiredPromotionTier ?? recommendation.action.currentPromotionTier} Lv{recommendation.action.requiredLevel ?? recommendation.action.currentLevel}</p>
+                      <p className="resultLine">{recommendation.action.unlockHint ?? "No unlock hint recorded"}</p>
+                      <p className="resultLine">Leveling: {formatCosts(recommendation.action.levelMaterialCosts)}</p>
+                      <p className="resultLine">Promotion: {formatCosts(recommendation.action.promotionMaterialCosts)}</p>
+                      <p className="resultLine">Skill: {formatCosts(recommendation.action.skillMaterialCosts)}</p>
+                      <p className="warningText">{recommendation.notes.join(" | ")}</p>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
       </section>
     </main>
   );

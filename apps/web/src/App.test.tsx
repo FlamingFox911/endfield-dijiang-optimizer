@@ -165,11 +165,85 @@ describe("App", () => {
     expect(portrait.closest(".avatar")).toHaveAttribute("data-rarity", "5");
   });
 
+  it("renders Base Skill icons in the roster, operator editor, and recommendations", async () => {
+    const { container } = render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    expect(container.querySelectorAll(".editorSkillGrid .skillBadgeImage").length).toBeGreaterThan(0);
+    expect(container.querySelectorAll(".editorSkillGrid .skillBadgeOverlay").length).toBe(0);
+
+    const ownedToggles = await screen.findAllByRole("checkbox", { name: "Owned" });
+    await userEvent.click(ownedToggles[0]!);
+    const firstSkillSelect = container.querySelector(".editorSkillGrid .skillCard select") as HTMLSelectElement;
+    fireEvent.change(firstSkillSelect, {
+      target: {
+        value: "1",
+      },
+    });
+
+    await waitFor(() => {
+      expect(container.querySelectorAll(".portraitSkills .skillBadgeImage").length).toBeGreaterThan(0);
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "Recommend unlocks" }));
+
+    act(() => {
+      workerInstances[0]!.emit({
+        type: "recommendations-completed",
+        runId: 1,
+        result: {
+          catalogVersion: "2026-03-20/v1.1-phase1",
+          baselineScore: 1,
+          rankingMode: "balanced",
+          recommendations: [
+            {
+              action: {
+                operatorId: "chen-qianyu",
+                skillId: "blade-critique",
+                targetRank: 1,
+                currentLevel: 1,
+                currentPromotionTier: 0,
+                requiredLevel: 20,
+                requiredPromotionTier: 1,
+                levelsToGain: 19,
+                levelExpCost: 0,
+                levelTCredCost: 0,
+                levelMaterialCosts: [],
+                levelCostIsUpperBound: false,
+                promotionMaterialCosts: [],
+                skillMaterialCosts: [],
+                materialCosts: [],
+                unlockHint: "test",
+              },
+              scoreDelta: 1,
+              roi: 1,
+              estimatedDaysToUnlock: 1,
+              notes: [],
+            },
+          ],
+        },
+      });
+    });
+
+    const recommendationCard = await screen.findByText("Blade Critique");
+    expect(recommendationCard.closest(".resultCard")).not.toBeNull();
+    expect(screen.getByAltText("Blade Critique icon")).toBeInTheDocument();
+  });
+
   it("orders facilities like the in-game layout and operators by rarity then name", async () => {
     const { container } = render(<App />);
 
     await screen.findByText("Endfield Dijiang Optimizer");
 
+    const operatorNames = Array.from(container.querySelectorAll(".portraitGrid .portraitLabel"))
+      .map((element) => element.textContent)
+      .filter(Boolean);
+    expect(operatorNames.indexOf("Ardelia")).toBeLessThan(operatorNames.indexOf("Alesh"));
+    expect(operatorNames.indexOf("Ember")).toBeLessThan(operatorNames.indexOf("Gilberta"));
+    expect(operatorNames.indexOf("Gilberta")).toBeLessThan(operatorNames.indexOf("Tangtang"));
+
+    await userEvent.click(screen.getByRole("tab", { name: /Planner/i }));
     const plannerPanel = screen.getByText("Dijiang layout").closest(".plannerPanel");
     expect(plannerPanel).not.toBeNull();
     const facilityHeadings = within(plannerPanel!).getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent);
@@ -180,13 +254,6 @@ describe("App", () => {
       "Manufacturing 2",
       "Growth Chamber 1",
     ]);
-
-    const operatorNames = Array.from(container.querySelectorAll(".rosterList .operatorName"))
-      .map((element) => element.textContent)
-      .filter(Boolean);
-    expect(operatorNames.indexOf("Ardelia")).toBeLessThan(operatorNames.indexOf("Alesh"));
-    expect(operatorNames.indexOf("Ember")).toBeLessThan(operatorNames.indexOf("Gilberta"));
-    expect(operatorNames.indexOf("Gilberta")).toBeLessThan(operatorNames.indexOf("Tangtang"));
   });
 
   it("runs recommendations from the UI", async () => {
@@ -240,6 +307,71 @@ describe("App", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Next unlocks")).toBeInTheDocument();
+    });
+  });
+
+  it("falls back to a greek-only badge when a Base Skill icon fails to load", async () => {
+    render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    const ownedToggles = await screen.findAllByRole("checkbox", { name: "Owned" });
+    await userEvent.click(ownedToggles[0]!);
+    await userEvent.click(screen.getByRole("button", { name: "Recommend unlocks" }));
+
+    act(() => {
+      workerInstances[0]!.emit({
+        type: "recommendations-completed",
+        runId: 1,
+        result: {
+          catalogVersion: "2026-03-20/v1.1-phase1",
+          baselineScore: 1,
+          rankingMode: "balanced",
+          recommendations: [
+            {
+              action: {
+                operatorId: "chen-qianyu",
+                skillId: "blade-critique",
+                targetRank: 1,
+                currentLevel: 1,
+                currentPromotionTier: 0,
+                requiredLevel: 20,
+                requiredPromotionTier: 1,
+                levelsToGain: 19,
+                levelExpCost: 0,
+                levelTCredCost: 0,
+                levelMaterialCosts: [],
+                levelCostIsUpperBound: false,
+                promotionMaterialCosts: [],
+                skillMaterialCosts: [],
+                materialCosts: [],
+                unlockHint: "test",
+              },
+              scoreDelta: 1,
+              roi: 1,
+              estimatedDaysToUnlock: 1,
+              notes: [],
+            },
+          ],
+        },
+      });
+    });
+
+    const recommendationCard = (await screen.findByText("Blade Critique")).closest(".resultCard") as HTMLElement;
+    const badge = within(recommendationCard).getByLabelText(/Blade Critique:/);
+    const badgeImage = within(recommendationCard).getByAltText("Blade Critique icon");
+    const expectedOverlay = badge.getAttribute("aria-label")?.includes("GAMMA")
+      ? "\u03b3"
+      : badge.getAttribute("aria-label")?.includes("ALPHA")
+        ? "\u03b1"
+        : "\u03b2";
+
+    fireEvent.error(badgeImage);
+
+    await waitFor(() => {
+      expect(within(recommendationCard).queryByAltText("Blade Critique icon")).not.toBeInTheDocument();
+      expect(badge).toHaveClass("fallback");
+      expect(within(recommendationCard).getByText(expectedOverlay)).toBeInTheDocument();
     });
   });
 
@@ -345,6 +477,9 @@ describe("App", () => {
     );
 
     render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.click(screen.getByRole("tab", { name: /Planner/i }));
 
     await waitFor(() => {
       expect(screen.getByText("Manufacturing 2")).toBeInTheDocument();

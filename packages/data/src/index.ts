@@ -178,6 +178,15 @@ function dedupeSourceRefs(sourceRefs: SourceRef[]): SourceRef[] {
   return merged;
 }
 
+function requireAsset(assetById: Map<string, ImageAsset>, assetId: string, context: string): ImageAsset {
+  const asset = assetById.get(assetId);
+  if (!asset) {
+    throw new Error(`${context} references missing asset '${assetId}'.`);
+  }
+
+  return asset;
+}
+
 export function createProjectedOutputs(): Record<(typeof PRODUCT_KINDS)[number], number> {
   return {
     operator_exp: 0,
@@ -378,6 +387,8 @@ export function toGameCatalog(bundle: CatalogBundle): GameCatalog {
       entry,
     ]),
   );
+  const assets = bundle.assets.assets as ImageAsset[];
+  const assetById = new Map(assets.map((asset) => [asset.id, asset]));
 
   return {
     version: bundle.manifest.catalogVersion,
@@ -409,6 +420,7 @@ export function toGameCatalog(bundle: CatalogBundle): GameCatalog {
       ...withConfidence(operator),
       baseSkills: operator.baseSkills.map((skill, skillIndex) => ({
         ...withConfidence(skill),
+        icon: requireAsset(assetById, skill.iconAssetId, `Base Skill '${operator.id}:${skill.id}'`),
         sourceRefs: dedupeSourceRefs(skill.sourceRefs),
         ranks: skill.ranks.map((rank) => {
           const progression = baseSkillProgressionByKey.get(
@@ -450,7 +462,7 @@ export function toGameCatalog(bundle: CatalogBundle): GameCatalog {
     })) as FacilityDefinition[],
     sources: bundle.sources.sources,
     gaps: bundle.gaps.gaps as CatalogGap[],
-    assets: bundle.assets.assets as ImageAsset[],
+    assets,
   };
 }
 
@@ -549,6 +561,25 @@ export function validateCatalogBundle(bundle: CatalogBundle): ValidationResult {
       issues.push(makeIssue("duplicate_source", `sources.${source.id}`, `sources.json contains duplicate source id '${source.id}'.`));
     }
     sourceIds.add(source.id);
+  }
+
+  const assetEntries = validateCatalogSection("assets.json", bundle.assets, "assets", issues);
+  const assetIds = new Set<string>();
+  for (const asset of assetEntries) {
+    if (!isObject(asset) || typeof asset.id !== "string") {
+      issues.push(makeIssue("invalid_asset_entry", "assets", "assets.json contains an invalid asset entry."));
+      continue;
+    }
+    if (assetIds.has(asset.id)) {
+      issues.push(makeIssue("duplicate_asset", `assets.${asset.id}`, `assets.json contains duplicate asset id '${asset.id}'.`));
+    }
+    assetIds.add(asset.id);
+    if (typeof asset.path !== "string" || asset.path.length === 0) {
+      issues.push(makeIssue("invalid_asset_path", `assets.${asset.id}.path`, `assets.json asset '${asset.id}' must contain a path.`));
+    }
+    if (asset.kind !== "portrait" && asset.kind !== "facility" && asset.kind !== "icon") {
+      issues.push(makeIssue("invalid_asset_kind", `assets.${asset.id}.kind`, `assets.json asset '${asset.id}' must use kind portrait, facility, or icon.`));
+    }
   }
 
   const progression = bundle.progression;
@@ -860,6 +891,23 @@ export function validateCatalogBundle(bundle: CatalogBundle): ValidationResult {
         issues.push(makeIssue("invalid_skill", `operators.${operator.id}`, `operators.json operator '${operator.id}' contains an invalid Base Skill.`));
         continue;
       }
+      if (typeof skill.iconAssetId !== "string" || skill.iconAssetId.length === 0) {
+        issues.push(
+          makeIssue(
+            "missing_skill_icon_asset",
+            `operators.${operator.id}.baseSkills.${skill.id}.iconAssetId`,
+            `operators.json Base Skill '${skill.id}' must contain iconAssetId.`,
+          ),
+        );
+      } else if (!assetIds.has(skill.iconAssetId)) {
+        issues.push(
+          makeIssue(
+            "unknown_skill_icon_asset",
+            `operators.${operator.id}.baseSkills.${skill.id}.iconAssetId`,
+            `operators.json Base Skill '${skill.id}' references unknown asset id '${skill.iconAssetId}'.`,
+          ),
+        );
+      }
       validateSourceRefArray(skill.sourceRefs, `operators.json Base Skill '${skill.id}'`, sourceIds, issues);
       if (!Array.isArray(skill.ranks) || skill.ranks.length === 0) {
         issues.push(
@@ -958,7 +1006,6 @@ export function validateCatalogBundle(bundle: CatalogBundle): ValidationResult {
   }
 
   validateCatalogSection("gaps.json", bundle.gaps, "gaps", issues);
-  validateCatalogSection("assets.json", bundle.assets, "assets", issues);
 
   return {
     ok: issues.every((issue) => issue.severity !== "error"),

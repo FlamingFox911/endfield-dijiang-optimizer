@@ -1,168 +1,455 @@
 {
-    "catalogVersion":  "2026-03-20/v1.1-phase1",
-    "assets":  [
-                   {
-                       "id":  "placeholder-operator-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/placeholders/operator-portrait.png",
-                       "attribution":  "Placeholder; local bundle asset."
-                   },
-                   {
-                       "id":  "placeholder-facility-icon",
-                       "kind":  "facility",
-                       "path":  "assets/placeholders/facility-icon.png",
-                       "attribution":  "Placeholder; local bundle asset."
-                   },
-                   {
-                       "id":  "operator-chen-qianyu-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/chen-qianyu.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/chen-qianyu.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-xaihi-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/xaihi.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/xaihi.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-snowshine-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/snowshine.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/snowshine.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-da-pan-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/da-pan.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/da-pan.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-ardelia-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/ardelia.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/ardelia.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-akekuri-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/akekuri.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/akekuri.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-fluorite-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/fluorite.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/fluorite.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-estella-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/estella.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/estella.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-perlica-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/perlica.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/perlica.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-yvonne-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/yvonne.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/yvonne.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-antal-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/antal.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/antal.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-wulfgard-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/wulfgard.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/wulfgard.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-laevatain-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/laevatain.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/laevatain.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-last-rite-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/last-rite.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/last-rite.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-pogranichnik-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/pogranichnik.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/pogranichnik.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-gilberta-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/gilberta.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/gilberta.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-lifeng-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/lifeng.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/lifeng.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-alesh-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/alesh.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/alesh.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-arclight-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/arclight.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/arclight.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-avywenna-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/avywenna.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/avywenna.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-catcher-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/catcher.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/catcher.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-ember-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/ember.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/ember.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "operator-tangtang-portrait",
-                       "kind":  "portrait",
-                       "path":  "assets/operators/tangtang.webp",
-                       "attribution":  "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/tangtang.webp), retrieved 2026-03-22."
-                   },
-                   {
-                       "id":  "facility-control-nexus-icon",
-                       "kind":  "facility",
-                       "path":  "assets/facilities/control-nexus.png",
-                       "attribution":  "TBD"
-                   },
-                   {
-                       "id":  "facility-reception-room-icon",
-                       "kind":  "facility",
-                       "path":  "assets/facilities/reception-room.png",
-                       "attribution":  "TBD"
-                   }
-               ]
+  "catalogVersion": "2026-03-20/v1.1-phase1",
+  "assets": [
+    {
+      "id": "facility-control_nexus-icon",
+      "kind": "facility",
+      "path": "assets/facilities/control_nexus.png",
+      "attribution": "Facility icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Snowshine); source image https://endfield.wiki.gg/images/thumb/Control_Nexus_icon.png/25px-Control_Nexus_icon.png?9d523b; retrieved 2026-03-22."
+    },
+    {
+      "id": "facility-growth_chamber-icon",
+      "kind": "facility",
+      "path": "assets/facilities/growth_chamber.png",
+      "attribution": "Facility icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Chen_Qianyu); source image https://endfield.wiki.gg/images/thumb/Growth_Chamber_icon.png/25px-Growth_Chamber_icon.png?c5c3c1; retrieved 2026-03-22."
+    },
+    {
+      "id": "facility-manufacturing_cabin-icon",
+      "kind": "facility",
+      "path": "assets/facilities/manufacturing_cabin.png",
+      "attribution": "Facility icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Chen_Qianyu); source image https://endfield.wiki.gg/images/thumb/Manufacturing_Cabin_icon.png/25px-Manufacturing_Cabin_icon.png?fc95bc; retrieved 2026-03-22."
+    },
+    {
+      "id": "facility-reception_room-icon",
+      "kind": "facility",
+      "path": "assets/facilities/reception_room.png",
+      "attribution": "Facility icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Xaihi); source image https://endfield.wiki.gg/images/thumb/Reception_Room_icon.png/25px-Reception_Room_icon.png?672ffd; retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-akekuri-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/akekuri.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/akekuri.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-alesh-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/alesh.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/alesh.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-antal-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/antal.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/antal.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-arclight-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/arclight.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/arclight.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-ardelia-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/ardelia.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/ardelia.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-avywenna-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/avywenna.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/avywenna.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-catcher-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/catcher.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/catcher.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-chen-qianyu-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/chen-qianyu.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/chen-qianyu.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-da-pan-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/da-pan.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/da-pan.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-ember-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/ember.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/ember.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-estella-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/estella.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/estella.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-fluorite-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/fluorite.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/fluorite.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-gilberta-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/gilberta.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/gilberta.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-laevatain-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/laevatain.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/laevatain.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-last-rite-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/last-rite.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/last-rite.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-lifeng-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/lifeng.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/lifeng.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-perlica-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/perlica.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/perlica.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-pogranichnik-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/pogranichnik.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/pogranichnik.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-snowshine-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/snowshine.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/snowshine.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-tangtang-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/tangtang.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/tangtang.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-wulfgard-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/wulfgard.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/wulfgard.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-xaihi-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/xaihi.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/xaihi.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "operator-yvonne-portrait",
+      "kind": "portrait",
+      "path": "assets/operators/yvonne.webp",
+      "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/yvonne.webp), retrieved 2026-03-22."
+    },
+    {
+      "id": "placeholder-facility-icon",
+      "kind": "facility",
+      "path": "assets/placeholders/facility-icon.png",
+      "attribution": "Placeholder; local bundle asset."
+    },
+    {
+      "id": "placeholder-operator-portrait",
+      "kind": "portrait",
+      "path": "assets/placeholders/operator-portrait.png",
+      "attribution": "Placeholder; local bundle asset."
+    },
+    {
+      "id": "skill-akekuri-coffee-or-tea-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/akekuri--coffee-or-tea.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Akekuri); source image https://endfield.wiki.gg/images/thumb/MFG-power_consume.png/25px-MFG-power_consume.png?baa6e0; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-akekuri-icebreaker-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/akekuri--icebreaker.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Akekuri); source image https://endfield.wiki.gg/images/thumb/RR-guestroom_power_consume.png/25px-RR-guestroom_power_consume.png?a90e72; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-alesh-anglers-intel-network-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/alesh--anglers-intel-network.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Alesh); source image https://endfield.wiki.gg/images/thumb/RR-guestroom_clue.png/25px-RR-guestroom_clue.png?18a6ae; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-alesh-casual-angling-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/alesh--casual-angling.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Alesh); source image https://endfield.wiki.gg/images/thumb/CN-power.png/25px-CN-power.png?d0d1ff; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-antal-experimental-arts-unit-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/antal--experimental-arts-unit.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Antal); source image https://endfield.wiki.gg/images/thumb/MFG-efficiency.png/25px-MFG-efficiency.png?4fa039; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-antal-pun-isher-studies-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/antal--pun-isher-studies.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Antal); source image https://endfield.wiki.gg/images/thumb/GC-power_consume.png/25px-GC-power_consume.png?8097f1; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-arclight-blade-of-the-wildlands-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/arclight--blade-of-the-wildlands.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Arclight); source image https://endfield.wiki.gg/images/thumb/MFG-efficiency.png/25px-MFG-efficiency.png?4fa039; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-arclight-hanna-traditions-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/arclight--hanna-traditions.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Arclight); source image https://endfield.wiki.gg/images/thumb/RR-guestroom_clue.png/25px-RR-guestroom_clue.png?18a6ae; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-ardelia-mr-dollys-game-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/ardelia--mr-dollys-game.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Ardelia); source image https://endfield.wiki.gg/images/thumb/RR-guestroom_power_consume.png/25px-RR-guestroom_power_consume.png?a90e72; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-ardelia-tales-of-the-land-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/ardelia--tales-of-the-land.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Ardelia); source image https://endfield.wiki.gg/images/thumb/RR-guestroom_efficiency.png/25px-RR-guestroom_efficiency.png?c326d2; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-avywenna-messengers-secret-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/avywenna--messengers-secret.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Avywenna); source image https://endfield.wiki.gg/images/thumb/RR-guestroom_clue.png/25px-RR-guestroom_clue.png?18a6ae; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-avywenna-residence-advisor-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/avywenna--residence-advisor.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Avywenna); source image https://endfield.wiki.gg/images/thumb/CN-power.png/25px-CN-power.png?d0d1ff; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-catcher-grounded-approach-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/catcher--grounded-approach.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Catcher); source image https://endfield.wiki.gg/images/thumb/GC-power_consume.png/25px-GC-power_consume.png?8097f1; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-catcher-silent-caretaker-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/catcher--silent-caretaker.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Catcher); source image https://endfield.wiki.gg/images/thumb/CN-power.png/25px-CN-power.png?d0d1ff; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-chen-qianyu-blade-critique-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/chen-qianyu--blade-critique.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Chen_Qianyu); source image https://endfield.wiki.gg/images/thumb/MFG-efficiency.png/25px-MFG-efficiency.png?4fa039; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-chen-qianyu-jadeworking-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/chen-qianyu--jadeworking.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Chen_Qianyu); source image https://endfield.wiki.gg/images/thumb/GC-mineral.png/25px-GC-mineral.png?595dab; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-da-pan-chef-of-forage-and-game-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/da-pan--chef-of-forage-and-game.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Da_Pan); source image https://endfield.wiki.gg/images/thumb/GC-fungus.png/25px-GC-fungus.png?ab9336; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-da-pan-worldly-wisdom-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/da-pan--worldly-wisdom.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Da_Pan); source image https://endfield.wiki.gg/images/thumb/CN-power.png/25px-CN-power.png?d0d1ff; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-ember-keepers-of-the-banner-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/ember--keepers-of-the-banner.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Ember); source image https://endfield.wiki.gg/images/thumb/RR-guestroom_clue.png/25px-RR-guestroom_clue.png?18a6ae; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-ember-special-northern-training-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/ember--special-northern-training.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Ember); source image https://endfield.wiki.gg/images/thumb/MFG-efficiency.png/25px-MFG-efficiency.png?4fa039; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-estella-fragmented-rest-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/estella--fragmented-rest.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Estella); source image https://endfield.wiki.gg/images/thumb/CN-power.png/25px-CN-power.png?d0d1ff; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-estella-frequency-monitoring-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/estella--frequency-monitoring.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Estella); source image https://endfield.wiki.gg/images/thumb/RR-guestroom_efficiency.png/25px-RR-guestroom_efficiency.png?c326d2; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-fluorite-reader-of-emotions-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/fluorite--reader-of-emotions.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Fluorite); source image https://endfield.wiki.gg/images/thumb/CN-power.png/25px-CN-power.png?d0d1ff; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-fluorite-wildlands-trekker-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/fluorite--wildlands-trekker.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Fluorite); source image https://endfield.wiki.gg/images/thumb/GC-mineral.png/25px-GC-mineral.png?595dab; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-gilberta-messengerial-arms-mastery-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/gilberta--messengerial-arms-mastery.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Gilberta); source image https://endfield.wiki.gg/images/thumb/MFG-efficiency.png/25px-MFG-efficiency.png?4fa039; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-gilberta-messengerial-processing-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/gilberta--messengerial-processing.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Gilberta); source image https://endfield.wiki.gg/images/thumb/MFG-power_consume.png/25px-MFG-power_consume.png?baa6e0; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-laevatain-memory-crucible-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/laevatain--memory-crucible.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Laevatain); source image https://endfield.wiki.gg/images/thumb/MFG-efficiency.png/25px-MFG-efficiency.png?4fa039; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-laevatain-undying-flames-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/laevatain--undying-flames.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Laevatain); source image https://endfield.wiki.gg/images/thumb/MFG-power_consume.png/25px-MFG-power_consume.png?baa6e0; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-last-rite-cemetery-gardening-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/last-rite--cemetery-gardening.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Last_Rite); source image https://endfield.wiki.gg/images/thumb/GC-flower.png/25px-GC-flower.png?f0d133; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-last-rite-fame-of-the-royal-courts-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/last-rite--fame-of-the-royal-courts.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Last_Rite); source image https://endfield.wiki.gg/images/thumb/RR-guestroom_clue.png/25px-RR-guestroom_clue.png?18a6ae; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-lifeng-laddie-reliable-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/lifeng--laddie-reliable.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Lifeng); source image https://endfield.wiki.gg/images/thumb/RR-guestroom_clue.png/25px-RR-guestroom_clue.png?18a6ae; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-lifeng-youthful-ambition-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/lifeng--youthful-ambition.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Lifeng); source image https://endfield.wiki.gg/images/thumb/CN-power.png/25px-CN-power.png?d0d1ff; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-perlica-protocol-redistribution-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/perlica--protocol-redistribution.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Perlica); source image https://endfield.wiki.gg/images/thumb/MFG-efficiency.png/25px-MFG-efficiency.png?4fa039; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-perlica-supervisor-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/perlica--supervisor.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Perlica); source image https://endfield.wiki.gg/images/thumb/CN-power.png/25px-CN-power.png?d0d1ff; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-pogranichnik-hone-the-weapons-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/pogranichnik--hone-the-weapons.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Pogranichnik); source image https://endfield.wiki.gg/images/thumb/MFG-efficiency.png/25px-MFG-efficiency.png?4fa039; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-pogranichnik-morale-boost-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/pogranichnik--morale-boost.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Pogranichnik); source image https://endfield.wiki.gg/images/thumb/MFG-power_consume.png/25px-MFG-power_consume.png?baa6e0; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-snowshine-happy-go-lucky-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/snowshine--happy-go-lucky.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Snowshine); source image https://endfield.wiki.gg/images/thumb/CN-power.png/25px-CN-power.png?d0d1ff; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-snowshine-rescuers-perseverance-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/snowshine--rescuers-perseverance.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Snowshine); source image https://endfield.wiki.gg/images/thumb/MFG-power_consume.png/25px-MFG-power_consume.png?baa6e0; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-tangtang-rivers-daughter-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/tangtang--rivers-daughter.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Tangtang); source image https://endfield.wiki.gg/images/thumb/GC-flower.png/25px-GC-flower.png?f0d133; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-tangtang-supreme-chief-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/tangtang--supreme-chief.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Tangtang); source image https://endfield.wiki.gg/images/thumb/GC-power_consume.png/25px-GC-power_consume.png?8097f1; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-wulfgard-knack-for-the-wildlands-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/wulfgard--knack-for-the-wildlands.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Wulfgard); source image https://endfield.wiki.gg/images/thumb/GC-mineral.png/25px-GC-mineral.png?595dab; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-wulfgard-pack-techniques-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/wulfgard--pack-techniques.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Wulfgard); source image https://endfield.wiki.gg/images/thumb/MFG-efficiency.png/25px-MFG-efficiency.png?4fa039; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-xaihi-murmuring-session-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/xaihi--murmuring-session.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Xaihi); source image https://endfield.wiki.gg/images/thumb/RR-guestroom_clue.png/25px-RR-guestroom_clue.png?18a6ae; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-xaihi-standardized-scripting-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/xaihi--standardized-scripting.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Xaihi); source image https://endfield.wiki.gg/images/thumb/MFG-efficiency.png/25px-MFG-efficiency.png?4fa039; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-yvonne-fashionista-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/yvonne--fashionista.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Yvonne); source image https://endfield.wiki.gg/images/thumb/GC-power_consume.png/25px-GC-power_consume.png?8097f1; retrieved 2026-03-22."
+    },
+    {
+      "id": "skill-yvonne-fungal-pigment-extraction-icon",
+      "kind": "icon",
+      "path": "assets/base-skills/yvonne--fungal-pigment-extraction.png",
+      "attribution": "Base Skill icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Yvonne); source image https://endfield.wiki.gg/images/thumb/GC-fungus.png/25px-GC-fungus.png?ab9336; retrieved 2026-03-22."
+    }
+  ]
 }
-

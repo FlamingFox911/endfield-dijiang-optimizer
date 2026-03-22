@@ -9,6 +9,7 @@ import {
   hydrateScenarioForCatalog,
   listSelectableRecipes,
   migrateScenario,
+  validateCatalogBundle,
   validateScenarioAgainstCatalog,
 } from "@endfield/data";
 import { loadCatalogBundle, loadDefaultCatalog, loadScenarioFile, resolveRepoPath } from "@endfield/data/node";
@@ -158,6 +159,40 @@ describe("data services", () => {
     expect(tangtang?.baseSkills[1]?.ranks[1]?.unlockHint).toBe(
       "Raise Tangtang to Elite 4 Level 80 to unlock River's Daughter gamma.",
     );
+    expect(tangtang?.baseSkills[0]?.icon.id).toBe("skill-tangtang-supreme-chief-icon");
+    expect(tangtang?.baseSkills[0]?.icon.kind).toBe("icon");
+  });
+
+  it("requires every Base Skill icon asset id to resolve against the asset bundle", async () => {
+    const bundle = await loadCatalogBundle();
+    const validation = validateCatalogBundle(bundle);
+
+    expect(validation.ok).toBe(true);
+    expect(
+      bundle.operators.operators.every((operator) => operator.baseSkills.every((skill) => typeof skill.iconAssetId === "string" && skill.iconAssetId.length > 0)),
+    ).toBe(true);
+  });
+
+  it("rejects Base Skill icon refs that point at missing assets", async () => {
+    const bundle = await loadCatalogBundle();
+    const broken = structuredClone(bundle);
+    broken.operators.operators[0]!.baseSkills[0]!.iconAssetId = "missing-base-skill-icon";
+
+    const validation = validateCatalogBundle(broken);
+
+    expect(validation.ok).toBe(false);
+    expect(validation.issues.some((issue) => issue.code === "unknown_skill_icon_asset")).toBe(true);
+  });
+
+  it("deduplicates facility fallback assets by facility kind", async () => {
+    const bundle = await loadCatalogBundle();
+    const facilityAssets = bundle.assets.assets.filter((asset) => asset.kind === "facility" && asset.id !== "placeholder-facility-icon");
+    const referencedKinds = new Set(
+      bundle.operators.operators.flatMap((operator) => operator.baseSkills.map((skill) => skill.facilityKind)),
+    );
+
+    expect(new Set(facilityAssets.map((asset) => asset.id)).size).toBe(facilityAssets.length);
+    expect(facilityAssets).toHaveLength(referencedKinds.size);
   });
 
   it("resolves shared and operator-specific Promotion IV material requirements", async () => {

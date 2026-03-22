@@ -60,6 +60,7 @@ Each operator record includes:
 - rarity and class
 - portrait asset refs
 - Base Skill definitions
+- Base Skill icon asset refs
 - source refs
 
 Shared progression defaults should not be duplicated in every operator record when they can live in `progression.json`. The loader expands shared defaults back into the fully resolved runtime shape.
@@ -158,6 +159,7 @@ Each recipe record includes:
 
 - portrait ids
 - facility icon ids
+- Base Skill icon ids
 - placeholder ids
 - relative file paths
 - attribution when needed

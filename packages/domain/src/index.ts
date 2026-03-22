@@ -79,6 +79,7 @@ export interface BaseSkillDefinition {
   id: string;
   name: string;
   facilityKind: FacilityKind;
+  icon: ImageAsset;
   ranks: BaseSkillRankDefinition[];
   sourceRefs: SourceRef[];
   dataConfidence?: DataConfidence;
@@ -98,6 +99,7 @@ export interface CatalogBaseSkillDefinition {
   id: string;
   name: string;
   facilityKind: FacilityKind;
+  iconAssetId: string;
   ranks: CatalogBaseSkillRankDefinition[];
   sourceRefs: SourceRef[];
   dataConfidence?: DataConfidence;

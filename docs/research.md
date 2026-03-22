@@ -3,6 +3,7 @@
 Snapshot date: March 20, 2026.
 
 This document records the source-backed facts that shaped the application architecture, plus the gaps that still need manual validation or in-game verification.
+Operational retrieval notes for each source domain live in `docs/source-tactics.md`.
 
 ## Confirmed facts
 
