@@ -22,7 +22,7 @@ Current repo status:
 - Roster
   Portrait grid, operator search, rarity filters, level and promotion controls, and explicit base-skill rank controls.
 - Dijiang
-  Visual cards for Control Nexus, Manufacturing Cabins, Growth Chamber, and Reception Room, including room levels and hard assignments.
+  Visual cards for Control Nexus, Manufacturing Cabins, Growth Chamber, and Reception Room, including room levels, Control Nexus unlock gating, and hard assignments.
 - Priorities
   Per-room recipe pickers, saved with the scenario for future reuse.
 - Results

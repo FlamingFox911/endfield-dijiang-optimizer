@@ -21,6 +21,11 @@ describe("data services", () => {
     expect(scenario.scenarioFormatVersion).toBe(CURRENT_SCENARIO_FORMAT_VERSION);
     expect(scenario.catalogVersion).toBe(catalog.version);
     expect(scenario.options.upgradeRankingMode).toBe("balanced");
+    expect(scenario.facilities.manufacturingCabins).toHaveLength(2);
+    expect(scenario.facilities.manufacturingCabins[0]?.enabled).toBe(true);
+    expect(scenario.facilities.manufacturingCabins[1]?.enabled).toBe(false);
+    expect(scenario.facilities.growthChambers[0]?.enabled).toBe(false);
+    expect(scenario.facilities.receptionRoom?.enabled).toBe(false);
   });
 
   it("migrates legacy scenarios by filling the new format fields", () => {
@@ -43,6 +48,9 @@ describe("data services", () => {
     expect(migration.migrated).toBe(true);
     expect(migration.scenario.scenarioFormatVersion).toBe(CURRENT_SCENARIO_FORMAT_VERSION);
     expect(migration.scenario.options.upgradeRankingMode).toBe("balanced");
+    expect(migration.scenario.facilities.manufacturingCabins).toHaveLength(2);
+    expect(migration.scenario.facilities.growthChambers).toHaveLength(1);
+    expect(migration.scenario.facilities.receptionRoom?.id).toBe("reception-1");
   });
 
   it("validates the updated example scenario set", async () => {
@@ -137,6 +145,22 @@ describe("data services", () => {
     expect(validation.ok).toBe(false);
     expect(validation.issues.some((issue) => issue.code === "invalid_recipe_room_kind")).toBe(true);
     expect(validation.issues.some((issue) => issue.code === "hard_assignment_slot_oob")).toBe(true);
+  });
+
+  it("rejects facilities that are still locked behind Control Nexus progression", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+
+    scenario.facilities.manufacturingCabins[1]!.enabled = true;
+    scenario.facilities.growthChambers[0]!.enabled = true;
+    scenario.facilities.receptionRoom!.enabled = true;
+
+    const validation = validateScenarioAgainstCatalog(catalog, scenario);
+
+    expect(validation.ok).toBe(false);
+    expect(validation.issues.some((issue) => issue.path === "facilities.manufacturingCabins.mfg-2.enabled")).toBe(true);
+    expect(validation.issues.some((issue) => issue.path === "facilities.growthChambers.growth-1.enabled")).toBe(true);
+    expect(validation.issues.some((issue) => issue.path === "facilities.receptionRoom.enabled")).toBe(true);
   });
 
   it("uses the verified Manufacturing Cabin recipe unlock tiers", async () => {

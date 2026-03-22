@@ -85,6 +85,18 @@ const MAX_LAYOUT_DEFAULTS = {
   reception_room: 1,
 } as const;
 
+const ROOM_UNLOCK_THRESHOLDS = {
+  manufacturing_cabin: [1, 3],
+  growth_chamber: [2],
+  reception_room: [3],
+} as const;
+
+const ROOM_LEVEL_CAPS_BY_CONTROL_NEXUS = {
+  manufacturing_cabin: { 1: 1, 2: 2, 3: 2, 4: 3, 5: 3 },
+  growth_chamber: { 1: 0, 2: 1, 3: 2, 4: 2, 5: 3 },
+  reception_room: { 1: 0, 2: 0, 3: 1, 4: 2, 5: 3 },
+} as const;
+
 const PRODUCT_KINDS = [
   "operator_exp",
   "weapon_exp",
@@ -979,6 +991,24 @@ export function getMaxFacilityRoomCounts(): typeof MAX_LAYOUT_DEFAULTS {
   return MAX_LAYOUT_DEFAULTS;
 }
 
+export function getUnlockedFacilityRoomCount(
+  roomKind: Exclude<FacilityKind, "control_nexus">,
+  controlNexusLevel: number,
+): number {
+  const thresholds = ROOM_UNLOCK_THRESHOLDS[roomKind];
+  return thresholds.filter((threshold) => controlNexusLevel >= threshold).length;
+}
+
+export function getFacilityLevelCapForControlNexus(
+  roomKind: Exclude<FacilityKind, "control_nexus">,
+  controlNexusLevel: number,
+): number {
+  return (
+    ROOM_LEVEL_CAPS_BY_CONTROL_NEXUS[roomKind][controlNexusLevel as 1 | 2 | 3 | 4 | 5] ??
+    0
+  );
+}
+
 export function getGrowthSlotCap(
   catalog: GameCatalog,
   roomLevel: number,
@@ -992,7 +1022,6 @@ export function getGrowthSlotCap(
 
 export function createStarterScenario(catalog: GameCatalog): OptimizationScenario {
   const firstManufacturingRecipe = listSelectableRecipes(catalog, "manufacturing_cabin", 1)[0];
-  const firstGrowthRecipe = listSelectableRecipes(catalog, "growth_chamber", 1)[0];
 
   return {
     scenarioFormatVersion: CURRENT_SCENARIO_FORMAT_VERSION,
@@ -1016,18 +1045,23 @@ export function createStarterScenario(catalog: GameCatalog): OptimizationScenari
           level: 1,
           fixedRecipeId: firstManufacturingRecipe?.id,
         },
+        {
+          id: "mfg-2",
+          enabled: false,
+          level: 1,
+        },
       ],
       growthChambers: [
         {
           id: "growth-1",
-          enabled: true,
+          enabled: false,
           level: 1,
-          fixedRecipeIds: firstGrowthRecipe ? [firstGrowthRecipe.id] : [],
+          fixedRecipeIds: [],
         },
       ],
       receptionRoom: {
         id: "reception-1",
-        enabled: true,
+        enabled: false,
         level: 1,
       },
       hardAssignments: [],
@@ -1213,6 +1247,19 @@ export function migrateScenario(input: unknown): MigrationResult {
     });
   }
 
+  while (facilities.manufacturingCabins.length < MAX_LAYOUT_DEFAULTS.manufacturing_cabin) {
+    const roomNumber = facilities.manufacturingCabins.length + 1;
+    facilities.manufacturingCabins.push({
+      id: `mfg-${roomNumber}`,
+      enabled: roomNumber === 1,
+      level: 1,
+    });
+    changes.push({
+      path: `facilities.manufacturingCabins.${roomNumber - 1}`,
+      message: `Added missing Manufacturing Cabin placeholder 'mfg-${roomNumber}'.`,
+    });
+  }
+
   if (!Array.isArray(facilities.growthChambers)) {
     facilities.growthChambers = [];
     changes.push({
@@ -1220,26 +1267,51 @@ export function migrateScenario(input: unknown): MigrationResult {
       message: "Defaulted missing growthChambers to an empty array.",
     });
   }
-  else {
-    for (const room of facilities.growthChambers) {
-      if (isObject(room) && Array.isArray(room.fixedRecipeIds)) {
-        continue;
-      }
-      if (isObject(room) && typeof room.fixedRecipeId === "string") {
-        room.fixedRecipeIds = [room.fixedRecipeId];
-        delete room.fixedRecipeId;
-        changes.push({
-          path: "facilities.growthChambers[].fixedRecipeIds",
-          message: "Migrated Growth Chamber fixedRecipeId to fixedRecipeIds[].",
-        });
-      } else if (isObject(room) && room.fixedRecipeIds == null) {
-        room.fixedRecipeIds = [];
-        changes.push({
-          path: "facilities.growthChambers[].fixedRecipeIds",
-          message: "Defaulted missing Growth Chamber fixedRecipeIds to an empty array.",
-        });
-      }
+
+  while (facilities.growthChambers.length < MAX_LAYOUT_DEFAULTS.growth_chamber) {
+    const roomNumber = facilities.growthChambers.length + 1;
+    facilities.growthChambers.push({
+      id: `growth-${roomNumber}`,
+      enabled: false,
+      level: 1,
+      fixedRecipeIds: [],
+    });
+    changes.push({
+      path: `facilities.growthChambers.${roomNumber - 1}`,
+      message: `Added missing Growth Chamber placeholder 'growth-${roomNumber}'.`,
+    });
+  }
+
+  for (const room of facilities.growthChambers) {
+    if (isObject(room) && Array.isArray(room.fixedRecipeIds)) {
+      continue;
     }
+    if (isObject(room) && typeof room.fixedRecipeId === "string") {
+      room.fixedRecipeIds = [room.fixedRecipeId];
+      delete room.fixedRecipeId;
+      changes.push({
+        path: "facilities.growthChambers[].fixedRecipeIds",
+        message: "Migrated Growth Chamber fixedRecipeId to fixedRecipeIds[].",
+      });
+    } else if (isObject(room) && room.fixedRecipeIds == null) {
+      room.fixedRecipeIds = [];
+      changes.push({
+        path: "facilities.growthChambers[].fixedRecipeIds",
+        message: "Defaulted missing Growth Chamber fixedRecipeIds to an empty array.",
+      });
+    }
+  }
+
+  if (!isObject(facilities.receptionRoom)) {
+    facilities.receptionRoom = {
+      id: "reception-1",
+      enabled: false,
+      level: 1,
+    };
+    changes.push({
+      path: "facilities.receptionRoom",
+      message: "Added missing Reception Room placeholder 'reception-1'.",
+    });
   }
 
   if (!Array.isArray(facilities.hardAssignments)) {
@@ -1355,7 +1427,16 @@ export function validateScenarioAgainstCatalog(
     }
   }
 
-  for (const room of scenario.facilities.manufacturingCabins) {
+  const unlockedManufacturingRooms = getUnlockedFacilityRoomCount(
+    "manufacturing_cabin",
+    scenario.facilities.controlNexus.level,
+  );
+  const manufacturingLevelCap = getFacilityLevelCapForControlNexus(
+    "manufacturing_cabin",
+    scenario.facilities.controlNexus.level,
+  );
+
+  for (const [roomIndex, room] of scenario.facilities.manufacturingCabins.entries()) {
     roomIds.add(room.id);
     roomSpecs.set(room.id, {
       roomKind: "manufacturing_cabin",
@@ -1367,6 +1448,24 @@ export function validateScenarioAgainstCatalog(
         scenario.facilities.controlNexus.level,
       ),
     });
+    if (roomIndex >= unlockedManufacturingRooms && room.enabled) {
+      issues.push(
+        makeIssue(
+          "room_locked",
+          `facilities.manufacturingCabins.${room.id}.enabled`,
+          `Manufacturing cabin '${room.id}' is locked until Control Nexus level 3.`,
+        ),
+      );
+    }
+    if (room.enabled && room.level > manufacturingLevelCap) {
+      issues.push(
+        makeIssue(
+          "room_level_locked",
+          `facilities.manufacturingCabins.${room.id}.level`,
+          `Manufacturing cabin '${room.id}' cannot exceed level ${manufacturingLevelCap} at Control Nexus level ${scenario.facilities.controlNexus.level}.`,
+        ),
+      );
+    }
     if (room.fixedRecipeId && !recipeIds.has(room.fixedRecipeId)) {
       issues.push(
         makeIssue(
@@ -1399,7 +1498,16 @@ export function validateScenarioAgainstCatalog(
     }
   }
 
-  for (const room of scenario.facilities.growthChambers) {
+  const unlockedGrowthRooms = getUnlockedFacilityRoomCount(
+    "growth_chamber",
+    scenario.facilities.controlNexus.level,
+  );
+  const growthLevelCap = getFacilityLevelCapForControlNexus(
+    "growth_chamber",
+    scenario.facilities.controlNexus.level,
+  );
+
+  for (const [roomIndex, room] of scenario.facilities.growthChambers.entries()) {
     roomIds.add(room.id);
     roomSpecs.set(room.id, {
       roomKind: "growth_chamber",
@@ -1411,6 +1519,24 @@ export function validateScenarioAgainstCatalog(
         scenario.facilities.controlNexus.level,
       ),
     });
+    if (roomIndex >= unlockedGrowthRooms && room.enabled) {
+      issues.push(
+        makeIssue(
+          "room_locked",
+          `facilities.growthChambers.${room.id}.enabled`,
+          `Growth chamber '${room.id}' is locked until Control Nexus level 2.`,
+        ),
+      );
+    }
+    if (room.enabled && room.level > growthLevelCap) {
+      issues.push(
+        makeIssue(
+          "room_level_locked",
+          `facilities.growthChambers.${room.id}.level`,
+          `Growth chamber '${room.id}' cannot exceed level ${growthLevelCap} at Control Nexus level ${scenario.facilities.controlNexus.level}.`,
+        ),
+      );
+    }
     const growthSlotCap = getGrowthSlotCap(catalog, room.level);
     if ((room.fixedRecipeIds?.length ?? 0) > growthSlotCap) {
       issues.push(
@@ -1455,6 +1581,14 @@ export function validateScenarioAgainstCatalog(
   }
 
   if (scenario.facilities.receptionRoom) {
+    const unlockedReceptionRooms = getUnlockedFacilityRoomCount(
+      "reception_room",
+      scenario.facilities.controlNexus.level,
+    );
+    const receptionLevelCap = getFacilityLevelCapForControlNexus(
+      "reception_room",
+      scenario.facilities.controlNexus.level,
+    );
     roomIds.add(scenario.facilities.receptionRoom.id);
     roomSpecs.set(scenario.facilities.receptionRoom.id, {
       roomKind: "reception_room",
@@ -1466,6 +1600,24 @@ export function validateScenarioAgainstCatalog(
         scenario.facilities.controlNexus.level,
       ),
     });
+    if (unlockedReceptionRooms === 0 && scenario.facilities.receptionRoom.enabled) {
+      issues.push(
+        makeIssue(
+          "room_locked",
+          "facilities.receptionRoom.enabled",
+          "Reception room is locked until Control Nexus level 3.",
+        ),
+      );
+    }
+    if (scenario.facilities.receptionRoom.enabled && scenario.facilities.receptionRoom.level > receptionLevelCap) {
+      issues.push(
+        makeIssue(
+          "room_level_locked",
+          "facilities.receptionRoom.level",
+          `Reception room cannot exceed level ${receptionLevelCap} at Control Nexus level ${scenario.facilities.controlNexus.level}.`,
+        ),
+      );
+    }
   }
 
   const hardAssigned = new Set<string>();

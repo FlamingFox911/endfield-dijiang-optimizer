@@ -10,7 +10,6 @@
         {
           "level": 1,
           "slotCap": 1,
-          "growthSlotCap": 3,
           "sourceRefs": [
             {
               "id": "game8-control-nexus",
@@ -18,6 +17,13 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/575985",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "user-control-nexus-upgrades-2026-03-21",
+              "label": "User Control Nexus upgrade screenshots",
+              "url": "local-user-supplied",
+              "retrievedOn": "2026-03-21",
+              "confidence": "manual_override"
             }
           ]
         },
@@ -31,6 +37,13 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/575985",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "user-control-nexus-upgrades-2026-03-21",
+              "label": "User Control Nexus upgrade screenshots",
+              "url": "local-user-supplied",
+              "retrievedOn": "2026-03-21",
+              "confidence": "manual_override"
             }
           ]
         },
@@ -44,6 +57,13 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/575985",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "user-control-nexus-upgrades-2026-03-21",
+              "label": "User Control Nexus upgrade screenshots",
+              "url": "local-user-supplied",
+              "retrievedOn": "2026-03-21",
+              "confidence": "manual_override"
             }
           ]
         },
@@ -57,6 +77,13 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/575985",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "user-control-nexus-upgrades-2026-03-21",
+              "label": "User Control Nexus upgrade screenshots",
+              "url": "local-user-supplied",
+              "retrievedOn": "2026-03-21",
+              "confidence": "manual_override"
             }
           ]
         },
@@ -70,6 +97,13 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/575985",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "user-control-nexus-upgrades-2026-03-21",
+              "label": "User Control Nexus upgrade screenshots",
+              "url": "local-user-supplied",
+              "retrievedOn": "2026-03-21",
+              "confidence": "manual_override"
             }
           ]
         }
@@ -88,6 +122,13 @@
           "url": "https://game8.co/games/Arknights-Endfield/archives/575985",
           "retrievedOn": "2026-03-20",
           "confidence": "guide_site"
+        },
+        {
+          "id": "user-control-nexus-upgrades-2026-03-21",
+          "label": "User Control Nexus upgrade screenshots",
+          "url": "local-user-supplied",
+          "retrievedOn": "2026-03-21",
+          "confidence": "manual_override"
         }
       ]
     },
@@ -95,7 +136,7 @@
       "id": "manufacturing_cabin",
       "name": "Manufacturing Cabin",
       "kind": "manufacturing_cabin",
-      "unlockHint": "Unlocked during the Maintenance Progress main mission in Chapter 1 - Progress 2; the second cabin becomes available after reaching Control Nexus level 3.",
+      "unlockHint": "Unlocked during the Maintenance Progress main mission in Chapter 1 - Progress 2; a second Manufacturing Cabin unlocks at Control Nexus level 3.",
       "levels": [
         {
           "level": 1,
@@ -153,6 +194,13 @@
           "url": "https://game8.co/games/Arknights-Endfield/archives/577556",
           "retrievedOn": "2026-03-20",
           "confidence": "guide_site"
+        },
+        {
+          "id": "user-control-nexus-upgrades-2026-03-21",
+          "label": "User Control Nexus upgrade screenshots",
+          "url": "local-user-supplied",
+          "retrievedOn": "2026-03-21",
+          "confidence": "manual_override"
         }
       ]
     },
@@ -160,11 +208,12 @@
       "id": "growth_chamber",
       "name": "Growth Chamber",
       "kind": "growth_chamber",
-      "unlockHint": "Unlocked through the Dijiang Upgrade and Maintenance II mission and upgraded through the normal Dijiang progression flow; max growth slots are known to reach 9.",
+      "unlockHint": "Unlocked at Control Nexus level 2; its level cap increases to 2 at Control Nexus level 3 and to 3 at Control Nexus level 5.",
       "levels": [
         {
           "level": 1,
           "slotCap": 1,
+          "growthSlotCap": 3,
           "sourceRefs": [
             {
               "id": "game8-growth-chamber",
@@ -172,6 +221,13 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/577534",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "user-control-nexus-upgrades-2026-03-21",
+              "label": "User Control Nexus upgrade screenshots",
+              "url": "local-user-supplied",
+              "retrievedOn": "2026-03-21",
+              "confidence": "manual_override"
             }
           ],
           "unresolvedFields": []
@@ -187,6 +243,13 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/577534",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "user-control-nexus-upgrades-2026-03-21",
+              "label": "User Control Nexus upgrade screenshots",
+              "url": "local-user-supplied",
+              "retrievedOn": "2026-03-21",
+              "confidence": "manual_override"
             }
           ],
           "unresolvedFields": []
@@ -202,6 +265,13 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/577534",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "user-control-nexus-upgrades-2026-03-21",
+              "label": "User Control Nexus upgrade screenshots",
+              "url": "local-user-supplied",
+              "retrievedOn": "2026-03-21",
+              "confidence": "manual_override"
             }
           ],
           "unresolvedFields": []
@@ -214,6 +284,13 @@
           "url": "https://game8.co/games/Arknights-Endfield/archives/577534",
           "retrievedOn": "2026-03-20",
           "confidence": "guide_site"
+        },
+        {
+          "id": "user-control-nexus-upgrades-2026-03-21",
+          "label": "User Control Nexus upgrade screenshots",
+          "url": "local-user-supplied",
+          "retrievedOn": "2026-03-21",
+          "confidence": "manual_override"
         }
       ]
     },
@@ -221,7 +298,7 @@
       "id": "reception_room",
       "name": "Reception Room",
       "kind": "reception_room",
-      "unlockHint": "Unlocked during the Maintenance Progress main mission inside the OMV Dijiang.",
+      "unlockHint": "Unlocked at Control Nexus level 3 through the Dijiang Upgrade and Maintenance II progression flow; its level cap rises to 2 at Control Nexus level 4 and 3 at Control Nexus level 5.",
       "levels": [
         {
           "level": 1,
@@ -233,6 +310,13 @@
               "url": "https://gamewith.net/akendfield/72893",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "user-control-nexus-upgrades-2026-03-21",
+              "label": "User Control Nexus upgrade screenshots",
+              "url": "local-user-supplied",
+              "retrievedOn": "2026-03-21",
+              "confidence": "manual_override"
             }
           ],
           "unresolvedFields": []
@@ -247,6 +331,13 @@
               "url": "https://gamewith.net/akendfield/72893",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "user-control-nexus-upgrades-2026-03-21",
+              "label": "User Control Nexus upgrade screenshots",
+              "url": "local-user-supplied",
+              "retrievedOn": "2026-03-21",
+              "confidence": "manual_override"
             }
           ],
           "unresolvedFields": []
@@ -261,6 +352,13 @@
               "url": "https://gamewith.net/akendfield/72893",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "user-control-nexus-upgrades-2026-03-21",
+              "label": "User Control Nexus upgrade screenshots",
+              "url": "local-user-supplied",
+              "retrievedOn": "2026-03-21",
+              "confidence": "manual_override"
             }
           ],
           "unresolvedFields": []
@@ -280,6 +378,13 @@
           "url": "https://gamewith.net/akendfield/72893",
           "retrievedOn": "2026-03-20",
           "confidence": "guide_site"
+        },
+        {
+          "id": "user-control-nexus-upgrades-2026-03-21",
+          "label": "User Control Nexus upgrade screenshots",
+          "url": "local-user-supplied",
+          "retrievedOn": "2026-03-21",
+          "confidence": "manual_override"
         }
       ]
     }

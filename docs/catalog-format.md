@@ -127,6 +127,7 @@ Each facility record includes:
 - stable id and room kind
 - unlock hint
 - level table
+- Control Nexus-gated room unlocks and facility level-cap notes when known
 - slot-cap and unresolved-field notes
 
 ## Recipes file
@@ -179,6 +180,13 @@ Each scenario contains:
 - per-room selected recipes
 - global hard assignments
 - solver options including `planningMode`
+
+Room availability is also part of scenario validation. For the current catalog:
+
+- the Growth Chamber unlocks at Control Nexus level 2
+- the second Manufacturing Cabin unlocks at Control Nexus level 3
+- the Reception Room unlocks at Control Nexus level 3
+- facility level caps are additionally constrained by Control Nexus progression
 
 The room recipe plan is user-owned scenario data. The solver does not choose recipes in v1; it optimizes operator placement around the user's exact per-room recipe choices.
 

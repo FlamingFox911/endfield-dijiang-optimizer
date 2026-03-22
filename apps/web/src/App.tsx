@@ -6,8 +6,10 @@ import {
   CURRENT_CATALOG_VERSION,
   createStarterScenario,
   fetchGameCatalog,
+  getFacilityLevelCapForControlNexus,
   getGrowthSlotCap,
   getRoomSlotCap,
+  getUnlockedFacilityRoomCount,
   hydrateScenarioForCatalog,
   migrateScenario,
   validateScenarioAgainstCatalog,
@@ -154,6 +156,12 @@ function App() {
 
   const validation = validateScenarioAgainstCatalog(catalog, scenario);
   const ownedOperators = scenario.roster.filter((entry) => entry.owned);
+  const unlockedManufacturingRoomCount = getUnlockedFacilityRoomCount("manufacturing_cabin", scenario.facilities.controlNexus.level);
+  const unlockedGrowthRoomCount = getUnlockedFacilityRoomCount("growth_chamber", scenario.facilities.controlNexus.level);
+  const unlockedReceptionRoomCount = getUnlockedFacilityRoomCount("reception_room", scenario.facilities.controlNexus.level);
+  const manufacturingLevelCap = getFacilityLevelCapForControlNexus("manufacturing_cabin", scenario.facilities.controlNexus.level);
+  const growthLevelCap = getFacilityLevelCapForControlNexus("growth_chamber", scenario.facilities.controlNexus.level);
+  const receptionLevelCap = getFacilityLevelCapForControlNexus("reception_room", scenario.facilities.controlNexus.level);
   const roomOptions = [
     { id: "control_nexus", label: "Control Nexus" },
     ...scenario.facilities.manufacturingCabins.map((room, index) => ({ id: room.id, label: `Manufacturing ${index + 1}` })),
@@ -299,28 +307,31 @@ function App() {
           <div className="roomStack">
             {scenario.facilities.manufacturingCabins.map((room, index) => {
               const recipe = room.fixedRecipeId ? recipesById.get(room.fixedRecipeId) : undefined;
+              const roomLocked = index >= unlockedManufacturingRoomCount;
               return (
                 <article className="roomCard" key={room.id}>
                   <div className="facilityHeader"><div><h3>Manufacturing {index + 1}</h3><p>{facilitiesByKind.get("manufacturing_cabin")?.unlockHint}</p></div><span className="miniStat">{getRoomSlotCap(catalog, "manufacturing_cabin", room.level, scenario.facilities.controlNexus.level)} slots</span></div>
-                  <div className="numericRow"><label><span>Enabled</span><input type="checkbox" checked={room.enabled} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, enabled: event.target.checked } : entry) } }))} /></label><label><span>Level</span><input type="number" min={1} max={3} value={room.level} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, level: Number(event.target.value) as 1 | 2 | 3 } : entry) } }))} /></label></div>
-                  <label><span>Recipe</span><select value={room.fixedRecipeId ?? ""} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, fixedRecipeId: event.target.value || undefined } : entry) } }))}><option value="">No recipe</option>{catalog.recipes.filter((entry) => entry.facilityKind === "manufacturing_cabin" && entry.roomLevel <= room.level).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label>
-                  <p className="roomMeta">{recipe ? `${formatLabel(recipe.productKind)} | ${formatDurationMinutes(recipe.baseDurationMinutes)} | output ${recipe.outputAmount ?? "?"}` : "No recipe selected"}</p>
+                  <div className="numericRow"><label><span>Enabled</span><input type="checkbox" checked={room.enabled} disabled={roomLocked} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, enabled: event.target.checked } : entry) } }))} /></label><label><span>Level</span><input type="number" min={1} max={manufacturingLevelCap} value={room.level} disabled={roomLocked} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, level: Number(event.target.value) as 1 | 2 | 3 } : entry) } }))} /></label></div>
+                  <label><span>Recipe</span><select value={room.fixedRecipeId ?? ""} disabled={roomLocked} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, fixedRecipeId: event.target.value || undefined } : entry) } }))}><option value="">No recipe</option>{catalog.recipes.filter((entry) => entry.facilityKind === "manufacturing_cabin" && entry.roomLevel <= room.level).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label>
+                  <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 3" : recipe ? `${formatLabel(recipe.productKind)} | ${formatDurationMinutes(recipe.baseDurationMinutes)} | output ${recipe.outputAmount ?? "?"}` : "No recipe selected"}</p>
                 </article>
               );
             })}
             {scenario.facilities.growthChambers.map((room, index) => {
               const recipes = (room.fixedRecipeIds ?? []).map((recipeId) => recipesById.get(recipeId)).filter(Boolean);
               const growthSlotCap = getGrowthSlotCap(catalog, room.level);
+              const roomLocked = index >= unlockedGrowthRoomCount;
               return (
                 <article className="roomCard" key={room.id}>
                   <div className="facilityHeader"><div><h3>Growth Chamber {index + 1}</h3><p>{facilitiesByKind.get("growth_chamber")?.unlockHint}</p></div><span className="miniStat">{getRoomSlotCap(catalog, "growth_chamber", room.level, scenario.facilities.controlNexus.level)} slots</span></div>
-                  <div className="numericRow"><label><span>Enabled</span><input type="checkbox" checked={room.enabled} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, growthChambers: current.facilities.growthChambers.map((entry) => entry.id === room.id ? { ...entry, enabled: event.target.checked } : entry) } }))} /></label><label><span>Level</span><input type="number" min={1} max={3} value={room.level} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, growthChambers: current.facilities.growthChambers.map((entry) => entry.id === room.id ? { ...entry, level: Number(event.target.value) as 1 | 2 | 3 } : entry) } }))} /></label></div>
+                  <div className="numericRow"><label><span>Enabled</span><input type="checkbox" checked={room.enabled} disabled={roomLocked} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, growthChambers: current.facilities.growthChambers.map((entry) => entry.id === room.id ? { ...entry, enabled: event.target.checked } : entry) } }))} /></label><label><span>Level</span><input type="number" min={1} max={Math.max(growthLevelCap, 1)} value={room.level} disabled={roomLocked} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, growthChambers: current.facilities.growthChambers.map((entry) => entry.id === room.id ? { ...entry, level: Number(event.target.value) as 1 | 2 | 3 } : entry) } }))} /></label></div>
                   <div className="skillGrid">
                     {Array.from({ length: growthSlotCap }, (_, slotIndex) => (
                       <label key={`${room.id}-growth-slot-${slotIndex}`}>
                         <span>Growth Slot {slotIndex + 1}</span>
                         <select
                           value={room.fixedRecipeIds?.[slotIndex] ?? ""}
+                          disabled={roomLocked}
                           onChange={(event) => updateScenario((current) => ({
                             ...current,
                             facilities: {
@@ -346,14 +357,22 @@ function App() {
                       </label>
                     ))}
                   </div>
-                  <p className="roomMeta">{recipes.length > 0 ? recipes.map((recipe) => `${recipe.name} (${formatLabel(recipe.productKind)})`).join(" | ") : "No growth materials selected"}</p>
+                  <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 2" : recipes.length > 0 ? recipes.map((recipe) => `${recipe.name} (${formatLabel(recipe.productKind)})`).join(" | ") : "No growth materials selected"}</p>
                 </article>
               );
             })}
             {scenario.facilities.receptionRoom && (
               <article className="roomCard">
+                {(() => {
+                  const roomLocked = unlockedReceptionRoomCount === 0;
+                  return (
+                    <>
                 <div className="facilityHeader"><div><h3>Reception Room</h3><p>{facilitiesByKind.get("reception_room")?.unlockHint}</p></div><span className="miniStat">{getRoomSlotCap(catalog, "reception_room", scenario.facilities.receptionRoom.level, scenario.facilities.controlNexus.level)} slots</span></div>
-                <div className="numericRow"><label><span>Enabled</span><input type="checkbox" checked={scenario.facilities.receptionRoom.enabled} onChange={(event) => updateScenario((current) => current.facilities.receptionRoom ? ({ ...current, facilities: { ...current.facilities, receptionRoom: { ...current.facilities.receptionRoom, enabled: event.target.checked } } }) : current)} /></label><label><span>Level</span><input type="number" min={1} max={3} value={scenario.facilities.receptionRoom.level} onChange={(event) => updateScenario((current) => current.facilities.receptionRoom ? ({ ...current, facilities: { ...current.facilities, receptionRoom: { ...current.facilities.receptionRoom, level: Number(event.target.value) as 1 | 2 | 3 } } }) : current)} /></label></div>
+                <div className="numericRow"><label><span>Enabled</span><input type="checkbox" checked={scenario.facilities.receptionRoom.enabled} disabled={roomLocked} onChange={(event) => updateScenario((current) => current.facilities.receptionRoom ? ({ ...current, facilities: { ...current.facilities, receptionRoom: { ...current.facilities.receptionRoom, enabled: event.target.checked } } }) : current)} /></label><label><span>Level</span><input type="number" min={1} max={Math.max(receptionLevelCap, 1)} value={scenario.facilities.receptionRoom.level} disabled={roomLocked} onChange={(event) => updateScenario((current) => current.facilities.receptionRoom ? ({ ...current, facilities: { ...current.facilities, receptionRoom: { ...current.facilities.receptionRoom, level: Number(event.target.value) as 1 | 2 | 3 } } }) : current)} /></label></div>
+                <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 3" : "Available for clue assignments"}</p>
+                    </>
+                  );
+                })()}
               </article>
             )}
           </div>

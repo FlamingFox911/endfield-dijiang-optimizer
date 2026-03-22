@@ -72,6 +72,14 @@
       "confidence": "guide_site"
     },
     {
+      "id": "user-control-nexus-upgrades-2026-03-21",
+      "label": "User Control Nexus upgrade screenshots",
+      "url": "local-user-supplied",
+      "retrievedOn": "2026-03-21",
+      "confidence": "manual_override",
+      "notes": "User-supplied in-game screenshots confirming Control Nexus unlocks, room counts, and facility level-cap progression."
+    },
+    {
       "id": "game8-da-pan",
       "label": "Game8 Da Pan page",
       "url": "https://game8.co/games/Arknights-Endfield/archives/523672",
