@@ -20,7 +20,6 @@ catalogs/
 scenarios/
   examples/
     current-base.simple.json
-    current-base.advanced.json
     max-facilities.simple.json
 schemas/
   catalog-manifest.schema.json
@@ -181,7 +180,7 @@ Each scenario contains:
 - facility levels
 - per-room selected recipes
 - global hard assignments
-- solver options including `planningMode`
+- solver options such as the max-facilities overlay, unlock ranking mode, and search profile
 
 Room availability is also part of scenario validation. For the current catalog:
 
@@ -198,15 +197,6 @@ Owned operator state records only the values that affect planning in v1:
 - current level
 - current promotion tier
 - explicit Base Skill rank state
-
-## Planning mode semantics
-
-- `simple`
-  The scenario still stores explicit room recipe selections, but the UI is menu-driven and intentionally constrained.
-- `advanced`
-  The same room recipe selections exist, but the UI may expose more detailed scenario controls.
-
-Planning mode does not change the underlying solver semantics for v1.
 
 ## Validation expectations
 

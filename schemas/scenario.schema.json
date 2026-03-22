@@ -102,22 +102,11 @@
     "options": {
       "type": "object",
       "required": [
-        "planningMode",
-        "horizonHours",
         "maxFacilities",
         "upgradeRankingMode"
       ],
       "properties": {
-        "planningMode": {
-          "type": "string",
-          "enum": [
-            "simple",
-            "advanced"
-          ]
-        },
-        "horizonHours": { "type": "integer", "minimum": 1 },
         "maxFacilities": { "type": "boolean" },
-        "includeReceptionRoom": { "type": "boolean" },
         "upgradeRankingMode": {
           "type": "string",
           "enum": [

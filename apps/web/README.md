@@ -5,12 +5,7 @@ The web app is the main GUI target. It is browser-first so the optimizer remains
 The web app never asks for account login. All player state is entered manually or loaded from local scenario files.
 It should load the bundled catalog library at startup so the app works offline for normal use.
 
-The UI should expose two modes:
-
-- `Simple`
-  Fast path for choosing one recipe per room from a preselected menu.
-- `Advanced`
-  Same room recipe selection, but with more detailed scenario controls.
+The UI should keep one streamlined planning surface with room recipe pickers and always-available hard assignments.
 
 Current repo status:
 
@@ -45,9 +40,6 @@ Current repo status:
 ## Control choices
 
 - Stepper arrows for operator level and room level.
-- A top-level `Simple` / `Advanced` mode switch.
-- In `Simple`, preselected recipe menus only.
-- In `Advanced`, the same recipe menus plus more detailed hard-assignment and scenario controls.
 - Toggle for `Current Facilities` vs `Max Facilities`.
 - `Recommend Unlocks Ranking` control with `Balanced`, `ROI`, and `Fastest` modes plus inline help text.
 - Searchable global hard-assignment picker for any room.

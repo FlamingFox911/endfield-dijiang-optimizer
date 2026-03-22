@@ -91,10 +91,7 @@
     "hardAssignments": []
   },
   "options": {
-    "planningMode": "simple",
-    "horizonHours": 24,
     "maxFacilities": true,
-    "includeReceptionRoom": true,
     "upgradeRankingMode": "balanced"
   }
 }

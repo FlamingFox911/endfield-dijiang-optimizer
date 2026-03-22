@@ -424,10 +424,7 @@ describe("App", () => {
         hardAssignments: [],
       },
       options: {
-        planningMode: "simple",
-        horizonHours: 24,
         maxFacilities: false,
-        includeReceptionRoom: true,
         upgradeRankingMode: "balanced",
         optimizationProfile: "custom",
         optimizationEffort: 17,
@@ -465,10 +462,7 @@ describe("App", () => {
           hardAssignments: [],
         },
         options: {
-          planningMode: "simple",
-          horizonHours: 24,
           maxFacilities: false,
-          includeReceptionRoom: true,
           upgradeRankingMode: "balanced",
           optimizationProfile: "thorough",
           optimizationEffort: 14,

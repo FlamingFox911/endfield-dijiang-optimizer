@@ -54,6 +54,8 @@ interface OperatorRoomEvaluation {
   globalMoodDropReductionPercent: number;
 }
 
+const STEADY_STATE_HOURS = 1;
+
 export class OptimizationCancelledError extends Error {
   constructor(message = "Optimization canceled.") {
     super(message);
@@ -86,7 +88,7 @@ function getRecipeBaseUnits(recipe: RecipeDefinition, horizonHours: number, warn
   const outputAmount = recipe.outputAmount ?? 1;
 
   if (recipe.baseDurationMinutes == null) {
-    warnings.push(`Recipe '${recipe.id}' is missing duration data; assuming one baseline run per horizon.`);
+    warnings.push(`Recipe '${recipe.id}' is missing duration data; assuming one baseline run per hour.`);
   }
   if (recipe.outputAmount == null) {
     warnings.push(`Recipe '${recipe.id}' is missing output amount; assuming one baseline unit.`);
@@ -211,7 +213,7 @@ export function normalizeScenario(
     }
   }
 
-  if (normalizedScenario.options.includeReceptionRoom !== false && normalizedScenario.facilities.receptionRoom?.enabled) {
+  if (normalizedScenario.facilities.receptionRoom?.enabled) {
     addRoom(
       normalizedScenario.facilities.receptionRoom.id,
       "reception_room",
@@ -744,7 +746,7 @@ function solveAverageControlMoodSupport(sources: ControlMoodSource[]) {
     };
   }
 
-  let controlWorkingUptime = SUPPORT_WEIGHTS.baselineMoodWorkingUptime;
+  let controlWorkingUptime: number = SUPPORT_WEIGHTS.baselineMoodWorkingUptime;
   for (let iteration = 0; iteration < 16; iteration += 1) {
     const averageMoodRegenPercent = totalMoodRegenPercent * controlWorkingUptime;
     const averageMoodDropReductionPercent = totalMoodDropReductionPercent * controlWorkingUptime;
@@ -1025,8 +1027,8 @@ export function solveNormalizedScenario(
     .sort((left, right) => {
       const leftRoom = roomMap.get(left.roomId)!;
       const rightRoom = roomMap.get(right.roomId)!;
-      const leftBase = getBaseRoomUnits(leftRoom, normalizedScenarioResult.scenario.options.horizonHours, warnings);
-      const rightBase = getBaseRoomUnits(rightRoom, normalizedScenarioResult.scenario.options.horizonHours, warnings);
+      const leftBase = getBaseRoomUnits(leftRoom, STEADY_STATE_HOURS, warnings);
+      const rightBase = getBaseRoomUnits(rightRoom, STEADY_STATE_HOURS, warnings);
       return rightBase - leftBase;
     });
 
@@ -1076,7 +1078,7 @@ export function solveNormalizedScenario(
   const optimisticContributionCache = new Map<string, number>();
   const perRoomContributionCache = new Map<string, number>();
   const maxControlMoodSupportUpperBound = productionRooms.reduce((sum, room) => {
-    const baseUnits = getBaseRoomUnits(room, normalizedScenarioResult.scenario.options.horizonHours, warnings);
+    const baseUnits = getBaseRoomUnits(room, STEADY_STATE_HOURS, warnings);
     const seatOccupancyUnits = baseUnits * (SUPPORT_WEIGHTS.assignedOperatorProductionEfficiencyPercent / 100);
     let maxProductionDirectUnits = 0;
 
@@ -1087,7 +1089,7 @@ export function solveNormalizedScenario(
         operatorDef,
         ownedOperator,
         room,
-        normalizedScenarioResult.scenario.options.horizonHours,
+        STEADY_STATE_HOURS,
         warnings,
       );
       if (evaluation.productionDirectUnits > maxProductionDirectUnits) {
@@ -1111,7 +1113,7 @@ export function solveNormalizedScenario(
       operatorDef,
       ownedOperator,
       room,
-      normalizedScenarioResult.scenario.options.horizonHours,
+      STEADY_STATE_HOURS,
       warnings,
     );
     const contribution =
@@ -1135,7 +1137,7 @@ export function solveNormalizedScenario(
       assignedByRoom,
       operatorDefs,
       ownedOperators,
-      normalizedScenarioResult.scenario.options.horizonHours,
+      STEADY_STATE_HOURS,
       warnings,
     );
     const currentControlAssignments = (assignedByRoom.get(controlRoom.roomId) ?? []).filter(Boolean) as string[];
@@ -1144,7 +1146,7 @@ export function solveNormalizedScenario(
       controlRoom,
       operatorDefs,
       ownedOperators,
-      normalizedScenarioResult.scenario.options.horizonHours,
+      STEADY_STATE_HOURS,
       warnings,
     );
     const nextControlSources = collectControlMoodSources(
@@ -1152,7 +1154,7 @@ export function solveNormalizedScenario(
       controlRoom,
       operatorDefs,
       ownedOperators,
-      normalizedScenarioResult.scenario.options.horizonHours,
+      STEADY_STATE_HOURS,
       warnings,
     );
 
@@ -1272,7 +1274,7 @@ export function solveNormalizedScenario(
       best.assignedByRoom.get(room.roomId) ?? [],
       operatorDefs,
       ownedOperators,
-      normalizedScenarioResult.scenario.options.horizonHours,
+      STEADY_STATE_HOURS,
       finalWarnings,
     );
     roomPlans.push(plan.roomPlan);
@@ -1287,7 +1289,7 @@ export function solveNormalizedScenario(
     explanations,
     operatorDefs,
     ownedOperators,
-    normalizedScenarioResult.scenario.options.horizonHours,
+    STEADY_STATE_HOURS,
     finalWarnings,
   );
 

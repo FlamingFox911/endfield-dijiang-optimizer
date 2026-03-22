@@ -11,7 +11,7 @@ This repository now contains the full shared runtime, a packaged CLI, a browser 
 - Simulate a "max facilities" scenario without mutating the user's saved base state.
 - Recommend which operators' Base Skills to unlock next to improve Dijiang output.
 - Support both a CLI workflow and a richer GUI with portraits, input boxes, sliders where applicable, steppers, and facility cards.
-- Offer `Simple` and `Advanced` planning modes so casual users can pick one exact recipe per room from menus, while power users can use more detailed controls.
+- Keep planning centered on one exact recipe selection per room, with optional hard assignments when the user wants fixed placements.
 - Save room recipe selections for reuse and support import/export of local scenario files.
 - Ship with a built-in library of operators, portraits, base skills, recipes, facilities, and other static game data.
 - Explain why a recommended assignment or upgrade wins through room score breakdowns and upgrade notes.

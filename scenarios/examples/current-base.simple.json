@@ -90,10 +90,7 @@
     ]
   },
   "options": {
-    "planningMode": "simple",
-    "horizonHours": 24,
     "maxFacilities": false,
-    "includeReceptionRoom": true,
     "upgradeRankingMode": "balanced"
   }
 }

@@ -80,7 +80,6 @@ program
   .command("optimize")
   .description("Solve a scenario file")
   .option("-s, --scenario <path>", "Scenario JSON path")
-  .option("--mode <mode>", "Override planning mode")
   .option("--max-facilities", "Apply the max-facilities overlay")
   .option("--json", "Emit JSON output")
   .action(async (options) => {
@@ -97,9 +96,6 @@ program
       return;
     }
 
-    if (options.mode) {
-      scenario.options.planningMode = options.mode;
-    }
     if (options.maxFacilities) {
       scenario.options.maxFacilities = true;
     }

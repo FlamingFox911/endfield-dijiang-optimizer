@@ -1132,10 +1132,7 @@ export function createStarterScenario(catalog: GameCatalog): OptimizationScenari
       hardAssignments: [],
     },
     options: {
-      planningMode: "simple",
-      horizonHours: 24,
       maxFacilities: false,
-      includeReceptionRoom: true,
       upgradeRankingMode: "balanced",
       optimizationProfile: DEFAULT_OPTIMIZATION_PROFILE,
       optimizationEffort: DEFAULT_OPTIMIZATION_EFFORT,
@@ -1464,27 +1461,43 @@ export function migrateScenario(input: unknown): MigrationResult {
     }
   }
 
-  if (typeof options.planningMode !== "string") {
-    options.planningMode = "simple";
-    changes.push({
-      path: "options.planningMode",
-      message: "Defaulted missing planningMode to 'simple'.",
-    });
-  }
-
-  if (typeof options.horizonHours !== "number") {
-    options.horizonHours = 24;
-    changes.push({
-      path: "options.horizonHours",
-      message: "Defaulted missing horizonHours to 24.",
-    });
-  }
-
   if (typeof options.maxFacilities !== "boolean") {
     options.maxFacilities = false;
     changes.push({
       path: "options.maxFacilities",
       message: "Defaulted missing maxFacilities to false.",
+    });
+  }
+
+  if (typeof options.includeReceptionRoom === "boolean") {
+    if (options.includeReceptionRoom === false && isObject(facilities.receptionRoom)) {
+      facilities.receptionRoom.enabled = false;
+      changes.push({
+        path: "facilities.receptionRoom.enabled",
+        message: "Migrated deprecated options.includeReceptionRoom=false to facilities.receptionRoom.enabled=false.",
+      });
+    }
+
+    delete options.includeReceptionRoom;
+    changes.push({
+      path: "options.includeReceptionRoom",
+      message: "Removed deprecated includeReceptionRoom option.",
+    });
+  }
+
+  if ("planningMode" in options) {
+    delete options.planningMode;
+    changes.push({
+      path: "options.planningMode",
+      message: "Removed deprecated planningMode option.",
+    });
+  }
+
+  if ("horizonHours" in options) {
+    delete options.horizonHours;
+    changes.push({
+      path: "options.horizonHours",
+      message: "Removed deprecated horizonHours option; solver now assumes steady-state planning.",
     });
   }
 
@@ -1809,16 +1822,6 @@ export function validateScenarioAgainstCatalog(
     hardAssigned.add(assignment.operatorId);
   }
 
-  if (!["simple", "advanced"].includes(scenario.options.planningMode)) {
-    issues.push(
-      makeIssue(
-        "invalid_planning_mode",
-        "options.planningMode",
-        "Scenario options.planningMode must be 'simple' or 'advanced'.",
-      ),
-    );
-  }
-
   const rankingMode = scenario.options.upgradeRankingMode ?? "balanced";
   if (!["fastest", "roi", "balanced"].includes(rankingMode)) {
     issues.push(
@@ -1952,15 +1955,6 @@ function validateScenarioShape(scenario: OptimizationScenario): ValidationIssue[
     issues.push(makeIssue("invalid_options", "options", "Scenario options must be an object."));
   }
   else {
-    if (typeof scenario.options.horizonHours !== "number") {
-      issues.push(
-        makeIssue(
-          "invalid_horizon",
-          "options.horizonHours",
-          "Scenario options.horizonHours must be a number.",
-        ),
-      );
-    }
     if (typeof scenario.options.maxFacilities !== "boolean") {
       issues.push(
         makeIssue(

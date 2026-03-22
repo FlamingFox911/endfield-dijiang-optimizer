@@ -101,22 +101,11 @@ Core user-scenario entities:
 - Production plan
   Stores the exact recipe the user wants each Manufacturing Cabin and Growth Chamber to run.
 - Solver options
-  Includes planning mode, time horizon, max-facilities toggle, and whether to include auxiliary rooms in the score.
-
-## Planning modes
-
-The app should expose two planning modes:
-
-- `Simple`
-  The default mode. Users choose one recipe per room from preselected menus. No quota inputs, sliders, arrows, or free-form numeric recipe controls are shown.
-- `Advanced`
-  Uses the same room-level recipe selections, but exposes more detailed controls such as more explicit hard-assignment editing, slot-specific placement control where relevant, and lower-level scenario editing tools.
-
-Both modes use the same solver and the same room-level recipe plan. The difference is how much control is exposed to the user, not a different optimization engine.
+  Includes the max-facilities toggle, unlock ranking mode, and search profile settings.
 
 ## Optimization model
 
-The default objective is output and facility-value maximization over a user-selected horizon, with 24 hours as the default.
+The default objective is output and facility-value maximization in steady state, using per-hour production rates rather than a user-selected finite horizon.
 
 Recipe choice is not part of the optimization problem in v1. The user specifies the exact recipe each Manufacturing Cabin and Growth Chamber should run, such as `ARMS INSP Set` or `Advanced Cognitive Carrier`, and the solver optimizes operator assignments around that room plan.
 
@@ -232,10 +221,6 @@ Primary commands:
   Read a scenario and output the best current assignment.
 - `optimize --max-facilities`
   Apply the max-room overlay before solving.
-- `optimize --mode simple`
-  Use the streamlined planning workflow.
-- `optimize --mode advanced`
-  Use the fully granular planning workflow.
 - `recommend-upgrades`
   Rank the next Base Skill unlocks using the current scenario.
 - `init-scenario`
@@ -259,14 +244,12 @@ Interaction style:
 - searchable operator prompts
 - numeric steppers for levels and room levels
 - menu-driven recipe selection for each room
-- in `simple` mode, recipe input stays menu-only
+- optional hard assignments when the user wants to pin placements
 - table output with per-room reasoning and projected gains
 
 ## Web GUI design
 
 The GUI should be task-oriented instead of spreadsheet-oriented.
-
-The app should expose a top-level mode switch between `Simple` and `Advanced`.
 
 Main layout:
 
@@ -276,8 +259,8 @@ Main layout:
 
 Controls:
 
-- in `Simple` mode: recipe pickers only, one recipe per room, with no extra granular inputs
-- in `Advanced` mode: the same room recipe picks plus more detailed hard-assignment and low-level scenario controls
+- recipe pickers only, one recipe per room
+- hard assignments always available as optional overrides
 - stepper arrows for operator level, promotion tier, and room level
 - toggles for `current facilities` vs `max facilities`
 - a `Recommend Unlocks Ranking` selector with `balanced`, `roi`, and `fastest` modes plus inline help text
@@ -323,8 +306,6 @@ Minimum file shape:
 - operator ownership and unlock state
 - facility levels and hard assignments
 - per-room recipe selections
-- planning mode
-- hard assignments
 - solver options
 
 When a scenario references an older catalog version:

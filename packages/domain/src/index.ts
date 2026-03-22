@@ -31,7 +31,6 @@ export type SourceConfidence =
 
 export type DataConfidence = "verified" | "provisional" | "heuristic";
 export type SkillRank = 0 | 1 | 2;
-export type PlanningMode = "simple" | "advanced";
 export type ValidationSeverity = "error" | "warning";
 export type UpgradeRankingMode = "fastest" | "roi" | "balanced";
 export type OptimizationProfile = "fast" | "balanced" | "thorough" | "exhaustive" | "custom";
@@ -336,10 +335,7 @@ export interface FacilityState {
 }
 
 export interface BaseOptimizationOptions {
-  planningMode: PlanningMode;
-  horizonHours: number;
   maxFacilities: boolean;
-  includeReceptionRoom?: boolean;
   upgradeRankingMode?: UpgradeRankingMode;
   optimizationProfile?: OptimizationProfile;
   optimizationEffort?: number;

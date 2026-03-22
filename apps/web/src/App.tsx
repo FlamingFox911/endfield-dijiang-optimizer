@@ -789,22 +789,6 @@ function App() {
             <div><span>Gaps</span><strong>{catalog.gaps.length}</strong></div>
           </div>
           <label className="pill">
-            <span>Mode</span>
-            <select
-              value={scenario.options.planningMode}
-              onChange={(event) => updateScenario((current) => ({
-                ...current,
-                options: {
-                  ...current.options,
-                  planningMode: event.target.value as "simple" | "advanced",
-                },
-              }))}
-            >
-              <option value="simple">Simple</option>
-              <option value="advanced">Advanced</option>
-            </select>
-          </label>
-          <label className="pill">
             <span className="labelWithHelp">
               <span>Recommend Unlocks Ranking</span>
               <span
@@ -837,21 +821,6 @@ function App() {
 
       <section className="toolbar">
         <label className="pill compact">
-          <span>Horizon hours</span>
-          <input
-            type="number"
-            min={1}
-            value={scenario.options.horizonHours}
-            onChange={(event) => updateScenario((current) => ({
-              ...current,
-              options: {
-                ...current.options,
-                horizonHours: Number(event.target.value) || 24,
-              },
-            }))}
-          />
-        </label>
-        <label className="pill compact">
           <span>Optimization profile</span>
           <select value={scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE} onChange={(event) => setOptimizationProfile(event.target.value as OptimizationProfile)}>
             {OPTIMIZATION_PROFILES.map((profile) => <option key={profile} value={profile}>{formatLabel(profile)}</option>)}
@@ -882,21 +851,17 @@ function App() {
               },
             }))}
           />
-          <span>Max facilities overlay</span>
-        </label>
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={scenario.options.includeReceptionRoom !== false}
-            onChange={(event) => updateScenario((current) => ({
-              ...current,
-              options: {
-                ...current.options,
-                includeReceptionRoom: event.target.checked,
-              },
-            }))}
-          />
-          <span>Include reception room</span>
+          <span className="labelWithHelp">
+            <span>Max facilities overlay</span>
+            <span
+              className="helpBadge"
+              role="img"
+              aria-label="When enabled, optimization assumes a fully built base overlay: Control Nexus level 5, all manufacturing and growth rooms enabled at level 3, and a level 3 reception room added or enabled. This affects optimization and recommend unlocks inputs, but does not rewrite the planner form."
+              title={"When enabled, optimization assumes a fully built base overlay.\n\nControl Nexus is treated as level 5.\nAll manufacturing and growth rooms are treated as enabled at level 3.\nA level 3 reception room is added or enabled.\n\nThis affects Optimize and Recommend unlocks inputs, but does not rewrite the planner form."}
+            >
+              ?
+            </span>
+          </span>
         </label>
         <button onClick={runOptimization} disabled={optimizationRun != null || recommendationRun != null}>Optimize</button>
         <button className="secondary" onClick={runRecommendations} disabled={optimizationRun != null || recommendationRun != null}>Recommend unlocks</button>
@@ -1146,7 +1111,7 @@ function App() {
                 <p className="eyebrow">Planner</p>
                 <h2>Dijiang layout</h2>
               </div>
-              <span>{scenario.options.planningMode} mode</span>
+              <span>{scenario.facilities.hardAssignments.length} hard assignment{scenario.facilities.hardAssignments.length === 1 ? "" : "s"}</span>
             </div>
 
             <article className="roomCard">
@@ -1391,57 +1356,56 @@ function App() {
               })}
             </div>
 
-            {scenario.options.planningMode === "advanced" && (
-              <article className="roomCard">
-                <h3>Hard assignments</h3>
-                {scenario.facilities.hardAssignments.map((assignment, index) => (
-                  <div className="numericRow" key={`${assignment.operatorId}-${index}`}>
-                    <select
-                      value={assignment.operatorId}
-                      onChange={(event) => updateScenario((current) => ({
-                        ...current,
-                        facilities: {
-                          ...current.facilities,
-                          hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: event.target.value, roomId: entry.roomId } : { operatorId: entry.operatorId, roomId: entry.roomId }),
-                        },
-                      }))}
-                    >
-                      {ownedOperators.map((entry) => <option key={entry.operatorId} value={entry.operatorId}>{operatorsById.get(entry.operatorId)?.name ?? entry.operatorId}</option>)}
-                    </select>
-                    <select
-                      value={assignment.roomId}
-                      onChange={(event) => updateScenario((current) => ({
-                        ...current,
-                        facilities: {
-                          ...current.facilities,
-                          hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: entry.operatorId, roomId: event.target.value } : { operatorId: entry.operatorId, roomId: entry.roomId }),
-                        },
-                      }))}
-                    >
-                      {roomOptions.map((room) => <option key={room.id} value={room.id}>{room.label}</option>)}
-                    </select>
-                  </div>
-                ))}
-                <button
-                  className="secondary"
-                  onClick={() => updateScenario((current) => ({
-                    ...current,
-                    facilities: {
-                      ...current.facilities,
-                      hardAssignments: [
-                        ...current.facilities.hardAssignments,
-                        {
-                          operatorId: ownedOperators[0]?.operatorId ?? current.roster[0]?.operatorId ?? "",
-                          roomId: "control_nexus",
-                        },
-                      ],
-                    },
-                  }))}
-                >
-                  Add hard assignment
-                </button>
-              </article>
-            )}
+            <article className="roomCard">
+              <h3>Hard assignments</h3>
+              <p className="roomMeta">Optional overrides. Leave this empty to let the optimizer place everyone freely.</p>
+              {scenario.facilities.hardAssignments.map((assignment, index) => (
+                <div className="numericRow" key={`${assignment.operatorId}-${index}`}>
+                  <select
+                    value={assignment.operatorId}
+                    onChange={(event) => updateScenario((current) => ({
+                      ...current,
+                      facilities: {
+                        ...current.facilities,
+                        hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: event.target.value, roomId: entry.roomId } : { operatorId: entry.operatorId, roomId: entry.roomId }),
+                      },
+                    }))}
+                  >
+                    {ownedOperators.map((entry) => <option key={entry.operatorId} value={entry.operatorId}>{operatorsById.get(entry.operatorId)?.name ?? entry.operatorId}</option>)}
+                  </select>
+                  <select
+                    value={assignment.roomId}
+                    onChange={(event) => updateScenario((current) => ({
+                      ...current,
+                      facilities: {
+                        ...current.facilities,
+                        hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: entry.operatorId, roomId: event.target.value } : { operatorId: entry.operatorId, roomId: entry.roomId }),
+                      },
+                    }))}
+                  >
+                    {roomOptions.map((room) => <option key={room.id} value={room.id}>{room.label}</option>)}
+                  </select>
+                </div>
+              ))}
+              <button
+                className="secondary"
+                onClick={() => updateScenario((current) => ({
+                  ...current,
+                  facilities: {
+                    ...current.facilities,
+                    hardAssignments: [
+                      ...current.facilities.hardAssignments,
+                      {
+                        operatorId: ownedOperators[0]?.operatorId ?? current.roster[0]?.operatorId ?? "",
+                        roomId: "control_nexus",
+                      },
+                    ],
+                  },
+                }))}
+              >
+                Add hard assignment
+              </button>
+            </article>
           </section>
         )}
 
@@ -1461,7 +1425,7 @@ function App() {
                   <strong>{result.totalScore.toFixed(2)}</strong>
                   <p>Support weights: {result.supportWeightsVersion}</p>
                   <div className="summaryOutputs">
-                    {Object.entries(result.projectedOutputs).filter(([, value]) => value > 0).map(([productKind, value]) => <span key={productKind}>{formatLabel(productKind)} {value.toFixed(2)}</span>)}
+                    {Object.entries(result.projectedOutputs).filter(([, value]) => value > 0).map(([productKind, value]) => <span key={productKind}>{formatLabel(productKind)} {value.toFixed(2)}/hr</span>)}
                   </div>
                 </article>
                 {result.roomPlans.map((room) => {

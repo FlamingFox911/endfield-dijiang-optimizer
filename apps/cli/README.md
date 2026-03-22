@@ -5,7 +5,7 @@ The CLI is intended to be the first working surface because it is faster to test
 The CLI never reads account data. It operates only on manually entered values and local scenario files.
 It should use the bundled catalog library by default so normal usage has no runtime dependency on guide sites.
 
-The CLI should support both `simple` and `advanced` planning modes against the same solver.
+The CLI should use the same steady-state solver and scenario model as the web app.
 
 Current repo status:
 
@@ -21,10 +21,6 @@ Current repo status:
   Solve the current-base scenario.
 - `endfield-opt optimize --scenario ./my-base.json --max-facilities`
   Solve the hypothetical fully upgraded Dijiang scenario.
-- `endfield-opt optimize --scenario ./my-base.json --mode simple`
-  Solve using the streamlined planning workflow.
-- `endfield-opt optimize --scenario ./my-base.json --mode advanced`
-  Solve using the granular planning workflow.
 - `endfield-opt recommend-upgrades --scenario ./my-base.json`
   Rank the next Base Skill unlocks that improve Dijiang output.
 - `endfield-opt recommend-upgrades --scenario ./my-base.json --ranking roi`
@@ -36,7 +32,7 @@ Current repo status:
 
 - Searchable operator selection.
 - Menu-driven recipe selection for each room.
-- In `simple` mode, recipe input stays menu-only.
+- Hard assignments remain available as optional room overrides.
 - Numeric steppers for levels, promotion tiers, and room levels.
 - Table output grouped by room.
 - Optional JSON output for scripting.
@@ -79,10 +75,7 @@ Current repo status:
     ]
   },
   "options": {
-    "planningMode": "simple",
-    "horizonHours": 24,
-    "maxFacilities": false,
-    "includeReceptionRoom": true
+    "maxFacilities": false
   }
 }
 ```

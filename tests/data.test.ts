@@ -85,6 +85,31 @@ describe("data services", () => {
     ]);
   });
 
+  it("migrates deprecated includeReceptionRoom=false to a disabled reception room", () => {
+    const migration = migrateScenario({
+      scenarioFormatVersion: 1,
+      catalogVersion: "2026-03-20/v1.1-phase1",
+      roster: [],
+      facilities: {
+        controlNexus: { level: 3 },
+        manufacturingCabins: [],
+        growthChambers: [],
+        receptionRoom: { id: "reception-1", enabled: true, level: 1 },
+        hardAssignments: [],
+      },
+      options: {
+        planningMode: "simple",
+        horizonHours: 24,
+        maxFacilities: false,
+        includeReceptionRoom: false,
+        upgradeRankingMode: "balanced",
+      },
+    });
+
+    expect(migration.scenario.facilities.receptionRoom?.enabled).toBe(false);
+    expect("includeReceptionRoom" in migration.scenario.options).toBe(false);
+  });
+
   it("validates the updated example scenario set", async () => {
     const catalog = await loadDefaultCatalog();
     const scenario = await loadScenarioFile(resolveRepoPath("scenarios", "examples", "current-base.simple.json"));

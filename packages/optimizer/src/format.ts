@@ -64,9 +64,9 @@ export function formatOptimizationResultText(
 
     const projectedOutputs = Object.entries(room.projectedOutputs)
       .filter(([, value]) => value > 0)
-      .map(([productKind, value]) => `${formatProductKind(productKind)} ${value.toFixed(2)}`);
+      .map(([productKind, value]) => `${formatProductKind(productKind)} ${value.toFixed(2)}/hr`);
     if (projectedOutputs.length > 0) {
-      lines.push(`  projected: ${projectedOutputs.join(" | ")}`);
+      lines.push(`  projected rate: ${projectedOutputs.join(" | ")}`);
     }
 
     if (room.usedFallbackHeuristics) {

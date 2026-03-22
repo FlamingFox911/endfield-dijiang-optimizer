@@ -47,7 +47,7 @@ describe("optimizer runtime", () => {
 
     const result = solveScenario(catalog, scenario);
     const manufacturingPlan = result.roomPlans.find((room) => room.roomId === "mfg-1");
-    const baseUnits = (scenario.options.horizonHours * 60 / recipe!.baseDurationMinutes!) * (recipe!.outputAmount ?? 1);
+    const baseUnits = (60 / recipe!.baseDurationMinutes!) * (recipe!.outputAmount ?? 1);
 
     expect(manufacturingPlan).toBeDefined();
     expect(manufacturingPlan!.assignedOperatorIds).toEqual(["snowshine"]);
@@ -84,7 +84,7 @@ describe("optimizer runtime", () => {
 
     const result = solveScenario(catalog, scenario);
     const manufacturingPlan = result.roomPlans.find((room) => room.roomId === "mfg-1");
-    const baseUnits = (scenario.options.horizonHours * 60 / recipe!.baseDurationMinutes!) * (recipe!.outputAmount ?? 1);
+    const baseUnits = (60 / recipe!.baseDurationMinutes!) * (recipe!.outputAmount ?? 1);
     const boostedUptime = 1 / (
       1 + ((SUPPORT_WEIGHTS.baselineMoodDrainPerHour * 0.86) / SUPPORT_WEIGHTS.baselineMoodRegenPerHour)
     );
@@ -139,7 +139,7 @@ describe("optimizer runtime", () => {
     const result = solveScenario(catalog, scenario);
     const controlPlan = result.roomPlans.find((room) => room.roomId === "control_nexus");
     const manufacturingPlan = result.roomPlans.find((room) => room.roomId === "mfg-1");
-    const baseUnits = (scenario.options.horizonHours * 60 / recipe!.baseDurationMinutes!) * (recipe!.outputAmount ?? 1);
+    const baseUnits = (60 / recipe!.baseDurationMinutes!) * (recipe!.outputAmount ?? 1);
     let controlWorkingUptime = SUPPORT_WEIGHTS.baselineMoodWorkingUptime;
     for (let iteration = 0; iteration < 16; iteration += 1) {
       controlWorkingUptime = 1 / (
