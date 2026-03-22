@@ -85,8 +85,7 @@
     "hardAssignments": [
       {
         "operatorId": "xaihi",
-        "roomId": "control_nexus",
-        "slotIndex": 0
+        "roomId": "control_nexus"
       }
     ]
   },

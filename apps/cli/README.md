@@ -73,7 +73,7 @@ Current repo status:
       "level": 1
     },
     "hardAssignments": [
-      { "operatorId": "chen-qianyu", "roomId": "control_nexus", "slotIndex": 0 }
+      { "operatorId": "chen-qianyu", "roomId": "control_nexus" }
     ]
   },
   "options": {

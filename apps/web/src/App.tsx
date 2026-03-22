@@ -1,6 +1,12 @@
-import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 
-import type { GameCatalog, OptimizationResult, OptimizationScenario, UpgradeRecommendationResult } from "@endfield/domain";
+import type {
+  GameCatalog,
+  OptimizationProfile,
+  OptimizationResult,
+  OptimizationScenario,
+  UpgradeRecommendationResult,
+} from "@endfield/domain";
 
 import {
   CURRENT_CATALOG_VERSION,
@@ -14,9 +20,41 @@ import {
   migrateScenario,
   validateScenarioAgainstCatalog,
 } from "@endfield/data";
-import { recommendUpgrades, solveScenario } from "@endfield/optimizer";
+import {
+  DEFAULT_OPTIMIZATION_EFFORT,
+  DEFAULT_OPTIMIZATION_PROFILE,
+  MAX_OPTIMIZATION_EFFORT,
+  OPTIMIZATION_PROFILE_EFFORTS,
+  clampOptimizationEffort,
+  getOptimizationSearchConfig,
+  recommendUpgrades,
+} from "@endfield/optimizer";
+
+import { createOptimizerWorker } from "./optimizer.worker.client";
+import type { OptimizerWorkerResponse } from "./optimizer-worker-types";
+import type { OptimizationProgressSnapshot } from "@endfield/optimizer";
 
 const DRAFT_KEY = "endfield-dijiang-optimizer:draft";
+const OPTIMIZATION_PROFILES: OptimizationProfile[] = ["fast", "balanced", "thorough", "exhaustive"];
+
+interface OptimizationRunState {
+  runId: number;
+  startedAt: number;
+  progress: OptimizationProgressSnapshot;
+}
+
+function sanitizeScenarioForPersistence(scenario: OptimizationScenario): OptimizationScenario {
+  return {
+    ...scenario,
+    facilities: {
+      ...scenario.facilities,
+      hardAssignments: scenario.facilities.hardAssignments.map((assignment) => ({
+        operatorId: assignment.operatorId,
+        roomId: assignment.roomId,
+      })),
+    },
+  };
+}
 
 function replaceRosterEntry(
   scenario: OptimizationScenario,
@@ -73,6 +111,42 @@ function getRankLabel(
   return skill.ranks.find((entry) => entry.rank === rank)?.label.toUpperCase() ?? `RANK ${rank}`;
 }
 
+function getCanonicalEffortForProfile(profile: Exclude<OptimizationProfile, "custom">): number {
+  return OPTIMIZATION_PROFILE_EFFORTS[profile];
+}
+
+function getScenarioSearchConfig(scenario: OptimizationScenario) {
+  const profile = scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE;
+  const fallbackEffort = profile === "custom"
+    ? DEFAULT_OPTIMIZATION_EFFORT
+    : getCanonicalEffortForProfile(profile);
+  const effort = clampOptimizationEffort(scenario.options.optimizationEffort ?? fallbackEffort);
+
+  return getOptimizationSearchConfig(profile, effort);
+}
+
+function formatElapsedTime(valueMs: number): string {
+  const totalSeconds = Math.max(0, Math.floor(valueMs / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function getOptimizationProfileSummary(profile: OptimizationProfile): string {
+  switch (profile) {
+    case "fast":
+      return "Quickest estimate";
+    case "balanced":
+      return "Recommended default";
+    case "thorough":
+      return "Searches more assignments";
+    case "exhaustive":
+      return "Slowest; may still stop at the search budget";
+    case "custom":
+      return "Custom search budget";
+  }
+}
+
 function App() {
   const [catalog, setCatalog] = useState<GameCatalog | null>(null);
   const [scenario, setScenario] = useState<OptimizationScenario | null>(null);
@@ -81,6 +155,11 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [messages, setMessages] = useState<string[]>([]);
+  const [optimizationRun, setOptimizationRun] = useState<OptimizationRunState | null>(null);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const workerRef = useRef<Worker | null>(null);
+  const activeRunIdRef = useRef<number | null>(null);
+  const nextRunIdRef = useRef(1);
 
   useEffect(() => {
     let cancelled = false;
@@ -125,14 +204,48 @@ function App() {
 
   useEffect(() => {
     if (scenario) {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(scenario));
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(sanitizeScenarioForPersistence(scenario)));
     }
   }, [scenario]);
+
+  useEffect(() => () => {
+    workerRef.current?.terminate();
+    workerRef.current = null;
+    activeRunIdRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    if (!catalog || !scenario) {
+      return;
+    }
+
+    const hydration = hydrateScenarioForCatalog(catalog, scenario);
+    if (!hydration.hydrated) {
+      return;
+    }
+
+    setScenario(hydration.scenario);
+    setMessages((current) => [...summarizeHydration(hydration), ...current]);
+  }, [catalog, scenario]);
 
   useEffect(() => {
     setResult(null);
     setRecommendations(null);
   }, [scenario]);
+
+  useEffect(() => {
+    if (!optimizationRun) {
+      setElapsedMs(0);
+      return;
+    }
+
+    setElapsedMs(Date.now() - optimizationRun.startedAt);
+    const timer = window.setInterval(() => {
+      setElapsedMs(Date.now() - optimizationRun.startedAt);
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [optimizationRun]);
 
   const deferredSearch = useDeferredValue(search);
 
@@ -173,15 +286,120 @@ function App() {
     startTransition(() => setScenario((current) => (current ? updater(current) : current)));
   };
 
+  const setOptimizationProfile = (profile: OptimizationProfile) => {
+    updateScenario((current) => ({
+      ...current,
+      options: {
+        ...current.options,
+        optimizationProfile: profile,
+        optimizationEffort: profile === "custom"
+          ? clampOptimizationEffort(current.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)
+          : getCanonicalEffortForProfile(profile),
+      },
+    }));
+  };
+
+  const setOptimizationEffort = (effort: number) => {
+    const clampedEffort = clampOptimizationEffort(effort);
+    const matchingProfile = OPTIMIZATION_PROFILES.find(
+      (profile) => getCanonicalEffortForProfile(profile) === clampedEffort,
+    );
+
+    updateScenario((current) => ({
+      ...current,
+      options: {
+        ...current.options,
+        optimizationEffort: clampedEffort,
+        optimizationProfile: matchingProfile ?? "custom",
+      },
+    }));
+  };
+
+  const stopActiveWorker = () => {
+    workerRef.current?.terminate();
+    workerRef.current = null;
+    activeRunIdRef.current = null;
+  };
+
   const runOptimization = () => {
     const nextValidation = validateScenarioAgainstCatalog(catalog, scenario);
     if (!nextValidation.ok) {
       setMessages(nextValidation.issues.map((issue) => issue.message));
       return;
     }
-    const nextResult = solveScenario(catalog, scenario);
-    setMessages(nextResult.warnings);
-    setResult(nextResult);
+
+    stopActiveWorker();
+
+    const runId = nextRunIdRef.current;
+    nextRunIdRef.current += 1;
+    const searchConfig = getScenarioSearchConfig(scenario);
+    const worker = createOptimizerWorker();
+    workerRef.current = worker;
+    activeRunIdRef.current = runId;
+
+    const startingProgress: OptimizationProgressSnapshot = {
+      phase: "Queueing optimization",
+      visitedNodes: 0,
+      totalSlots: 0,
+      currentDepth: 0,
+      bestScore: 0,
+      maxBranchCandidatesPerSlot: searchConfig.maxBranchCandidatesPerSlot,
+      profileLabel: searchConfig.profileLabel,
+      effort: searchConfig.effort,
+      maxVisitedNodes: searchConfig.maxVisitedNodes,
+    };
+    setOptimizationRun({
+      runId,
+      startedAt: Date.now(),
+      progress: startingProgress,
+    });
+
+    worker.onmessage = (event: MessageEvent<OptimizerWorkerResponse>) => {
+      const message = event.data;
+      if (message.runId !== activeRunIdRef.current) {
+        return;
+      }
+
+      if (message.type === "started" || message.type === "progress") {
+        setOptimizationRun((current) => current && current.runId === message.runId
+          ? { ...current, progress: message.progress }
+          : current);
+        return;
+      }
+
+      if (message.type === "completed") {
+        stopActiveWorker();
+        setOptimizationRun(null);
+        setMessages(message.result.warnings);
+        setResult(message.result);
+        return;
+      }
+
+      if (message.type === "canceled") {
+        stopActiveWorker();
+        setOptimizationRun(null);
+        setMessages(["Optimization canceled."]);
+        return;
+      }
+
+      stopActiveWorker();
+      setOptimizationRun(null);
+      setMessages([message.message]);
+    };
+
+    worker.postMessage({ type: "start", runId, catalog, scenario, searchConfig });
+  };
+
+  const cancelOptimization = () => {
+    const runId = activeRunIdRef.current;
+    if (runId == null) {
+      return;
+    }
+
+    workerRef.current?.postMessage({ type: "cancel", runId });
+    stopActiveWorker();
+    setOptimizationRun(null);
+    setMessages(["Optimization canceled."]);
   };
 
   const runRecommendations = () => {
@@ -194,7 +412,7 @@ function App() {
   };
 
   const exportScenario = () => {
-    const blob = new Blob([JSON.stringify(scenario, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(sanitizeScenarioForPersistence(scenario), null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
@@ -253,13 +471,40 @@ function App() {
       <section className="toolbar">
         <label className="pill grow"><span>Search roster</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Chen Qianyu" /></label>
         <label className="pill compact"><span>Horizon hours</span><input type="number" min={1} value={scenario.options.horizonHours} onChange={(event) => updateScenario((current) => ({ ...current, options: { ...current.options, horizonHours: Number(event.target.value) || 24 } }))} /></label>
+        <label className="pill compact"><span>Optimization profile</span><select value={scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE} onChange={(event) => setOptimizationProfile(event.target.value as OptimizationProfile)}>{OPTIMIZATION_PROFILES.map((profile) => <option key={profile} value={profile}>{formatLabel(profile)}</option>)}<option value="custom">Custom</option></select></label>
+        <label className="pill rangePill"><span>Search effort</span><input type="range" min={1} max={MAX_OPTIMIZATION_EFFORT} value={clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)} onChange={(event) => setOptimizationEffort(Number(event.target.value))} /><strong>{clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)}/{MAX_OPTIMIZATION_EFFORT}</strong><small>{getOptimizationProfileSummary(scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE)}</small></label>
         <label className="toggle"><input type="checkbox" checked={scenario.options.maxFacilities} onChange={(event) => updateScenario((current) => ({ ...current, options: { ...current.options, maxFacilities: event.target.checked } }))} /><span>Max facilities overlay</span></label>
         <label className="toggle"><input type="checkbox" checked={scenario.options.includeReceptionRoom !== false} onChange={(event) => updateScenario((current) => ({ ...current, options: { ...current.options, includeReceptionRoom: event.target.checked } }))} /><span>Include reception room</span></label>
-        <button onClick={runOptimization}>Optimize</button>
+        <button onClick={runOptimization} disabled={optimizationRun != null}>Optimize</button>
         <button className="secondary" onClick={runRecommendations}>Recommend unlocks</button>
         <button className="secondary" onClick={exportScenario}>Export JSON</button>
         <label className="secondary upload">Import JSON<input type="file" accept="application/json" onChange={importScenario} /></label>
       </section>
+
+      {optimizationRun && (
+        <section className="modalBackdrop">
+          <div className="modalCard" role="dialog" aria-modal="true" aria-label="Optimization progress">
+            <div className="panelHeader">
+              <div>
+                <p className="eyebrow">Optimization progress</p>
+                <h2>{formatLabel(optimizationRun.progress.profileLabel)}</h2>
+              </div>
+              <span className="miniStat">{formatElapsedTime(elapsedMs)}</span>
+            </div>
+            <p className="status">{optimizationRun.progress.phase}</p>
+            <div className="heroMetaGrid modalStats">
+              <div><span>Visited nodes</span><strong>{optimizationRun.progress.visitedNodes}</strong></div>
+              <div><span>Best score</span><strong>{optimizationRun.progress.bestScore.toFixed(2)}</strong></div>
+              <div><span>Depth</span><strong>{optimizationRun.progress.currentDepth} / {Math.max(optimizationRun.progress.totalSlots, 0)}</strong></div>
+              <div><span>Branch cap</span><strong>{optimizationRun.progress.maxBranchCandidatesPerSlot}</strong></div>
+              <div><span>Node budget</span><strong>{optimizationRun.progress.maxVisitedNodes}</strong></div>
+              <div><span>Effort</span><strong>{optimizationRun.progress.effort}/{MAX_OPTIMIZATION_EFFORT}</strong></div>
+            </div>
+            <p className="warningText">{getOptimizationProfileSummary(optimizationRun.progress.profileLabel)}</p>
+            <button type="button" onClick={cancelOptimization}>Cancel</button>
+          </div>
+        </section>
+      )}
 
       {messages.length > 0 && <section className="messageBar">{messages.map((message) => <p key={message}>{message}</p>)}</section>}
       {!validation.ok && <section className="messageBar warning">{validation.issues.map((issue) => <p key={`${issue.path}-${issue.message}`}>{issue.message}</p>)}</section>}
@@ -380,13 +625,12 @@ function App() {
             <article className="roomCard">
               <h3>Hard assignments</h3>
               {scenario.facilities.hardAssignments.map((assignment, index) => (
-                <div className="numericRow triple" key={`${assignment.operatorId}-${index}`}>
-                  <select value={assignment.operatorId} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { ...entry, operatorId: event.target.value } : entry) } }))}>{ownedOperators.map((entry) => <option key={entry.operatorId} value={entry.operatorId}>{operatorsById.get(entry.operatorId)?.name ?? entry.operatorId}</option>)}</select>
-                  <select value={assignment.roomId} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { ...entry, roomId: event.target.value } : entry) } }))}>{roomOptions.map((room) => <option key={room.id} value={room.id}>{room.label}</option>)}</select>
-                  <input type="number" min={0} value={assignment.slotIndex ?? 0} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { ...entry, slotIndex: Number(event.target.value) || 0 } : entry) } }))} />
+                <div className="numericRow" key={`${assignment.operatorId}-${index}`}>
+                  <select value={assignment.operatorId} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: event.target.value, roomId: entry.roomId } : { operatorId: entry.operatorId, roomId: entry.roomId }) } }))}>{ownedOperators.map((entry) => <option key={entry.operatorId} value={entry.operatorId}>{operatorsById.get(entry.operatorId)?.name ?? entry.operatorId}</option>)}</select>
+                  <select value={assignment.roomId} onChange={(event) => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: entry.operatorId, roomId: event.target.value } : { operatorId: entry.operatorId, roomId: entry.roomId }) } }))}>{roomOptions.map((room) => <option key={room.id} value={room.id}>{room.label}</option>)}</select>
                 </div>
               ))}
-              <button className="secondary" onClick={() => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, hardAssignments: [...current.facilities.hardAssignments, { operatorId: ownedOperators[0]?.operatorId ?? current.roster[0]?.operatorId ?? "", roomId: "control_nexus", slotIndex: 0 }] } }))}>Add hard assignment</button>
+              <button className="secondary" onClick={() => updateScenario((current) => ({ ...current, facilities: { ...current.facilities, hardAssignments: [...current.facilities.hardAssignments, { operatorId: ownedOperators[0]?.operatorId ?? current.roster[0]?.operatorId ?? "", roomId: "control_nexus" }] } }))}>Add hard assignment</button>
             </article>
           )}
         </section>

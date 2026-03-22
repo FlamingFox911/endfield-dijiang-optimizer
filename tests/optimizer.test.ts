@@ -3,7 +3,11 @@ import { describe, expect, it } from "vitest";
 import { createStarterScenario } from "@endfield/data";
 import { loadDefaultCatalog, loadScenarioFile, resolveRepoPath } from "@endfield/data/node";
 import {
+  DEFAULT_OPTIMIZATION_EFFORT,
+  DEFAULT_OPTIMIZATION_PROFILE,
+  OptimizationCancelledError,
   applyMaxFacilitiesOverlay,
+  getOptimizationSearchConfig,
   formatOptimizationResultText,
   formatUpgradeRecommendationsText,
   normalizeScenario,
@@ -110,5 +114,84 @@ describe("optimizer runtime", () => {
     expect(optimizationText).toContain("Elementary Cognitive Carrier");
     expect(upgradeText).toContain("Chen Qianyu");
     expect(upgradeText).toContain("Blade Critique");
+  });
+
+  it("maps optimization profiles to increasing search budgets", () => {
+    const fast = getOptimizationSearchConfig("fast", 4);
+    const balanced = getOptimizationSearchConfig(DEFAULT_OPTIMIZATION_PROFILE, DEFAULT_OPTIMIZATION_EFFORT);
+    const exhaustive = getOptimizationSearchConfig("exhaustive", 20);
+
+    expect(fast.maxBranchCandidatesPerSlot).toBeLessThan(balanced.maxBranchCandidatesPerSlot);
+    expect(balanced.maxVisitedNodes).toBeLessThan(exhaustive.maxVisitedNodes);
+    expect(exhaustive.profileLabel).toBe("exhaustive");
+  });
+
+  it("emits progress snapshots during optimization when requested", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = await loadScenarioFile(resolveRepoPath("scenarios", "examples", "current-base.simple.json"));
+    const progress: number[] = [];
+
+    solveScenario(catalog, scenario, {
+      searchConfig: { ...getOptimizationSearchConfig("balanced", 8), progressIntervalNodes: 1 },
+      onProgress: (snapshot) => {
+        progress.push(snapshot.visitedNodes);
+      },
+    });
+
+    expect(progress.length).toBeGreaterThan(0);
+    expect(progress[0]).toBeGreaterThanOrEqual(0);
+  });
+
+  it("supports cancellation through solver options", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = await loadScenarioFile(resolveRepoPath("scenarios", "examples", "current-base.simple.json"));
+    let shouldCancel = false;
+
+    expect(() => solveScenario(catalog, scenario, {
+      searchConfig: { ...getOptimizationSearchConfig("thorough", 14), progressIntervalNodes: 1 },
+      onProgress: () => {
+        shouldCancel = true;
+      },
+      shouldCancel: () => shouldCancel,
+    })).toThrow(OptimizationCancelledError);
+  });
+
+  it("keeps solveScenario backwards-compatible when no solver options are passed", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = await loadScenarioFile(resolveRepoPath("scenarios", "examples", "current-base.simple.json"));
+
+    const baseline = solveScenario(catalog, scenario);
+    const explicit = solveScenario(catalog, scenario, {});
+
+    expect(explicit.totalScore).toBe(baseline.totalScore);
+    expect(explicit.roomPlans).toHaveLength(baseline.roomPlans.length);
+  });
+
+  it("keeps multiple hard assignments in the same room", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+
+    scenario.facilities.controlNexus.level = 3;
+
+    for (const operatorId of ["snowshine", "gilberta", "tangtang"] as const) {
+      const entry = scenario.roster.find((operator) => operator.operatorId === operatorId);
+      expect(entry).toBeDefined();
+      entry!.owned = true;
+    }
+
+    scenario.facilities.hardAssignments = [
+      { operatorId: "snowshine", roomId: "control_nexus" },
+      { operatorId: "gilberta", roomId: "control_nexus" },
+      { operatorId: "tangtang", roomId: "control_nexus" },
+    ];
+
+    const result = solveScenario(catalog, scenario);
+    const controlNexusPlan = result.roomPlans.find((room) => room.roomId === "control_nexus");
+
+    expect(controlNexusPlan?.assignedOperatorIds).toHaveLength(3);
+    expect(controlNexusPlan?.assignedOperatorIds).toEqual(
+      expect.arrayContaining(["snowshine", "gilberta", "tangtang"]),
+    );
+    expect(result.warnings.some((warning) => warning.includes("Ignoring hard assignment"))).toBe(false);
   });
 });

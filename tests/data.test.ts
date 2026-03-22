@@ -21,6 +21,8 @@ describe("data services", () => {
     expect(scenario.scenarioFormatVersion).toBe(CURRENT_SCENARIO_FORMAT_VERSION);
     expect(scenario.catalogVersion).toBe(catalog.version);
     expect(scenario.options.upgradeRankingMode).toBe("balanced");
+    expect(scenario.options.optimizationProfile).toBe("balanced");
+    expect(scenario.options.optimizationEffort).toBe(18);
     expect(scenario.facilities.manufacturingCabins).toHaveLength(2);
     expect(scenario.facilities.manufacturingCabins[0]?.enabled).toBe(true);
     expect(scenario.facilities.manufacturingCabins[1]?.enabled).toBe(false);
@@ -48,9 +50,38 @@ describe("data services", () => {
     expect(migration.migrated).toBe(true);
     expect(migration.scenario.scenarioFormatVersion).toBe(CURRENT_SCENARIO_FORMAT_VERSION);
     expect(migration.scenario.options.upgradeRankingMode).toBe("balanced");
+    expect(migration.scenario.options.optimizationProfile).toBe("balanced");
+    expect(migration.scenario.options.optimizationEffort).toBe(18);
     expect(migration.scenario.facilities.manufacturingCabins).toHaveLength(2);
     expect(migration.scenario.facilities.growthChambers).toHaveLength(1);
     expect(migration.scenario.facilities.receptionRoom?.id).toBe("reception-1");
+  });
+
+  it("removes deprecated hard-assignment slot indexes during migration", () => {
+    const migration = migrateScenario({
+      scenarioFormatVersion: 1,
+      catalogVersion: "2026-03-20/v1.1-phase1",
+      roster: [],
+      facilities: {
+        controlNexus: { level: 1 },
+        manufacturingCabins: [],
+        growthChambers: [],
+        receptionRoom: { id: "reception-1", enabled: false, level: 1 },
+        hardAssignments: [
+          { operatorId: "xaihi", roomId: "control_nexus", slotIndex: 0 },
+        ],
+      },
+      options: {
+        planningMode: "simple",
+        horizonHours: 24,
+        maxFacilities: false,
+        upgradeRankingMode: "balanced",
+      },
+    });
+
+    expect(migration.scenario.facilities.hardAssignments).toEqual([
+      { operatorId: "xaihi", roomId: "control_nexus" },
+    ]);
   });
 
   it("validates the updated example scenario set", async () => {
@@ -62,11 +93,38 @@ describe("data services", () => {
     expect(validation.issues).toHaveLength(0);
   });
 
+  it("clamps imported custom optimization effort into the supported range", () => {
+    const migration = migrateScenario({
+      scenarioFormatVersion: 1,
+      catalogVersion: "2026-03-20/v1.1-phase1",
+      roster: [],
+      facilities: {
+        controlNexus: { level: 1 },
+        manufacturingCabins: [],
+        growthChambers: [],
+        hardAssignments: [],
+      },
+      options: {
+        planningMode: "simple",
+        horizonHours: 24,
+        maxFacilities: false,
+        optimizationProfile: "custom",
+        optimizationEffort: 420,
+      },
+    });
+
+    expect(migration.scenario.options.optimizationProfile).toBe("custom");
+    expect(migration.scenario.options.optimizationEffort).toBe(100);
+  });
+
   it("hydrates partial scenarios with the active catalog for editor use", async () => {
     const catalog = await loadDefaultCatalog();
     const scenario = await loadScenarioFile(resolveRepoPath("scenarios", "examples", "current-base.simple.json"));
 
     scenario.roster[0]!.baseSkillStates = [{ skillId: "blade-critique", unlockedRank: 1 }];
+    scenario.facilities.manufacturingCabins = [scenario.facilities.manufacturingCabins[0]!];
+    scenario.facilities.growthChambers = [];
+    scenario.facilities.receptionRoom = undefined;
 
     const hydration = hydrateScenarioForCatalog(catalog, scenario);
     const chen = hydration.scenario.roster.find((entry) => entry.operatorId === "chen-qianyu");
@@ -76,6 +134,9 @@ describe("data services", () => {
     expect(hydration.stats.addedBaseSkillStates).toBe(2);
     expect(chen?.baseSkillStates.map((entry) => entry.skillId)).toContain("jadeworking");
     expect(hydration.scenario.roster.length).toBe(catalog.operators.length);
+    expect(hydration.scenario.facilities.manufacturingCabins).toHaveLength(2);
+    expect(hydration.scenario.facilities.growthChambers).toHaveLength(1);
+    expect(hydration.scenario.facilities.receptionRoom?.id).toBe("reception-1");
   });
 
   it("expands shared progression defaults into runtime Base Skill costs and unlock hints", async () => {
@@ -138,13 +199,16 @@ describe("data services", () => {
     scenario.facilities.hardAssignments.push({
       operatorId: "chen-qianyu",
       roomId: "reception-1",
-      slotIndex: 1,
+    });
+    scenario.facilities.hardAssignments.push({
+      operatorId: "tangtang",
+      roomId: "reception-1",
     });
 
     const validation = validateScenarioAgainstCatalog(catalog, scenario);
     expect(validation.ok).toBe(false);
     expect(validation.issues.some((issue) => issue.code === "invalid_recipe_room_kind")).toBe(true);
-    expect(validation.issues.some((issue) => issue.code === "hard_assignment_slot_oob")).toBe(true);
+    expect(validation.issues.some((issue) => issue.code === "hard_assignment_room_overflow")).toBe(true);
   });
 
   it("rejects facilities that are still locked behind Control Nexus progression", async () => {

@@ -10,6 +10,7 @@ import type {
   ImageAsset,
   LevelProgressionMilestone,
   MaterialCost,
+  OptimizationProfile,
   OptimizationScenario,
   OperatorExpItemDefinition,
   OperatorDefinition,
@@ -78,6 +79,23 @@ const DEFAULT_SLOT_CAPS = {
 } as const;
 
 const DEFAULT_GROWTH_SLOT_CAPS = { 1: 3, 2: 6, 3: 9 } as const;
+const OPTIMIZATION_PROFILES = ["fast", "balanced", "thorough", "exhaustive", "custom"] as const satisfies OptimizationProfile[];
+const OPTIMIZATION_PROFILE_EFFORTS: Record<Exclude<OptimizationProfile, "custom">, number> = {
+  fast: 8,
+  balanced: 18,
+  thorough: 30,
+  exhaustive: 45,
+};
+const DEFAULT_OPTIMIZATION_PROFILE: OptimizationProfile = "balanced";
+const DEFAULT_OPTIMIZATION_EFFORT = OPTIMIZATION_PROFILE_EFFORTS[DEFAULT_OPTIMIZATION_PROFILE];
+const MAX_OPTIMIZATION_EFFORT = 100;
+
+function clampOptimizationEffort(value: unknown): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return DEFAULT_OPTIMIZATION_EFFORT;
+  }
+  return Math.min(MAX_OPTIMIZATION_EFFORT, Math.max(1, Math.round(value)));
+}
 
 const MAX_LAYOUT_DEFAULTS = {
   manufacturing_cabin: 2,
@@ -1072,6 +1090,8 @@ export function createStarterScenario(catalog: GameCatalog): OptimizationScenari
       maxFacilities: false,
       includeReceptionRoom: true,
       upgradeRankingMode: "balanced",
+      optimizationProfile: DEFAULT_OPTIMIZATION_PROFILE,
+      optimizationEffort: DEFAULT_OPTIMIZATION_EFFORT,
     },
   };
 }
@@ -1157,6 +1177,45 @@ export function hydrateScenarioForCatalog(
     nextScenario.roster.push(...unknownOperators);
   }
 
+  while (nextScenario.facilities.manufacturingCabins.length < MAX_LAYOUT_DEFAULTS.manufacturing_cabin) {
+    const roomNumber = nextScenario.facilities.manufacturingCabins.length + 1;
+    nextScenario.facilities.manufacturingCabins.push({
+      id: `mfg-${roomNumber}`,
+      enabled: roomNumber === 1,
+      level: 1,
+    });
+    changes.push({
+      path: `facilities.manufacturingCabins.${roomNumber - 1}`,
+      message: `Added missing Manufacturing Cabin placeholder 'mfg-${roomNumber}'.`,
+    });
+  }
+
+  while (nextScenario.facilities.growthChambers.length < MAX_LAYOUT_DEFAULTS.growth_chamber) {
+    const roomNumber = nextScenario.facilities.growthChambers.length + 1;
+    nextScenario.facilities.growthChambers.push({
+      id: `growth-${roomNumber}`,
+      enabled: false,
+      level: 1,
+      fixedRecipeIds: [],
+    });
+    changes.push({
+      path: `facilities.growthChambers.${roomNumber - 1}`,
+      message: `Added missing Growth Chamber placeholder 'growth-${roomNumber}'.`,
+    });
+  }
+
+  if (!nextScenario.facilities.receptionRoom) {
+    nextScenario.facilities.receptionRoom = {
+      id: "reception-1",
+      enabled: false,
+      level: 1,
+    };
+    changes.push({
+      path: "facilities.receptionRoom",
+      message: "Added missing Reception Room placeholder 'reception-1'.",
+    });
+  }
+
   return {
     scenario: nextScenario,
     hydrated: changes.length > 0,
@@ -1195,6 +1254,27 @@ export function migrateScenario(input: unknown): MigrationResult {
     changes.push({
       path: "options.upgradeRankingMode",
       message: "Defaulted missing upgradeRankingMode to 'balanced'.",
+    });
+  }
+  if (options.optimizationProfile == null || !OPTIMIZATION_PROFILES.includes(options.optimizationProfile as OptimizationProfile)) {
+    options.optimizationProfile = DEFAULT_OPTIMIZATION_PROFILE;
+    changes.push({
+      path: "options.optimizationProfile",
+      message: `Defaulted missing optimizationProfile to '${DEFAULT_OPTIMIZATION_PROFILE}'.`,
+    });
+  }
+  const normalizedProfile = options.optimizationProfile as OptimizationProfile;
+  const defaultEffortForProfile = normalizedProfile === "custom"
+    ? DEFAULT_OPTIMIZATION_EFFORT
+    : OPTIMIZATION_PROFILE_EFFORTS[normalizedProfile];
+  const nextEffort = options.optimizationEffort == null
+    ? defaultEffortForProfile
+    : clampOptimizationEffort(options.optimizationEffort);
+  if (options.optimizationEffort !== nextEffort) {
+    options.optimizationEffort = nextEffort;
+    changes.push({
+      path: "options.optimizationEffort",
+      message: `Defaulted optimizationEffort to ${nextEffort}.`,
     });
   }
 
@@ -1247,9 +1327,11 @@ export function migrateScenario(input: unknown): MigrationResult {
     });
   }
 
-  while (facilities.manufacturingCabins.length < MAX_LAYOUT_DEFAULTS.manufacturing_cabin) {
-    const roomNumber = facilities.manufacturingCabins.length + 1;
-    facilities.manufacturingCabins.push({
+  const manufacturingCabins = facilities.manufacturingCabins as Record<string, unknown>[];
+
+  while (manufacturingCabins.length < MAX_LAYOUT_DEFAULTS.manufacturing_cabin) {
+    const roomNumber = manufacturingCabins.length + 1;
+    manufacturingCabins.push({
       id: `mfg-${roomNumber}`,
       enabled: roomNumber === 1,
       level: 1,
@@ -1268,9 +1350,11 @@ export function migrateScenario(input: unknown): MigrationResult {
     });
   }
 
-  while (facilities.growthChambers.length < MAX_LAYOUT_DEFAULTS.growth_chamber) {
-    const roomNumber = facilities.growthChambers.length + 1;
-    facilities.growthChambers.push({
+  const growthChambers = facilities.growthChambers as Record<string, unknown>[];
+
+  while (growthChambers.length < MAX_LAYOUT_DEFAULTS.growth_chamber) {
+    const roomNumber = growthChambers.length + 1;
+    growthChambers.push({
       id: `growth-${roomNumber}`,
       enabled: false,
       level: 1,
@@ -1282,7 +1366,7 @@ export function migrateScenario(input: unknown): MigrationResult {
     });
   }
 
-  for (const room of facilities.growthChambers) {
+  for (const room of growthChambers) {
     if (isObject(room) && Array.isArray(room.fixedRecipeIds)) {
       continue;
     }
@@ -1320,6 +1404,17 @@ export function migrateScenario(input: unknown): MigrationResult {
       path: "facilities.hardAssignments",
       message: "Defaulted missing hardAssignments to an empty array.",
     });
+  }
+  else {
+    for (const assignment of facilities.hardAssignments) {
+      if (isObject(assignment) && "slotIndex" in assignment) {
+        delete assignment.slotIndex;
+        changes.push({
+          path: "facilities.hardAssignments[].slotIndex",
+          message: "Removed deprecated hard-assignment slotIndex field.",
+        });
+      }
+    }
   }
 
   if (typeof options.planningMode !== "string") {
@@ -1654,15 +1749,6 @@ export function validateScenarioAgainstCatalog(
     if (roomSpec) {
       const currentCount = (roomAssignmentCounts.get(assignment.roomId) ?? 0) + 1;
       roomAssignmentCounts.set(assignment.roomId, currentCount);
-      if (assignment.slotIndex != null && assignment.slotIndex >= roomSpec.slotCap) {
-        issues.push(
-          makeIssue(
-            "hard_assignment_slot_oob",
-            `facilities.hardAssignments.${assignment.operatorId}`,
-            `Hard assignment for '${assignment.operatorId}' targets slot ${assignment.slotIndex}, but room '${assignment.roomId}' only has ${roomSpec.slotCap} slots.`,
-          ),
-        );
-      }
       if (currentCount > roomSpec.slotCap) {
         issues.push(
           makeIssue(
@@ -1696,6 +1782,28 @@ export function validateScenarioAgainstCatalog(
       ),
     );
   }
+  const optimizationProfile = scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE;
+  if (!OPTIMIZATION_PROFILES.includes(optimizationProfile)) {
+    issues.push(
+      makeIssue(
+        "invalid_optimization_profile",
+        "options.optimizationProfile",
+        "Scenario options.optimizationProfile must be 'fast', 'balanced', 'thorough', 'exhaustive', or 'custom'.",
+      ),
+    );
+  }
+  if (
+    scenario.options.optimizationEffort != null &&
+    clampOptimizationEffort(scenario.options.optimizationEffort) !== scenario.options.optimizationEffort
+  ) {
+    issues.push(
+        makeIssue(
+          "invalid_optimization_effort",
+          "options.optimizationEffort",
+          `Scenario options.optimizationEffort must be an integer from 1 to ${MAX_OPTIMIZATION_EFFORT}.`,
+        ),
+      );
+    }
 
   return {
     ok: issues.every((issue) => issue.severity !== "error"),
@@ -1812,6 +1920,30 @@ function validateScenarioShape(scenario: OptimizationScenario): ValidationIssue[
           "invalid_max_facilities",
           "options.maxFacilities",
           "Scenario options.maxFacilities must be a boolean.",
+        ),
+      );
+    }
+    if (
+      scenario.options.optimizationProfile != null &&
+      !OPTIMIZATION_PROFILES.includes(scenario.options.optimizationProfile)
+    ) {
+      issues.push(
+        makeIssue(
+          "invalid_optimization_profile",
+          "options.optimizationProfile",
+          "Scenario options.optimizationProfile must be a supported profile string.",
+        ),
+      );
+    }
+    if (
+      scenario.options.optimizationEffort != null &&
+      (typeof scenario.options.optimizationEffort !== "number" || !Number.isFinite(scenario.options.optimizationEffort))
+    ) {
+      issues.push(
+        makeIssue(
+          "invalid_optimization_effort",
+          "options.optimizationEffort",
+          "Scenario options.optimizationEffort must be a number.",
         ),
       );
     }

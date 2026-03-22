@@ -15,7 +15,20 @@ The UI should expose two modes:
 Current repo status:
 
 - the shared solver and upgrade-advisor runtime already exist
-- the browser GUI is still pending
+- the browser GUI now runs optimization in a Web Worker so the main UI stays responsive
+
+## Optimization UX
+
+- `Optimize` runs in a dedicated worker and opens a progress modal instead of blocking the page.
+- The modal shows approximate node-based progress, current best score, elapsed time, and a cancel action.
+- Optimization effort is saved with the scenario draft and exported/imported JSON.
+- The UI exposes named profiles:
+  - `Fast`
+  - `Balanced`
+  - `Thorough`
+  - `Exhaustive`
+- A `Search effort` slider from `1` to `20` provides granular tuning. Moving the slider away from a preset switches the scenario to `Custom`.
+- `Exhaustive` means the highest configured search budget in the app, not an unconditional guarantee of full exhaustive search on large states.
 
 ## Primary screens
 

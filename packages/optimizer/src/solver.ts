@@ -15,7 +15,15 @@ import type {
 
 import { createProjectedOutputs, getGrowthSlotCap, getMaxFacilityRoomCounts, getRoomSlotCap } from "@endfield/data";
 
-import { SUPPORT_WEIGHTS } from "./config.js";
+import {
+  DEFAULT_OPTIMIZATION_EFFORT,
+  DEFAULT_OPTIMIZATION_PROFILE,
+  OPTIMIZATION_PROFILE_EFFORTS,
+  SUPPORT_WEIGHTS,
+  clampOptimizationEffort,
+  getOptimizationSearchConfig,
+} from "./config.js";
+import type { OptimizationProgressSnapshot, OptimizationSearchConfig, SolveScenarioOptions } from "./types.js";
 
 interface NormalizedRoom {
   roomId: string;
@@ -39,6 +47,33 @@ interface OperatorRoomEvaluation {
   reasons: string[];
   usedFallbackHeuristics: boolean;
   dataConfidence: DataConfidence;
+}
+
+export class OptimizationCancelledError extends Error {
+  constructor(message = "Optimization canceled.") {
+    super(message);
+    this.name = "OptimizationCancelledError";
+  }
+}
+
+function resolveSearchConfig(
+  scenario: OptimizationScenario,
+  options?: SolveScenarioOptions,
+): OptimizationSearchConfig {
+  if (options?.searchConfig) {
+    return {
+      ...options.searchConfig,
+      effort: clampOptimizationEffort(options.searchConfig.effort),
+    };
+  }
+
+  const profile = scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE;
+  const defaultEffort = profile === "custom"
+    ? DEFAULT_OPTIMIZATION_EFFORT
+    : OPTIMIZATION_PROFILE_EFFORTS[profile];
+  const effort = clampOptimizationEffort(scenario.options.optimizationEffort ?? defaultEffort);
+
+  return getOptimizationSearchConfig(profile, effort);
 }
 
 function getRecipeBaseUnits(recipe: RecipeDefinition, horizonHours: number, warnings: string[]) {
@@ -431,16 +466,9 @@ function buildHardAssignmentState(
     }
 
     const roomAssignments = assignedByRoom.get(room.roomId)!;
-    let targetIndex = assignment.slotIndex;
-    if (targetIndex == null) {
-      targetIndex = roomAssignments.findIndex((value) => value === null);
-    }
+    const targetIndex = roomAssignments.findIndex((value) => value === null);
     if (targetIndex == null || targetIndex < 0 || targetIndex >= roomAssignments.length) {
       warnings.push(`Ignoring hard assignment for operator '${assignment.operatorId}' because no valid slot is available in room '${room.roomId}'.`);
-      continue;
-    }
-    if (roomAssignments[targetIndex] != null) {
-      warnings.push(`Ignoring hard assignment for operator '${assignment.operatorId}' because slot ${targetIndex} in room '${room.roomId}' is already occupied.`);
       continue;
     }
 
@@ -593,8 +621,10 @@ function summarizePlans(roomPlans: RoomPlan[]) {
 export function solveNormalizedScenario(
   catalog: GameCatalog,
   normalizedScenarioResult: NormalizedScenarioResult,
+  options?: SolveScenarioOptions,
 ): OptimizationResult {
   const warnings = [...normalizedScenarioResult.warnings];
+  const searchConfig = resolveSearchConfig(normalizedScenarioResult.scenario, options);
   const operatorDefs = indexById(catalog.operators);
   const ownedOperators = getOwnedOperatorStateMap(normalizedScenarioResult.scenario);
   const rooms = normalizedScenarioResult.rooms;
@@ -614,6 +644,36 @@ export function solveNormalizedScenario(
   const availableOperatorIds = Array.from(ownedOperators.keys()).filter(
     (operatorId) => !hardState.hardAssignedOperatorIds.has(operatorId),
   );
+  const totalSlots = slotQueue.length;
+  let visitedNodes = 0;
+  let budgetExceeded = false;
+  let lastProgressNode = -1;
+
+  const maybeCancel = () => {
+    if (options?.shouldCancel?.()) {
+      throw new OptimizationCancelledError();
+    }
+  };
+
+  const emitProgress = (phase: string, currentDepth: number) => {
+    if (!options?.onProgress) {
+      return;
+    }
+
+    const nextProgress: OptimizationProgressSnapshot = {
+      phase,
+      visitedNodes,
+      totalSlots,
+      currentDepth,
+      bestScore: Number.isFinite(best.score) ? best.score : 0,
+      maxBranchCandidatesPerSlot: searchConfig.maxBranchCandidatesPerSlot,
+      profileLabel: searchConfig.profileLabel,
+      effort: searchConfig.effort,
+      maxVisitedNodes: searchConfig.maxVisitedNodes,
+    };
+
+    options.onProgress(nextProgress);
+  };
 
   let best = {
     score: Number.NEGATIVE_INFINITY,
@@ -621,23 +681,37 @@ export function solveNormalizedScenario(
   };
 
   const optimisticContributionCache = new Map<string, number>();
-  for (const operatorId of availableOperatorIds) {
+  const perRoomContributionCache = new Map<string, number>();
+
+  const getOperatorContributionForRoom = (operatorId: string, room: NormalizedRoom) => {
+    const cacheKey = `${operatorId}:${room.roomId}`;
+    const cached = perRoomContributionCache.get(cacheKey);
+    if (cached != null) {
+      return cached;
+    }
+
     const operatorDef = operatorDefs.get(operatorId)!;
     const ownedOperator = ownedOperators.get(operatorId)!;
+    const evaluation = evaluateOperatorForRoom(
+      operatorDef,
+      ownedOperator,
+      room,
+      normalizedScenarioResult.scenario.options.horizonHours,
+      warnings,
+    );
+    const contribution =
+      room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber"
+        ? evaluation.directScore
+        : evaluation.supportScore + evaluation.crossRoomScore;
+    perRoomContributionCache.set(cacheKey, contribution);
+    return contribution;
+  };
+
+  for (const operatorId of availableOperatorIds) {
     let bestContribution = 0;
 
     for (const room of rooms) {
-      const evaluation = evaluateOperatorForRoom(
-        operatorDef,
-        ownedOperator,
-        room,
-        normalizedScenarioResult.scenario.options.horizonHours,
-        warnings,
-      );
-      const contribution =
-        room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber"
-          ? evaluation.directScore
-          : evaluation.supportScore + evaluation.crossRoomScore;
+      const contribution = getOperatorContributionForRoom(operatorId, room);
       if (contribution > bestContribution) {
         bestContribution = contribution;
       }
@@ -646,15 +720,30 @@ export function solveNormalizedScenario(
     optimisticContributionCache.set(operatorId, bestContribution);
   }
 
+  emitProgress("Preparing search", 0);
+
   const dfs = (
     slotIndex: number,
     assignedByRoom: Map<string, Array<string | null>>,
     remainingOperatorIds: string[],
     currentScore: number,
   ) => {
+    maybeCancel();
+    if (visitedNodes >= searchConfig.maxVisitedNodes) {
+      budgetExceeded = true;
+      return;
+    }
+
+    visitedNodes += 1;
+    if (visitedNodes === 1 || visitedNodes - lastProgressNode >= searchConfig.progressIntervalNodes) {
+      lastProgressNode = visitedNodes;
+      emitProgress("Searching assignments", slotIndex);
+    }
+
     if (slotIndex >= slotQueue.length || remainingOperatorIds.length === 0) {
       if (currentScore > best.score) {
         best = { score: currentScore, assignedByRoom: cloneAssignedByRoom(assignedByRoom) };
+        emitProgress("Searching assignments", slotIndex);
       }
       return;
     }
@@ -672,24 +761,28 @@ export function solveNormalizedScenario(
     const targetSlot = slotQueue[slotIndex]!;
     const room = roomMap.get(targetSlot.roomId)!;
     const nextAssignedByRoom = cloneAssignedByRoom(assignedByRoom);
+    const largeSearchStateThreshold = Math.max(20, searchConfig.maxBranchCandidatesPerSlot * 10);
+    const candidateLimit = remainingOperatorIds.length * (slotQueue.length - slotIndex) > largeSearchStateThreshold
+      ? Math.min(searchConfig.maxBranchCandidatesPerSlot, remainingOperatorIds.length)
+      : remainingOperatorIds.length;
+    const candidateIndexes = remainingOperatorIds
+      .map((operatorId, index) => ({
+        index,
+        operatorId,
+        contribution: getOperatorContributionForRoom(operatorId, room),
+      }))
+      .sort((left, right) => right.contribution - left.contribution)
+      .slice(0, candidateLimit);
 
-    for (let index = 0; index < remainingOperatorIds.length; index += 1) {
-      const operatorId = remainingOperatorIds[index]!;
+    for (const candidate of candidateIndexes) {
+      maybeCancel();
+      if (budgetExceeded) {
+        return;
+      }
+      const index = candidate.index;
+      const operatorId = candidate.operatorId;
       nextAssignedByRoom.get(room.roomId)![targetSlot.slotIndex] = operatorId;
-
-      const operatorDef = operatorDefs.get(operatorId)!;
-      const ownedOperator = ownedOperators.get(operatorId)!;
-      const evaluation = evaluateOperatorForRoom(
-        operatorDef,
-        ownedOperator,
-        room,
-        normalizedScenarioResult.scenario.options.horizonHours,
-        warnings,
-      );
-      const addedScore =
-        room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber"
-          ? evaluation.directScore
-          : evaluation.supportScore + evaluation.crossRoomScore;
+      const addedScore = candidate.contribution;
 
       dfs(
         slotIndex + 1,
@@ -702,12 +795,21 @@ export function solveNormalizedScenario(
   };
 
   dfs(0, hardState.assignedByRoom, availableOperatorIds, 0);
+  maybeCancel();
+
+  if (budgetExceeded) {
+    warnings.push(
+      `Optimization search stopped after ${visitedNodes} visited nodes using the '${searchConfig.profileLabel}' profile.`,
+    );
+  }
 
   const roomPlans: RoomPlan[] = [];
   const explanations: AssignmentExplanation[] = [];
   const finalWarnings = [...warnings];
+  emitProgress("Scoring best plan", totalSlots);
 
   for (const room of rooms) {
+    maybeCancel();
     const plan = computeRoomPlan(
       room,
       best.assignedByRoom.get(room.roomId) ?? [],
@@ -735,8 +837,12 @@ export function solveNormalizedScenario(
   };
 }
 
-export function solveScenario(catalog: GameCatalog, scenario: OptimizationScenario): OptimizationResult {
-  return solveNormalizedScenario(catalog, normalizeScenario(catalog, scenario));
+export function solveScenario(
+  catalog: GameCatalog,
+  scenario: OptimizationScenario,
+  options?: SolveScenarioOptions,
+): OptimizationResult {
+  return solveNormalizedScenario(catalog, normalizeScenario(catalog, scenario), options);
 }
 
 export type { NormalizedRoom };

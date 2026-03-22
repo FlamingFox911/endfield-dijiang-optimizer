@@ -85,13 +85,11 @@
     "hardAssignments": [
       {
         "operatorId": "xaihi",
-        "roomId": "control_nexus",
-        "slotIndex": 0
+        "roomId": "control_nexus"
       },
       {
         "operatorId": "snowshine",
-        "roomId": "reception-1",
-        "slotIndex": 0
+        "roomId": "reception-1"
       }
     ]
   },
