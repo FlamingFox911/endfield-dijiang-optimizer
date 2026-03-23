@@ -61,6 +61,38 @@ const responses = new Map<string, unknown>([
 describe("App", () => {
   const getOptimizationProfileSelect = () => screen.getByText("Optimization profile").closest("label")!.querySelector("select") as HTMLSelectElement;
   const getSearchEffortSlider = () => screen.getByText("Search effort").closest("label")!.querySelector('input[type="range"]') as HTMLInputElement;
+  const seedDraft = (ownedOperatorIds: string[]) => {
+    localStorage.setItem(
+      "endfield-dijiang-optimizer:draft",
+      JSON.stringify({
+        scenarioFormatVersion: 1,
+        catalogVersion: "2026-03-20/v1.1-phase1",
+        roster: ownedOperatorIds.map((operatorId) => ({
+          operatorId,
+          owned: true,
+          level: 1,
+          promotionTier: 0,
+          baseSkillStates: [],
+        })),
+        facilities: {
+          controlNexus: { level: 3 },
+          manufacturingCabins: [
+            { id: "mfg-1", enabled: true, level: 1, fixedRecipeId: "elementary-cognitive-carrier" },
+            { id: "mfg-2", enabled: true, level: 1, fixedRecipeId: "arms-inspector" },
+          ],
+          growthChambers: [
+            { id: "growth-1", enabled: true, level: 1, fixedRecipeIds: ["kalkonyx"] },
+          ],
+          receptionRoom: { id: "reception-1", enabled: true, level: 1 },
+          hardAssignments: [],
+        },
+        options: {
+          maxFacilities: false,
+          upgradeRankingMode: "balanced",
+        },
+      }),
+    );
+  };
 
   beforeEach(() => {
     localStorage.clear();
@@ -740,6 +772,75 @@ describe("App", () => {
       expect(screen.getByText("Manufacturing Cabin 2")).toBeInTheDocument();
       expect(getOptimizationProfileSelect()).toHaveValue("thorough");
       expect(getSearchEffortSlider()).toHaveValue("14");
+    });
+  });
+
+  it("prevents duplicate hard-assignment operators and keeps manual operator changes", async () => {
+    seedDraft(["chen-qianyu", "xaihi", "snowshine"]);
+    const { container } = render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.click(screen.getByRole("tab", { name: /Planner/i }));
+
+    const addButton = screen.getByRole("button", { name: "Add hard assignment" });
+    await userEvent.click(addButton);
+    await userEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(container.querySelectorAll(".hardAssignmentRow").length).toBe(2);
+    });
+
+    const [firstRow, secondRow] = Array.from(container.querySelectorAll(".hardAssignmentRow"));
+    const firstOperatorSelect = within(firstRow!).getByRole("combobox", { name: "Operator" }) as HTMLSelectElement;
+    const secondOperatorSelect = within(secondRow!).getByRole("combobox", { name: "Operator" }) as HTMLSelectElement;
+    const firstOperatorId = firstOperatorSelect.value;
+    const secondOperatorId = secondOperatorSelect.value;
+
+    expect(secondOperatorId).not.toBe(firstOperatorId);
+    expect(Array.from(secondOperatorSelect.options).map((option) => option.value)).not.toContain(firstOperatorId);
+
+    const nextFirstOperatorId = Array.from(firstOperatorSelect.options)
+      .map((option) => option.value)
+      .find((value) => value !== firstOperatorId && value !== secondOperatorId);
+
+    expect(nextFirstOperatorId).toBeTruthy();
+
+    await userEvent.selectOptions(firstOperatorSelect, nextFirstOperatorId!);
+
+    await waitFor(() => {
+      const updatedRows = Array.from(container.querySelectorAll(".hardAssignmentRow"));
+      const updatedFirstOperatorSelect = within(updatedRows[0]!).getByRole("combobox", { name: "Operator" }) as HTMLSelectElement;
+      const updatedSecondOperatorSelect = within(updatedRows[1]!).getByRole("combobox", { name: "Operator" }) as HTMLSelectElement;
+      const updatedSecondOptions = Array.from(updatedSecondOperatorSelect.options).map((option) => option.value);
+
+      expect(updatedFirstOperatorSelect).toHaveValue(nextFirstOperatorId!);
+      expect(updatedSecondOptions).not.toContain(nextFirstOperatorId!);
+      expect(updatedSecondOptions).toContain(firstOperatorId);
+    });
+  });
+
+  it("removes hard-assignment rows and disables adding when no operators remain", async () => {
+    seedDraft(["chen-qianyu", "xaihi"]);
+    const { container } = render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.click(screen.getByRole("tab", { name: /Planner/i }));
+
+    const addButton = screen.getByRole("button", { name: "Add hard assignment" });
+    await userEvent.click(addButton);
+    await userEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(container.querySelectorAll(".hardAssignmentRow").length).toBe(2);
+      expect(screen.getByRole("button", { name: "Add hard assignment" })).toBeDisabled();
+    });
+
+    const removeButtons = screen.getAllByRole("button", { name: /Remove hard assignment for/i });
+    await userEvent.click(removeButtons[0]!);
+
+    await waitFor(() => {
+      expect(container.querySelectorAll(".hardAssignmentRow").length).toBe(1);
+      expect(screen.getByRole("button", { name: "Add hard assignment" })).not.toBeDisabled();
     });
   });
 

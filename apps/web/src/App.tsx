@@ -1,4 +1,4 @@
-import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import type {
   GameCatalog,
@@ -53,6 +53,9 @@ interface RecommendationRunState {
   startedAt: number;
   progress: UpgradeRecommendationProgressSnapshot;
 }
+
+type HardAssignment = OptimizationScenario["facilities"]["hardAssignments"][number];
+type RosterEntry = OptimizationScenario["roster"][number];
 
 function sanitizeScenarioForPersistence(scenario: OptimizationScenario): OptimizationScenario {
   return {
@@ -348,6 +351,31 @@ function getScenarioSearchConfig(scenario: OptimizationScenario) {
   return getOptimizationSearchConfig(profile, effort);
 }
 
+function getAvailableHardAssignmentOperatorIds(
+  ownedOperators: RosterEntry[],
+  hardAssignments: HardAssignment[],
+  currentIndex: number,
+): string[] {
+  const selectedElsewhere = new Set(
+    hardAssignments
+      .filter((_, index) => index !== currentIndex)
+      .map((assignment) => assignment.operatorId)
+      .filter(Boolean),
+  );
+
+  return ownedOperators
+    .filter((entry) => !selectedElsewhere.has(entry.operatorId))
+    .map((entry) => entry.operatorId);
+}
+
+function getNextHardAssignmentOperatorId(
+  ownedOperators: RosterEntry[],
+  hardAssignments: HardAssignment[],
+): string | null {
+  const assignedOperatorIds = new Set(hardAssignments.map((assignment) => assignment.operatorId).filter(Boolean));
+  return ownedOperators.find((entry) => !assignedOperatorIds.has(entry.operatorId))?.operatorId ?? null;
+}
+
 function formatElapsedTime(valueMs: number): string {
   const totalSeconds = Math.max(0, Math.floor(valueMs / 1000));
   const minutes = Math.floor(totalSeconds / 60);
@@ -538,6 +566,7 @@ function App() {
     ...scenario.facilities.manufacturingCabins.map((room, index) => ({ id: room.id, label: `Manufacturing Cabin ${index + 1}` })),
     ...scenario.facilities.growthChambers.map((room, index) => ({ id: room.id, label: `Growth Chamber ${index + 1}` })),
   ];
+  const nextHardAssignmentOperatorId = getNextHardAssignmentOperatorId(ownedOperators, scenario.facilities.hardAssignments);
   const roomLabelById = new Map(roomOptions.map((room) => [room.id, room.label]));
   const roomOrderById = new Map(roomOptions.map((room, index) => [room.id, index]));
   const orderedResultRoomPlans = result
@@ -558,7 +587,7 @@ function App() {
   const completedResultsCount = (result ? 1 : 0) + (recommendations ? 1 : 0);
 
   const updateScenario = (updater: (current: OptimizationScenario) => OptimizationScenario) => {
-    startTransition(() => setScenario((current) => (current ? updater(current) : current)));
+    setScenario((current) => (current ? updater(current) : current));
   };
 
   const setOptimizationProfile = (profile: OptimizationProfile) => {
@@ -1505,53 +1534,84 @@ function App() {
                   </div>
                 </div>
                 <div className="hardAssignmentGrid">
-                  {scenario.facilities.hardAssignments.map((assignment, index) => (
-                    <div className="hardAssignmentRow" key={`${assignment.operatorId}-${index}`}>
-                      <label className="plannerCell">
-                        <span>Operator</span>
-                        <select
-                          value={assignment.operatorId}
-                          onChange={(event) => updateScenario((current) => ({
+                  {scenario.facilities.hardAssignments.map((assignment, index) => {
+                    const currentOperatorName = operatorsById.get(assignment.operatorId)?.name ?? assignment.operatorId;
+                    const operatorOptionIds = Array.from(
+                      new Set([
+                        assignment.operatorId,
+                        ...getAvailableHardAssignmentOperatorIds(ownedOperators, scenario.facilities.hardAssignments, index),
+                      ].filter(Boolean)),
+                    );
+
+                    return (
+                      <div className="hardAssignmentRow" key={index}>
+                        <label className="plannerCell">
+                          <span>Operator</span>
+                          <select
+                            value={assignment.operatorId}
+                            onChange={(event) => updateScenario((current) => ({
+                              ...current,
+                              facilities: {
+                                ...current.facilities,
+                                hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: event.target.value, roomId: entry.roomId } : { operatorId: entry.operatorId, roomId: entry.roomId }),
+                              },
+                            }))}
+                          >
+                            {operatorOptionIds.map((operatorId) => (
+                              <option key={operatorId} value={operatorId}>{operatorsById.get(operatorId)?.name ?? operatorId}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="plannerCell">
+                          <span>Room</span>
+                          <select
+                            value={assignment.roomId}
+                            onChange={(event) => updateScenario((current) => ({
+                              ...current,
+                              facilities: {
+                                ...current.facilities,
+                                hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: entry.operatorId, roomId: event.target.value } : { operatorId: entry.operatorId, roomId: entry.roomId }),
+                              },
+                            }))}
+                          >
+                            {roomOptions.map((room) => <option key={room.id} value={room.id}>{room.label}</option>)}
+                          </select>
+                        </label>
+                        <button
+                          type="button"
+                          className="secondary hardAssignmentRemoveButton"
+                          aria-label={`Remove hard assignment for ${currentOperatorName}`}
+                          title={`Remove hard assignment for ${currentOperatorName}`}
+                          onClick={() => updateScenario((current) => ({
                             ...current,
                             facilities: {
                               ...current.facilities,
-                              hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: event.target.value, roomId: entry.roomId } : { operatorId: entry.operatorId, roomId: entry.roomId }),
+                              hardAssignments: current.facilities.hardAssignments.filter((_, entryIndex) => entryIndex !== index),
                             },
                           }))}
                         >
-                          {ownedOperators.map((entry) => <option key={entry.operatorId} value={entry.operatorId}>{operatorsById.get(entry.operatorId)?.name ?? entry.operatorId}</option>)}
-                        </select>
-                      </label>
-                      <label className="plannerCell">
-                        <span>Room</span>
-                        <select
-                          value={assignment.roomId}
-                          onChange={(event) => updateScenario((current) => ({
-                            ...current,
-                            facilities: {
-                              ...current.facilities,
-                              hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: entry.operatorId, roomId: event.target.value } : { operatorId: entry.operatorId, roomId: entry.roomId }),
-                            },
-                          }))}
-                        >
-                          {roomOptions.map((room) => <option key={room.id} value={room.id}>{room.label}</option>)}
-                        </select>
-                      </label>
-                    </div>
-                  ))}
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
                   <button
+                    type="button"
                     className="secondary hardAssignmentButton"
+                    disabled={!nextHardAssignmentOperatorId}
                     onClick={() => updateScenario((current) => ({
                       ...current,
                       facilities: {
                         ...current.facilities,
-                        hardAssignments: [
-                          ...current.facilities.hardAssignments,
-                          {
-                            operatorId: ownedOperators[0]?.operatorId ?? current.roster[0]?.operatorId ?? "",
-                            roomId: "control_nexus",
-                          },
-                        ],
+                        hardAssignments: nextHardAssignmentOperatorId
+                          ? [
+                              ...current.facilities.hardAssignments,
+                              {
+                                operatorId: nextHardAssignmentOperatorId,
+                                roomId: roomOptions[0]?.id ?? "control_nexus",
+                              },
+                            ]
+                          : current.facilities.hardAssignments,
                       },
                     }))}
                   >

@@ -409,7 +409,7 @@ button.secondary,
 }
 
 .hardAssignmentRow {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
 }
 
 .plannerRoomIntro,
@@ -579,6 +579,15 @@ button.secondary,
 
 .hardAssignmentButton {
   justify-self: start;
+}
+
+.hardAssignmentRemoveButton {
+  align-self: stretch;
+  min-width: 48px;
+  padding: 0;
+  border-radius: 18px;
+  font-size: 1.4rem;
+  line-height: 1;
 }
 
 .rosterWorkspace {
