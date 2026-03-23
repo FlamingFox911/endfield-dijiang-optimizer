@@ -1301,7 +1301,6 @@ function App() {
                           </div>
                           <span className="miniStat">{getRoomSlotCap(catalog, "manufacturing_cabin", room.level, scenario.facilities.controlNexus.level)} slots</span>
                         </div>
-                        <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 3" : recipe ? `${formatLabel(recipe.productKind)} | ${formatDurationMinutes(recipe.baseDurationMinutes)} | output ${recipe.outputAmount ?? "?"}` : "No recipe selected"}</p>
                         <div className="plannerStatRow">
                           <div className="plannerStatCell">
                             <span>Status</span>
@@ -1362,6 +1361,7 @@ function App() {
                             <option value="">No recipe</option>
                             {catalog.recipes.filter((entry) => entry.facilityKind === "manufacturing_cabin" && entry.roomLevel <= room.level).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
                           </select>
+                          <small className="plannerCellNote">{roomLocked ? "Locked until Control Nexus level 3" : recipe ? `${formatLabel(recipe.productKind)} | ${formatDurationMinutes(recipe.baseDurationMinutes)} | output ${recipe.outputAmount ?? "?"}` : "No recipe selected"}</small>
                         </label>
                       </div>
                     </div>
@@ -1370,9 +1370,6 @@ function App() {
               })}
 
               {scenario.facilities.growthChambers.map((room, index) => {
-                const recipes = (room.fixedRecipeIds ?? [])
-                  .map((recipeId) => recipesById.get(recipeId))
-                  .filter((recipe): recipe is NonNullable<typeof recipe> => recipe != null);
                 const growthSlotCap = getGrowthSlotCap(catalog, room.level);
                 const roomLocked = index >= unlockedGrowthRoomCount;
                 return (
@@ -1386,7 +1383,7 @@ function App() {
                           </div>
                           <span className="miniStat">{getRoomSlotCap(catalog, "growth_chamber", room.level, scenario.facilities.controlNexus.level)} slots</span>
                         </div>
-                        <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 2" : recipes.length > 0 ? recipes.map((recipe) => `${recipe.name} (${formatLabel(recipe.productKind)})`).join(" | ") : "No growth materials selected"}</p>
+                        {roomLocked && <p className="roomMeta">Locked until Control Nexus level 2</p>}
                         <div className="plannerStatRow">
                           <div className="plannerStatCell">
                             <span>Status</span>
@@ -1437,36 +1434,48 @@ function App() {
                         </label>
                       </div>
                       <div className="plannerSlotGrid">
-                        {Array.from({ length: growthSlotCap }, (_, slotIndex) => (
-                          <label className="plannerCell" key={`${room.id}-growth-slot-${slotIndex}`}>
-                            <span>Growth Slot {slotIndex + 1}</span>
-                            <select
-                              value={room.fixedRecipeIds?.[slotIndex] ?? ""}
-                              disabled={roomLocked}
-                              onChange={(event) => updateScenario((current) => ({
-                                ...current,
-                                facilities: {
-                                  ...current.facilities,
-                                  growthChambers: current.facilities.growthChambers.map((entry) => {
-                                    if (entry.id !== room.id) {
-                                      return entry;
-                                    }
-                                    const nextRecipeIds = [...(entry.fixedRecipeIds ?? [])];
-                                    if (event.target.value) {
-                                      nextRecipeIds[slotIndex] = event.target.value;
-                                    } else {
-                                      nextRecipeIds.splice(slotIndex, 1);
-                                    }
-                                    return { ...entry, fixedRecipeIds: nextRecipeIds.filter(Boolean) };
-                                  }),
-                                },
-                              }))}
-                            >
-                              <option value="">Empty slot</option>
-                              {catalog.recipes.filter((entry) => entry.facilityKind === "growth_chamber" && entry.roomLevel <= room.level).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
-                            </select>
-                          </label>
-                        ))}
+                        {Array.from({ length: growthSlotCap }, (_, slotIndex) => {
+                          const selectedRecipe = room.fixedRecipeIds?.[slotIndex]
+                            ? recipesById.get(room.fixedRecipeIds[slotIndex]!)
+                            : undefined;
+                          return (
+                            <label className="plannerCell" key={`${room.id}-growth-slot-${slotIndex}`}>
+                              <span>Growth Slot {slotIndex + 1}</span>
+                              <select
+                                value={room.fixedRecipeIds?.[slotIndex] ?? ""}
+                                disabled={roomLocked}
+                                onChange={(event) => updateScenario((current) => ({
+                                  ...current,
+                                  facilities: {
+                                    ...current.facilities,
+                                    growthChambers: current.facilities.growthChambers.map((entry) => {
+                                      if (entry.id !== room.id) {
+                                        return entry;
+                                      }
+                                      const nextRecipeIds = [...(entry.fixedRecipeIds ?? [])];
+                                      if (event.target.value) {
+                                        nextRecipeIds[slotIndex] = event.target.value;
+                                      } else {
+                                        nextRecipeIds.splice(slotIndex, 1);
+                                      }
+                                      return { ...entry, fixedRecipeIds: nextRecipeIds.filter(Boolean) };
+                                    }),
+                                  },
+                                }))}
+                              >
+                                <option value="">Empty slot</option>
+                                {catalog.recipes.filter((entry) => entry.facilityKind === "growth_chamber" && entry.roomLevel <= room.level).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
+                              </select>
+                              <small className="plannerCellNote">
+                                {roomLocked
+                                  ? "Locked until Control Nexus level 2"
+                                  : selectedRecipe
+                                    ? `${formatLabel(selectedRecipe.productKind)} | ${formatDurationMinutes(selectedRecipe.baseDurationMinutes)} | output ${selectedRecipe.outputAmount ?? "?"}`
+                                    : "Empty slot"}
+                              </small>
+                            </label>
+                          );
+                        })}
                       </div>
                     </div>
                   </article>

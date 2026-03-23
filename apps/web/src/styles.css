@@ -324,6 +324,12 @@ button.secondary,
   padding: 18px;
 }
 
+.resultCard {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
 .messageBar.warning {
   background: rgba(202, 99, 46, 0.16);
 }
@@ -331,6 +337,7 @@ button.secondary,
 .tabShell {
   display: grid;
   gap: 16px;
+  margin-top: 14px;
 }
 
 .tabBar {
@@ -477,6 +484,7 @@ button.secondary,
 .resultDataCell,
 .resultNoteCell {
   align-content: start;
+  min-height: 76px;
 }
 
 .plannerCellWide {
@@ -487,6 +495,11 @@ button.secondary,
   display: block;
   margin-top: 4px;
   font-size: 1rem;
+}
+
+.plannerCellNote {
+  color: #7c5a42;
+  line-height: 1.35;
 }
 
 .plannerToggleCell {
@@ -542,6 +555,7 @@ button.secondary,
 .resultNoteCell {
   margin: 0;
   line-height: 1.4;
+  min-height: 0;
 }
 
 .resultGrid,
@@ -821,7 +835,7 @@ button.secondary,
 .operatorChipList {
   display: grid;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 0;
 }
 
 .operatorChip {
@@ -895,7 +909,7 @@ button.secondary,
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 0;
 }
 
 .resultRecipeChip {
