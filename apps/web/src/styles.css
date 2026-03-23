@@ -83,7 +83,7 @@ select {
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.95fr);
   gap: 18px;
-  padding: 30px;
+  padding: 24px;
 }
 
 .eyebrow {
@@ -124,8 +124,8 @@ select {
 }
 
 .heroStats {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-top: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(138px, 1fr));
+  margin-top: 0;
 }
 
 .heroStats article,
@@ -143,7 +143,11 @@ select {
 .heroMetaGrid span,
 .rosterStats span,
 .editorStats span,
-.resultSummary p:first-child {
+.resultSummary p:first-child,
+.plannerCell span,
+.plannerStatCell span,
+.resultMetric span,
+.resultDataCell span {
   font-size: 0.8rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -151,18 +155,25 @@ select {
 }
 
 .heroPanel,
+.heroCopy,
 .roomStack,
 .resultStack,
+.resultWorkspace,
 .recommendationStack,
 .skillGrid,
 .rosterBrowser,
-.operatorEditor {
+.operatorEditor,
+.plannerGrid {
   display: grid;
   gap: 14px;
 }
 
 .heroPanel {
   align-content: start;
+}
+
+.heroCopy {
+  gap: 16px;
 }
 
 .heroMetaGrid,
@@ -172,11 +183,26 @@ select {
 }
 
 .toolbar {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 12px;
   margin: 18px 0;
   padding: 16px;
+  align-items: start;
+}
+
+.toolbarGrid,
+.toolbarActions {
+  display: grid;
+  gap: 12px;
+}
+
+.toolbarGrid {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.toolbarActions {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .pill,
@@ -198,16 +224,60 @@ label {
 }
 
 .compact {
-  min-width: 128px;
+  min-width: 0;
 }
 
 .rangePill {
-  min-width: 240px;
+  min-width: 0;
 }
 
 .toggle {
   grid-auto-flow: column;
   align-items: center;
+}
+
+.toolbar .toggle {
+  min-height: 100%;
+  align-content: center;
+}
+
+.toolbarFieldProfile {
+  grid-column: span 3;
+}
+
+.toolbarFieldEffort,
+.toolbarFieldRanking {
+  grid-column: span 4;
+}
+
+.toolbarFieldOverlay {
+  grid-column: span 2;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.toolbarActions button,
+.toolbarActions .upload {
+  min-height: 54px;
+  border-radius: 20px;
+}
+
+.toolbarFieldOverlay input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.toolbarFieldOverlay .labelWithHelp {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.toolbarFieldOverlay .labelWithHelp > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .labelWithHelp {
@@ -299,6 +369,11 @@ button.secondary,
   gap: 16px;
 }
 
+.plannerGrid {
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
 .panelHeader,
 .resultHeader,
 .facilityHeader,
@@ -312,6 +387,184 @@ button.secondary,
 
 .panelHeaderWide {
   align-items: end;
+}
+
+.plannerRoomCardWide {
+  grid-column: 1 / -1;
+}
+
+.plannerRoomBody,
+.hardAssignmentRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.hardAssignmentRow {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.plannerRoomIntro,
+.plannerStatRow,
+.plannerCellGrid,
+.plannerSlotGrid,
+.hardAssignmentGrid,
+.resultSummaryGrid,
+.resultMetricGrid,
+.resultDataGrid,
+.resultNotesGrid,
+.resultGrid,
+.recommendationGrid,
+.recommendationSummaryGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.plannerRoomIntro {
+  align-content: start;
+}
+
+.plannerCellGrid,
+.plannerSlotGrid,
+.resultSummaryGrid,
+.resultMetricGrid,
+.resultDataGrid,
+.recommendationGrid {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.plannerStatRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.plannerCellGridCompact {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.plannerSlotGrid {
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.hardAssignmentGrid {
+  align-content: start;
+}
+
+.plannerCell,
+.plannerStatCell,
+.resultMetric,
+.resultDataCell,
+.resultNoteCell {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid rgba(31, 36, 49, 0.07);
+  border-radius: 18px;
+  background: rgba(247, 237, 223, 0.72);
+}
+
+.plannerCell,
+.plannerStatCell,
+.resultMetric,
+.resultDataCell {
+  min-width: 0;
+}
+
+.resultMetric,
+.resultDataCell,
+.resultNoteCell {
+  align-content: start;
+}
+
+.plannerCellWide {
+  grid-column: 1 / -1;
+}
+
+.plannerCell strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1rem;
+}
+
+.plannerToggleCell {
+  align-content: start;
+}
+
+.plannerToggleCell input[type="checkbox"] {
+  width: auto;
+  justify-self: start;
+  margin-top: 4px;
+}
+
+.plannerStatCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(247, 237, 223, 0.92);
+}
+
+.plannerStatCell strong,
+.resultMetric strong,
+.resultDataCell strong {
+  display: block;
+  margin-top: 4px;
+}
+
+.plannerStatCell strong {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.resultMetric strong {
+  font-size: 1.05rem;
+}
+
+.resultMetricHighlight strong {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.resultMetricHighlight {
+  grid-column: span 2;
+}
+
+.resultDataCell strong {
+  font-size: 0.95rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.resultNoteCell {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.resultGrid,
+.recommendationGrid {
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  align-items: start;
+}
+
+.resultMetricGrid,
+.resultDataGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.recommendationInfoGrid {
+  grid-template-columns: 1fr;
+}
+
+.operatorChipGrid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.hardAssignmentButton {
+  justify-self: start;
 }
 
 .rosterWorkspace {
@@ -540,7 +793,8 @@ button.secondary,
 .operatorName,
 .skillHeader strong,
 .facilityHeader h3,
-.resultHeader h3 {
+.resultHeader h3,
+.resultSummary h3 {
   margin: 0;
 }
 
@@ -633,6 +887,10 @@ button.secondary,
   margin: 10px 0 0;
 }
 
+.roomMeta {
+  line-height: 1.45;
+}
+
 .resultRecipeList {
   display: flex;
   flex-wrap: wrap;
@@ -694,6 +952,11 @@ dl div {
   background: var(--panel-strong);
 }
 
+.resultSummary {
+  display: grid;
+  gap: 14px;
+}
+
 .modalBackdrop {
   position: fixed;
   inset: 0;
@@ -717,7 +980,17 @@ dl div {
 
 @media (max-width: 1180px) {
   .hero,
-  .rosterWorkspace {
+  .toolbar,
+  .rosterWorkspace,
+  .plannerRoomBody,
+  .plannerRoomBodyWide,
+  .hardAssignmentRow {
+    grid-template-columns: 1fr;
+  }
+
+  .plannerGrid,
+  .resultGrid,
+  .recommendationGrid {
     grid-template-columns: 1fr;
   }
 }
@@ -731,24 +1004,39 @@ dl div {
   .heroMetaGrid,
   .rosterStats,
   .editorStats,
-  .numericRow {
+  .toolbarActions,
+  .numericRow,
+  .plannerStatRow,
+  .plannerCellGrid,
+  .plannerSlotGrid,
+  .resultSummaryGrid,
+  .resultMetricGrid,
+  .resultDataGrid,
+  .operatorChipGrid {
     grid-template-columns: 1fr;
   }
 
   .tabButton {
     flex: 1 1 100%;
   }
+
+  .resultMetricHighlight {
+    grid-column: auto;
+  }
+
+  .toolbarGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbarFieldProfile,
+  .toolbarFieldEffort,
+  .toolbarFieldRanking,
+  .toolbarFieldOverlay {
+    grid-column: auto;
+  }
 }
 
 @media (max-width: 640px) {
-  .toolbar {
-    flex-direction: column;
-  }
-
-  .toolbar > * {
-    width: 100%;
-  }
-
   .portraitGrid {
     grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
   }

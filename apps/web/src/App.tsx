@@ -538,6 +538,7 @@ function App() {
     ...scenario.facilities.manufacturingCabins.map((room, index) => ({ id: room.id, label: `Manufacturing Cabin ${index + 1}` })),
     ...scenario.facilities.growthChambers.map((room, index) => ({ id: room.id, label: `Growth Chamber ${index + 1}` })),
   ];
+  const roomLabelById = new Map(roomOptions.map((room) => [room.id, room.label]));
   const roomOrderById = new Map(roomOptions.map((room, index) => [room.id, index]));
   const orderedResultRoomPlans = result
     ? [...result.roomPlans].sort((left, right) => {
@@ -546,6 +547,12 @@ function App() {
       return leftOrder - rightOrder;
     })
     : [];
+  const projectedOutputEntries = result
+    ? Object.entries(result.projectedOutputs).filter(([, value]) => value > 0)
+    : [];
+  const recommendationEntries = recommendations?.recommendations ?? [];
+  const optimizationSearchWarning = result?.warnings.find((warning) => warning.startsWith("Optimization search stopped"));
+  const secondaryResultWarnings = result?.warnings.filter((warning) => warning !== optimizationSearchWarning) ?? [];
   const selectedOperator = selectedOperatorId ? operatorsById.get(selectedOperatorId) : sortedOperators[0];
   const selectedOwnedState = selectedOperator ? rosterById.get(selectedOperator.id) : undefined;
   const completedResultsCount = (result ? 1 : 0) + (recommendations ? 1 : 0);
@@ -823,7 +830,31 @@ function App() {
             <div><span>Sources</span><strong>{catalog.sources.length}</strong></div>
             <div><span>Gaps</span><strong>{catalog.gaps.length}</strong></div>
           </div>
-          <label className="pill">
+        </div>
+      </header>
+
+      <section className="toolbar">
+        <div className="toolbarGrid">
+          <label className="pill compact toolbarField toolbarFieldProfile">
+            <span>Optimization profile</span>
+            <select value={scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE} onChange={(event) => setOptimizationProfile(event.target.value as OptimizationProfile)}>
+              {OPTIMIZATION_PROFILES.map((profile) => <option key={profile} value={profile}>{formatLabel(profile)}</option>)}
+              <option value="custom">Custom</option>
+            </select>
+          </label>
+          <label className="pill rangePill toolbarField toolbarFieldEffort">
+            <span>Search effort</span>
+            <input
+              type="range"
+              min={1}
+              max={MAX_OPTIMIZATION_EFFORT}
+              value={clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)}
+              onChange={(event) => setOptimizationEffort(Number(event.target.value))}
+            />
+            <strong>{clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)}/{MAX_OPTIMIZATION_EFFORT}</strong>
+            <small>{getOptimizationProfileSummary(scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE)}</small>
+          </label>
+          <label className="pill toolbarField toolbarFieldRanking">
             <span className="labelWithHelp">
               <span>Recommend Unlocks Ranking</span>
               <span
@@ -851,57 +882,37 @@ function App() {
             </select>
             <small>{getUpgradeRankingModeSummary(scenario.options.upgradeRankingMode ?? "balanced")}</small>
           </label>
-        </div>
-      </header>
-
-      <section className="toolbar">
-        <label className="pill compact">
-          <span>Optimization profile</span>
-          <select value={scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE} onChange={(event) => setOptimizationProfile(event.target.value as OptimizationProfile)}>
-            {OPTIMIZATION_PROFILES.map((profile) => <option key={profile} value={profile}>{formatLabel(profile)}</option>)}
-            <option value="custom">Custom</option>
-          </select>
-        </label>
-        <label className="pill rangePill">
-          <span>Search effort</span>
-          <input
-            type="range"
-            min={1}
-            max={MAX_OPTIMIZATION_EFFORT}
-            value={clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)}
-            onChange={(event) => setOptimizationEffort(Number(event.target.value))}
-          />
-          <strong>{clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)}/{MAX_OPTIMIZATION_EFFORT}</strong>
-          <small>{getOptimizationProfileSummary(scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE)}</small>
-        </label>
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={scenario.options.maxFacilities}
-            onChange={(event) => updateScenario((current) => ({
-              ...current,
-              options: {
-                ...current.options,
-                maxFacilities: event.target.checked,
-              },
-            }))}
-          />
-          <span className="labelWithHelp">
-            <span>Max facilities overlay</span>
-            <span
-              className="helpBadge"
-              role="img"
-              aria-label="When enabled, optimization assumes a fully built base overlay: Control Nexus level 5, all manufacturing and growth rooms enabled at level 3, and a level 3 reception room added or enabled. This affects optimization and recommend unlocks inputs, but does not rewrite the planner form."
-              title={"When enabled, optimization assumes a fully built base overlay.\n\nControl Nexus is treated as level 5.\nAll manufacturing and growth rooms are treated as enabled at level 3.\nA level 3 reception room is added or enabled.\n\nThis affects Optimize and Recommend unlocks inputs, but does not rewrite the planner form."}
-            >
-              ?
+          <label className="toggle toolbarField toolbarFieldOverlay">
+            <input
+              type="checkbox"
+              checked={scenario.options.maxFacilities}
+              onChange={(event) => updateScenario((current) => ({
+                ...current,
+                options: {
+                  ...current.options,
+                  maxFacilities: event.target.checked,
+                },
+              }))}
+            />
+            <span className="labelWithHelp">
+              <span>Max facilities overlay</span>
+              <span
+                className="helpBadge"
+                role="img"
+                aria-label="When enabled, optimization assumes a fully built base overlay: Control Nexus level 5, all manufacturing and growth rooms enabled at level 3, and a level 3 reception room added or enabled. This affects optimization and recommend unlocks inputs, but does not rewrite the planner form."
+                title={"When enabled, optimization assumes a fully built base overlay.\n\nControl Nexus is treated as level 5.\nAll manufacturing and growth rooms are treated as enabled at level 3.\nA level 3 reception room is added or enabled.\n\nThis affects Optimize and Recommend unlocks inputs, but does not rewrite the planner form."}
+              >
+                ?
+              </span>
             </span>
-          </span>
-        </label>
-        <button onClick={runOptimization} disabled={optimizationRun != null || recommendationRun != null}>Optimize</button>
-        <button className="secondary" onClick={runRecommendations} disabled={optimizationRun != null || recommendationRun != null}>Recommend unlocks</button>
-        <button className="secondary" onClick={exportScenario}>Export JSON</button>
-        <label className="secondary upload">Import JSON<input type="file" accept="application/json" onChange={importScenario} /></label>
+          </label>
+        </div>
+        <div className="toolbarActions">
+          <button onClick={runOptimization} disabled={optimizationRun != null || recommendationRun != null}>Optimize</button>
+          <button className="secondary" onClick={runRecommendations} disabled={optimizationRun != null || recommendationRun != null}>Recommend unlocks</button>
+          <button className="secondary" onClick={exportScenario}>Export JSON</button>
+          <label className="secondary upload">Import JSON<input type="file" accept="application/json" onChange={importScenario} /></label>
+        </div>
       </section>
 
       {optimizationRun && (
@@ -1149,48 +1160,89 @@ function App() {
               <span>{scenario.facilities.hardAssignments.length} hard assignment{scenario.facilities.hardAssignments.length === 1 ? "" : "s"}</span>
             </div>
 
-            <article className="roomCard">
-              <div className="facilityHeader">
-                <div>
-                  <h3>Control Nexus</h3>
-                  <p>{facilitiesByKind.get("control_nexus")?.unlockHint}</p>
+            <div className="plannerGrid">
+              <article className="roomCard plannerRoomCard plannerRoomCardWide">
+                <div className="plannerRoomBody">
+                  <div className="plannerRoomIntro">
+                    <div className="facilityHeader">
+                      <div>
+                        <h3>Control Nexus</h3>
+                        <p>{facilitiesByKind.get("control_nexus")?.unlockHint}</p>
+                      </div>
+                      <span className="miniStat">{getRoomSlotCap(catalog, "control_nexus", scenario.facilities.controlNexus.level, scenario.facilities.controlNexus.level)} slots</span>
+                    </div>
+                    <div className="plannerStatRow">
+                      <div className="plannerStatCell">
+                        <span>Current level</span>
+                        <strong>{scenario.facilities.controlNexus.level}</strong>
+                      </div>
+                      <div className="plannerStatCell">
+                        <span>Unlocks online</span>
+                        <strong>{roomOptions.length - 1} rooms</strong>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="plannerCellGrid plannerCellGridCompact">
+                    <label className="plannerCell">
+                      <span>Level</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={5}
+                        value={scenario.facilities.controlNexus.level}
+                        onChange={(event) => updateScenario((current) => ({
+                          ...current,
+                          facilities: {
+                            ...current.facilities,
+                            controlNexus: { level: Number(event.target.value) as 1 | 2 | 3 | 4 | 5 },
+                          },
+                        }))}
+                      />
+                    </label>
+                    <div className="plannerCell plannerInfoCell">
+                      <span>Manufacturing unlocks</span>
+                      <strong>{unlockedManufacturingRoomCount} / {scenario.facilities.manufacturingCabins.length}</strong>
+                    </div>
+                    <div className="plannerCell plannerInfoCell">
+                      <span>Growth unlocks</span>
+                      <strong>{unlockedGrowthRoomCount} / {scenario.facilities.growthChambers.length}</strong>
+                    </div>
+                    <div className="plannerCell plannerInfoCell">
+                      <span>Reception</span>
+                      <strong>{unlockedReceptionRoomCount > 0 ? "Available" : "Locked"}</strong>
+                    </div>
+                  </div>
                 </div>
-                <span className="miniStat">{getRoomSlotCap(catalog, "control_nexus", scenario.facilities.controlNexus.level, scenario.facilities.controlNexus.level)} slots</span>
-              </div>
-              <label className="pill compact">
-                <span>Level</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={5}
-                  value={scenario.facilities.controlNexus.level}
-                  onChange={(event) => updateScenario((current) => ({
-                    ...current,
-                    facilities: {
-                      ...current.facilities,
-                      controlNexus: { level: Number(event.target.value) as 1 | 2 | 3 | 4 | 5 },
-                    },
-                  }))}
-                />
-              </label>
-            </article>
+              </article>
 
-            <div className="roomStack">
               {scenario.facilities.receptionRoom && (
-                <article className="roomCard">
+                <article className="roomCard plannerRoomCard">
                   {(() => {
                     const roomLocked = unlockedReceptionRoomCount === 0;
                     return (
-                      <>
-                        <div className="facilityHeader">
-                          <div>
-                            <h3>Reception Room</h3>
-                            <p>{facilitiesByKind.get("reception_room")?.unlockHint}</p>
+                      <div className="plannerRoomBody">
+                        <div className="plannerRoomIntro">
+                          <div className="facilityHeader">
+                            <div>
+                              <h3>Reception Room</h3>
+                              <p>{facilitiesByKind.get("reception_room")?.unlockHint}</p>
+                            </div>
+                            <span className="miniStat">{getRoomSlotCap(catalog, "reception_room", scenario.facilities.receptionRoom.level, scenario.facilities.controlNexus.level)} slots</span>
                           </div>
-                          <span className="miniStat">{getRoomSlotCap(catalog, "reception_room", scenario.facilities.receptionRoom.level, scenario.facilities.controlNexus.level)} slots</span>
+                          <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 3" : "Available for clue assignments"}</p>
+                          <div className="plannerStatRow">
+                            <div className="plannerStatCell">
+                              <span>Status</span>
+                              <strong>{roomLocked ? "Locked" : scenario.facilities.receptionRoom.enabled ? "Enabled" : "Disabled"}</strong>
+                            </div>
+                            <div className="plannerStatCell">
+                              <span>Level cap</span>
+                              <strong>{Math.max(receptionLevelCap, 1)}</strong>
+                            </div>
+                          </div>
                         </div>
-                        <div className="numericRow">
-                          <label>
+                        <div className="plannerCellGrid plannerCellGridCompact">
+                          <label className="plannerCell plannerToggleCell">
                             <span>Enabled</span>
                             <input
                               type="checkbox"
@@ -1208,7 +1260,7 @@ function App() {
                               }) : current)}
                             />
                           </label>
-                          <label>
+                          <label className="plannerCell">
                             <span>Level</span>
                             <input
                               type="number"
@@ -1229,8 +1281,7 @@ function App() {
                             />
                           </label>
                         </div>
-                        <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 3" : "Available for clue assignments"}</p>
-                      </>
+                      </div>
                     );
                   })()}
                 </article>
@@ -1240,66 +1291,80 @@ function App() {
                 const recipe = room.fixedRecipeId ? recipesById.get(room.fixedRecipeId) : undefined;
                 const roomLocked = index >= unlockedManufacturingRoomCount;
                 return (
-                  <article className="roomCard" key={room.id}>
-                    <div className="facilityHeader">
-                      <div>
-                        <h3>Manufacturing Cabin {index + 1}</h3>
-                        <p>{facilitiesByKind.get("manufacturing_cabin")?.unlockHint}</p>
+                  <article className="roomCard plannerRoomCard" key={room.id}>
+                    <div className="plannerRoomBody">
+                      <div className="plannerRoomIntro">
+                        <div className="facilityHeader">
+                          <div>
+                            <h3>Manufacturing Cabin {index + 1}</h3>
+                            <p>{facilitiesByKind.get("manufacturing_cabin")?.unlockHint}</p>
+                          </div>
+                          <span className="miniStat">{getRoomSlotCap(catalog, "manufacturing_cabin", room.level, scenario.facilities.controlNexus.level)} slots</span>
+                        </div>
+                        <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 3" : recipe ? `${formatLabel(recipe.productKind)} | ${formatDurationMinutes(recipe.baseDurationMinutes)} | output ${recipe.outputAmount ?? "?"}` : "No recipe selected"}</p>
+                        <div className="plannerStatRow">
+                          <div className="plannerStatCell">
+                            <span>Status</span>
+                            <strong>{roomLocked ? "Locked" : room.enabled ? "Enabled" : "Disabled"}</strong>
+                          </div>
+                          <div className="plannerStatCell">
+                            <span>Level cap</span>
+                            <strong>{manufacturingLevelCap}</strong>
+                          </div>
+                        </div>
                       </div>
-                      <span className="miniStat">{getRoomSlotCap(catalog, "manufacturing_cabin", room.level, scenario.facilities.controlNexus.level)} slots</span>
+                      <div className="plannerCellGrid">
+                        <label className="plannerCell plannerToggleCell">
+                          <span>Enabled</span>
+                          <input
+                            type="checkbox"
+                            checked={room.enabled}
+                            disabled={roomLocked}
+                            onChange={(event) => updateScenario((current) => ({
+                              ...current,
+                              facilities: {
+                                ...current.facilities,
+                                manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, enabled: event.target.checked } : entry),
+                              },
+                            }))}
+                          />
+                        </label>
+                        <label className="plannerCell">
+                          <span>Level</span>
+                          <input
+                            type="number"
+                            min={1}
+                            max={manufacturingLevelCap}
+                            value={room.level}
+                            disabled={roomLocked}
+                            onChange={(event) => updateScenario((current) => ({
+                              ...current,
+                              facilities: {
+                                ...current.facilities,
+                                manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, level: Number(event.target.value) as 1 | 2 | 3 } : entry),
+                              },
+                            }))}
+                          />
+                        </label>
+                        <label className="plannerCell plannerCellWide">
+                          <span>Recipe</span>
+                          <select
+                            value={room.fixedRecipeId ?? ""}
+                            disabled={roomLocked}
+                            onChange={(event) => updateScenario((current) => ({
+                              ...current,
+                              facilities: {
+                                ...current.facilities,
+                                manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, fixedRecipeId: event.target.value || undefined } : entry),
+                              },
+                            }))}
+                          >
+                            <option value="">No recipe</option>
+                            {catalog.recipes.filter((entry) => entry.facilityKind === "manufacturing_cabin" && entry.roomLevel <= room.level).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
+                          </select>
+                        </label>
+                      </div>
                     </div>
-                    <div className="numericRow">
-                      <label>
-                        <span>Enabled</span>
-                        <input
-                          type="checkbox"
-                          checked={room.enabled}
-                          disabled={roomLocked}
-                          onChange={(event) => updateScenario((current) => ({
-                            ...current,
-                            facilities: {
-                              ...current.facilities,
-                              manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, enabled: event.target.checked } : entry),
-                            },
-                          }))}
-                        />
-                      </label>
-                      <label>
-                        <span>Level</span>
-                        <input
-                          type="number"
-                          min={1}
-                          max={manufacturingLevelCap}
-                          value={room.level}
-                          disabled={roomLocked}
-                          onChange={(event) => updateScenario((current) => ({
-                            ...current,
-                            facilities: {
-                              ...current.facilities,
-                              manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, level: Number(event.target.value) as 1 | 2 | 3 } : entry),
-                            },
-                          }))}
-                        />
-                      </label>
-                    </div>
-                    <label>
-                      <span>Recipe</span>
-                      <select
-                        value={room.fixedRecipeId ?? ""}
-                        disabled={roomLocked}
-                        onChange={(event) => updateScenario((current) => ({
-                          ...current,
-                          facilities: {
-                            ...current.facilities,
-                            manufacturingCabins: current.facilities.manufacturingCabins.map((entry) => entry.id === room.id ? { ...entry, fixedRecipeId: event.target.value || undefined } : entry),
-                          },
-                        }))}
-                      >
-                        <option value="">No recipe</option>
-                        {catalog.recipes.filter((entry) => entry.facilityKind === "manufacturing_cabin" && entry.roomLevel <= room.level).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
-                      </select>
-                    </label>
-                    <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 3" : recipe ? `${formatLabel(recipe.productKind)} | ${formatDurationMinutes(recipe.baseDurationMinutes)} | output ${recipe.outputAmount ?? "?"}` : "No recipe selected"}</p>
                   </article>
                 );
               })}
@@ -1311,135 +1376,180 @@ function App() {
                 const growthSlotCap = getGrowthSlotCap(catalog, room.level);
                 const roomLocked = index >= unlockedGrowthRoomCount;
                 return (
-                  <article className="roomCard" key={room.id}>
-                    <div className="facilityHeader">
-                      <div>
-                        <h3>Growth Chamber {index + 1}</h3>
-                        <p>{facilitiesByKind.get("growth_chamber")?.unlockHint}</p>
+                  <article className="roomCard plannerRoomCard plannerRoomCardWide" key={room.id}>
+                    <div className="plannerRoomBody plannerRoomBodyWide">
+                      <div className="plannerRoomIntro">
+                        <div className="facilityHeader">
+                          <div>
+                            <h3>Growth Chamber {index + 1}</h3>
+                            <p>{facilitiesByKind.get("growth_chamber")?.unlockHint}</p>
+                          </div>
+                          <span className="miniStat">{getRoomSlotCap(catalog, "growth_chamber", room.level, scenario.facilities.controlNexus.level)} slots</span>
+                        </div>
+                        <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 2" : recipes.length > 0 ? recipes.map((recipe) => `${recipe.name} (${formatLabel(recipe.productKind)})`).join(" | ") : "No growth materials selected"}</p>
+                        <div className="plannerStatRow">
+                          <div className="plannerStatCell">
+                            <span>Status</span>
+                            <strong>{roomLocked ? "Locked" : room.enabled ? "Enabled" : "Disabled"}</strong>
+                          </div>
+                          <div className="plannerStatCell">
+                            <span>Growth slots</span>
+                            <strong>{growthSlotCap}</strong>
+                          </div>
+                          <div className="plannerStatCell">
+                            <span>Level cap</span>
+                            <strong>{Math.max(growthLevelCap, 1)}</strong>
+                          </div>
+                        </div>
                       </div>
-                      <span className="miniStat">{getRoomSlotCap(catalog, "growth_chamber", room.level, scenario.facilities.controlNexus.level)} slots</span>
-                    </div>
-                    <div className="numericRow">
-                      <label>
-                        <span>Enabled</span>
-                        <input
-                          type="checkbox"
-                          checked={room.enabled}
-                          disabled={roomLocked}
-                          onChange={(event) => updateScenario((current) => ({
-                            ...current,
-                            facilities: {
-                              ...current.facilities,
-                              growthChambers: current.facilities.growthChambers.map((entry) => entry.id === room.id ? { ...entry, enabled: event.target.checked } : entry),
-                            },
-                          }))}
-                        />
-                      </label>
-                      <label>
-                        <span>Level</span>
-                        <input
-                          type="number"
-                          min={1}
-                          max={Math.max(growthLevelCap, 1)}
-                          value={room.level}
-                          disabled={roomLocked}
-                          onChange={(event) => updateScenario((current) => ({
-                            ...current,
-                            facilities: {
-                              ...current.facilities,
-                              growthChambers: current.facilities.growthChambers.map((entry) => entry.id === room.id ? { ...entry, level: Number(event.target.value) as 1 | 2 | 3 } : entry),
-                            },
-                          }))}
-                        />
-                      </label>
-                    </div>
-                    <div className="skillGrid">
-                      {Array.from({ length: growthSlotCap }, (_, slotIndex) => (
-                        <label key={`${room.id}-growth-slot-${slotIndex}`}>
-                          <span>Growth Slot {slotIndex + 1}</span>
-                          <select
-                            value={room.fixedRecipeIds?.[slotIndex] ?? ""}
+                      <div className="plannerCellGrid">
+                        <label className="plannerCell plannerToggleCell">
+                          <span>Enabled</span>
+                          <input
+                            type="checkbox"
+                            checked={room.enabled}
                             disabled={roomLocked}
                             onChange={(event) => updateScenario((current) => ({
                               ...current,
                               facilities: {
                                 ...current.facilities,
-                                growthChambers: current.facilities.growthChambers.map((entry) => {
-                                  if (entry.id !== room.id) {
-                                    return entry;
-                                  }
-                                  const nextRecipeIds = [...(entry.fixedRecipeIds ?? [])];
-                                  if (event.target.value) {
-                                    nextRecipeIds[slotIndex] = event.target.value;
-                                  } else {
-                                    nextRecipeIds.splice(slotIndex, 1);
-                                  }
-                                  return { ...entry, fixedRecipeIds: nextRecipeIds.filter(Boolean) };
-                                }),
+                                growthChambers: current.facilities.growthChambers.map((entry) => entry.id === room.id ? { ...entry, enabled: event.target.checked } : entry),
                               },
                             }))}
-                          >
-                            <option value="">Empty slot</option>
-                            {catalog.recipes.filter((entry) => entry.facilityKind === "growth_chamber" && entry.roomLevel <= room.level).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
-                          </select>
+                          />
                         </label>
-                      ))}
+                        <label className="plannerCell">
+                          <span>Level</span>
+                          <input
+                            type="number"
+                            min={1}
+                            max={Math.max(growthLevelCap, 1)}
+                            value={room.level}
+                            disabled={roomLocked}
+                            onChange={(event) => updateScenario((current) => ({
+                              ...current,
+                              facilities: {
+                                ...current.facilities,
+                                growthChambers: current.facilities.growthChambers.map((entry) => entry.id === room.id ? { ...entry, level: Number(event.target.value) as 1 | 2 | 3 } : entry),
+                              },
+                            }))}
+                          />
+                        </label>
+                      </div>
+                      <div className="plannerSlotGrid">
+                        {Array.from({ length: growthSlotCap }, (_, slotIndex) => (
+                          <label className="plannerCell" key={`${room.id}-growth-slot-${slotIndex}`}>
+                            <span>Growth Slot {slotIndex + 1}</span>
+                            <select
+                              value={room.fixedRecipeIds?.[slotIndex] ?? ""}
+                              disabled={roomLocked}
+                              onChange={(event) => updateScenario((current) => ({
+                                ...current,
+                                facilities: {
+                                  ...current.facilities,
+                                  growthChambers: current.facilities.growthChambers.map((entry) => {
+                                    if (entry.id !== room.id) {
+                                      return entry;
+                                    }
+                                    const nextRecipeIds = [...(entry.fixedRecipeIds ?? [])];
+                                    if (event.target.value) {
+                                      nextRecipeIds[slotIndex] = event.target.value;
+                                    } else {
+                                      nextRecipeIds.splice(slotIndex, 1);
+                                    }
+                                    return { ...entry, fixedRecipeIds: nextRecipeIds.filter(Boolean) };
+                                  }),
+                                },
+                              }))}
+                            >
+                              <option value="">Empty slot</option>
+                              {catalog.recipes.filter((entry) => entry.facilityKind === "growth_chamber" && entry.roomLevel <= room.level).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
+                            </select>
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                    <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 2" : recipes.length > 0 ? recipes.map((recipe) => `${recipe.name} (${formatLabel(recipe.productKind)})`).join(" | ") : "No growth materials selected"}</p>
                   </article>
                 );
               })}
             </div>
 
-            <article className="roomCard">
-              <h3>Hard assignments</h3>
-              <p className="roomMeta">Optional overrides. Leave this empty to let the optimizer place everyone freely.</p>
-              {scenario.facilities.hardAssignments.map((assignment, index) => (
-                <div className="numericRow" key={`${assignment.operatorId}-${index}`}>
-                  <select
-                    value={assignment.operatorId}
-                    onChange={(event) => updateScenario((current) => ({
-                      ...current,
-                      facilities: {
-                        ...current.facilities,
-                        hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: event.target.value, roomId: entry.roomId } : { operatorId: entry.operatorId, roomId: entry.roomId }),
-                      },
-                    }))}
-                  >
-                    {ownedOperators.map((entry) => <option key={entry.operatorId} value={entry.operatorId}>{operatorsById.get(entry.operatorId)?.name ?? entry.operatorId}</option>)}
-                  </select>
-                  <select
-                    value={assignment.roomId}
-                    onChange={(event) => updateScenario((current) => ({
-                      ...current,
-                      facilities: {
-                        ...current.facilities,
-                        hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: entry.operatorId, roomId: event.target.value } : { operatorId: entry.operatorId, roomId: entry.roomId }),
-                      },
-                    }))}
-                  >
-                    {roomOptions.map((room) => <option key={room.id} value={room.id}>{room.label}</option>)}
-                  </select>
+            <article className="roomCard plannerRoomCard plannerRoomCardWide">
+              <div className="plannerRoomBody plannerRoomBodyWide">
+                <div className="plannerRoomIntro">
+                  <div className="facilityHeader">
+                    <div>
+                      <h3>Hard assignments</h3>
+                      <p>Optional overrides. Leave this empty to let the optimizer place everyone freely.</p>
+                    </div>
+                    <span className="miniStat">{scenario.facilities.hardAssignments.length} pinned</span>
+                  </div>
+                  <div className="plannerStatRow">
+                    <div className="plannerStatCell">
+                      <span>Owned operators</span>
+                      <strong>{ownedOperators.length}</strong>
+                    </div>
+                    <div className="plannerStatCell">
+                      <span>Target rooms</span>
+                      <strong>{roomOptions.length}</strong>
+                    </div>
+                  </div>
                 </div>
-              ))}
-              <button
-                className="secondary"
-                onClick={() => updateScenario((current) => ({
-                  ...current,
-                  facilities: {
-                    ...current.facilities,
-                    hardAssignments: [
-                      ...current.facilities.hardAssignments,
-                      {
-                        operatorId: ownedOperators[0]?.operatorId ?? current.roster[0]?.operatorId ?? "",
-                        roomId: "control_nexus",
+                <div className="hardAssignmentGrid">
+                  {scenario.facilities.hardAssignments.map((assignment, index) => (
+                    <div className="hardAssignmentRow" key={`${assignment.operatorId}-${index}`}>
+                      <label className="plannerCell">
+                        <span>Operator</span>
+                        <select
+                          value={assignment.operatorId}
+                          onChange={(event) => updateScenario((current) => ({
+                            ...current,
+                            facilities: {
+                              ...current.facilities,
+                              hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: event.target.value, roomId: entry.roomId } : { operatorId: entry.operatorId, roomId: entry.roomId }),
+                            },
+                          }))}
+                        >
+                          {ownedOperators.map((entry) => <option key={entry.operatorId} value={entry.operatorId}>{operatorsById.get(entry.operatorId)?.name ?? entry.operatorId}</option>)}
+                        </select>
+                      </label>
+                      <label className="plannerCell">
+                        <span>Room</span>
+                        <select
+                          value={assignment.roomId}
+                          onChange={(event) => updateScenario((current) => ({
+                            ...current,
+                            facilities: {
+                              ...current.facilities,
+                              hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: entry.operatorId, roomId: event.target.value } : { operatorId: entry.operatorId, roomId: entry.roomId }),
+                            },
+                          }))}
+                        >
+                          {roomOptions.map((room) => <option key={room.id} value={room.id}>{room.label}</option>)}
+                        </select>
+                      </label>
+                    </div>
+                  ))}
+                  <button
+                    className="secondary hardAssignmentButton"
+                    onClick={() => updateScenario((current) => ({
+                      ...current,
+                      facilities: {
+                        ...current.facilities,
+                        hardAssignments: [
+                          ...current.facilities.hardAssignments,
+                          {
+                            operatorId: ownedOperators[0]?.operatorId ?? current.roster[0]?.operatorId ?? "",
+                            roomId: "control_nexus",
+                          },
+                        ],
                       },
-                    ],
-                  },
-                }))}
-              >
-                Add hard assignment
-              </button>
+                    }))}
+                  >
+                    Add hard assignment
+                  </button>
+                </div>
+              </div>
             </article>
           </section>
         )}
@@ -1451,69 +1561,144 @@ function App() {
                 <p className="eyebrow">Results</p>
                 <h2>Why this wins</h2>
               </div>
+              <span>{completedResultsCount > 0 ? `${completedResultsCount} pane${completedResultsCount === 1 ? "" : "s"} ready` : "Waiting to run"}</span>
             </div>
 
             {result ? (
-              <div className="resultStack">
-                <article className="resultSummary">
-                  <p>Total score</p>
-                  <strong>{result.totalScore.toFixed(2)}</strong>
-                  <p>Support weights: {result.supportWeightsVersion}</p>
-                  <div className="summaryOutputs">
-                    {Object.entries(result.projectedOutputs).filter(([, value]) => value > 0).map(([productKind, value]) => <span key={productKind}>{formatLabel(productKind)} {value.toFixed(2)}/hr</span>)}
-                  </div>
-                </article>
-                {orderedResultRoomPlans.map((room) => {
-                  const recipes = (room.chosenRecipeIds ?? [])
-                    .map((recipeId) => recipesById.get(recipeId))
-                    .filter((recipe): recipe is NonNullable<typeof recipe> => recipe != null);
-                  return (
-                    <article className="resultCard" key={room.roomId}>
-                      <div className="resultHeader">
-                        <div>
-                          <h3>{roomOptions.find((entry) => entry.id === room.roomId)?.label ?? room.roomId}</h3>
-                          <p>Lv{room.roomLevel}</p>
-                        </div>
-                        <span>{room.dataConfidence}</span>
+              <div className="resultWorkspace">
+                {optimizationSearchWarning && (
+                  <article className="resultSummary resultAlertSummary">
+                    <div className="panelHeader panelHeaderWide">
+                      <div>
+                        <p className="eyebrow">Optimization</p>
+                        <h3>Search stopped</h3>
                       </div>
-                      {recipes.length > 0 && (
-                        <div className="resultRecipeList">
-                          {recipes.map((recipe) => (
-                            <span className="resultRecipeChip" key={`${room.roomId}-${recipe.id}`}>
-                              <strong>{recipe.name}</strong>
-                              <small>{formatLabel(recipe.productKind)}</small>
-                            </span>
-                          ))}
+                      <span className="miniStat">{result.totalScore.toFixed(2)} score</span>
+                    </div>
+                    <div className="resultNotesGrid">
+                      <p className="warningText resultNoteCell">{optimizationSearchWarning}</p>
+                    </div>
+                  </article>
+                )}
+
+                <div className="resultGrid">
+                  {orderedResultRoomPlans.map((room) => {
+                    const recipes = (room.chosenRecipeIds ?? [])
+                      .map((recipeId) => recipesById.get(recipeId))
+                      .filter((recipe): recipe is NonNullable<typeof recipe> => recipe != null);
+                    const nonZeroRoomOutputs = Object.entries(room.projectedOutputs).filter(([, value]) => value > 0);
+                    const roomWarnings = room.warnings.filter((warning) => !warning.startsWith("Optimization search stopped"));
+                    return (
+                      <article className="resultCard" key={room.roomId}>
+                        <div className="resultHeader">
+                          <div>
+                            <h3>{roomLabelById.get(room.roomId) ?? room.roomId}</h3>
+                            <p>Lv{room.roomLevel}</p>
+                          </div>
+                          <span className="miniStat">{room.dataConfidence}</span>
                         </div>
-                      )}
-                      {room.assignedOperatorIds.length > 0
-                        ? (
-                            <div className="operatorChipList">
-                              {room.assignedOperatorIds.map((operatorId) => {
-                                const operator = operatorsById.get(operatorId);
-                                return (
-                                  <OperatorChip
-                                    key={`${room.roomId}-${operatorId}`}
-                                    catalog={catalog}
-                                    operator={operator}
-                                    fallbackLabel={operatorId}
-                                    meta={`${operator?.className ?? "Unknown"} | ${operator?.rarity ?? "?"} star`}
-                                  />
-                                );
-                              })}
-                            </div>
-                          )
-                        : <p className="resultLine">No operators assigned</p>}
-                      <dl>
-                        <div><dt>Direct</dt><dd>{room.scoreBreakdown.directProductionScore.toFixed(2)}</dd></div>
-                        <div><dt>Support</dt><dd>{room.scoreBreakdown.supportRoomScore.toFixed(2)}</dd></div>
-                        <div><dt>Cross-room</dt><dd>{room.scoreBreakdown.crossRoomBonusContribution.toFixed(2)}</dd></div>
-                      </dl>
-                      {room.usedFallbackHeuristics && <p className="warningText">Fallback heuristics were used for part of this room score.</p>}
-                      {room.warnings.length > 0 && <p className="warningText">{room.warnings.join(" | ")}</p>}
-                    </article>
-                  );
-                })}
+                        {room.assignedOperatorIds.length > 0
+                          ? (
+                              <div className="operatorChipList operatorChipGrid">
+                                {room.assignedOperatorIds.map((operatorId) => {
+                                  const operator = operatorsById.get(operatorId);
+                                  return (
+                                    <OperatorChip
+                                      key={`${room.roomId}-${operatorId}`}
+                                      catalog={catalog}
+                                      operator={operator}
+                                      fallbackLabel={operatorId}
+                                      meta={`${operator?.className ?? "Unknown"} | ${operator?.rarity ?? "?"} star`}
+                                    />
+                                  );
+                                })}
+                              </div>
+                            )
+                          : <p className="resultLine">No operators assigned</p>}
+                        {recipes.length > 0 && (
+                          <div className="resultRecipeList">
+                            {recipes.map((recipe) => (
+                              <span className="resultRecipeChip" key={`${room.roomId}-${recipe.id}`}>
+                                <strong>{recipe.name}</strong>
+                                <small>{formatLabel(recipe.productKind)}</small>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {nonZeroRoomOutputs.length > 0 && (
+                          <div className="resultDataGrid">
+                            {nonZeroRoomOutputs.map(([productKind, value]) => (
+                              <div className="resultDataCell" key={`${room.roomId}-${productKind}`}>
+                                <span>{formatLabel(productKind)}</span>
+                                <strong>{value.toFixed(2)}/hr</strong>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div className="resultMetricGrid resultMetricGridSecondary">
+                          <div className="resultMetric">
+                            <span>Total</span>
+                            <strong>{room.projectedScore.toFixed(2)}</strong>
+                          </div>
+                          <div className="resultMetric">
+                            <span>Direct</span>
+                            <strong>{room.scoreBreakdown.directProductionScore.toFixed(2)}</strong>
+                          </div>
+                          <div className="resultMetric">
+                            <span>Support</span>
+                            <strong>{room.scoreBreakdown.supportRoomScore.toFixed(2)}</strong>
+                          </div>
+                          <div className="resultMetric">
+                            <span>Cross-room</span>
+                            <strong>{room.scoreBreakdown.crossRoomBonusContribution.toFixed(2)}</strong>
+                          </div>
+                        </div>
+                        {(room.usedFallbackHeuristics || roomWarnings.length > 0) && (
+                          <div className="resultNotesGrid">
+                            {room.usedFallbackHeuristics && <p className="warningText resultNoteCell">Fallback heuristics were used for part of this room score.</p>}
+                            {roomWarnings.map((warning) => <p className="warningText resultNoteCell" key={`${room.roomId}-${warning}`}>{warning}</p>)}
+                          </div>
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
+
+                <article className="resultSummary">
+                  <div className="panelHeader panelHeaderWide">
+                    <div>
+                      <p className="eyebrow">Optimization</p>
+                      <h3>Scenario snapshot</h3>
+                    </div>
+                    <span className="miniStat">{orderedResultRoomPlans.length} rooms planned</span>
+                  </div>
+                  <div className="resultSummaryGrid">
+                    <div className="resultMetric resultMetricHighlight">
+                      <span>Total score</span>
+                      <strong>{result.totalScore.toFixed(2)}</strong>
+                    </div>
+                    <div className="resultMetric">
+                      <span>Support weights</span>
+                      <strong>{result.supportWeightsVersion}</strong>
+                    </div>
+                    <div className="resultMetric">
+                      <span>Warnings</span>
+                      <strong>{result.warnings.length}</strong>
+                    </div>
+                    <div className="resultMetric">
+                      <span>Tracked outputs</span>
+                      <strong>{projectedOutputEntries.length}</strong>
+                    </div>
+                  </div>
+                  <div className="summaryOutputs">
+                    {projectedOutputEntries.map(([productKind, value]) => <span key={productKind}>{formatLabel(productKind)} {value.toFixed(2)}/hr</span>)}
+                  </div>
+                  {secondaryResultWarnings.length > 0 && (
+                    <div className="resultNotesGrid">
+                      {secondaryResultWarnings.map((warning) => <p className="warningText resultNoteCell" key={warning}>{warning}</p>)}
+                    </div>
+                  )}
+                </article>
               </div>
             ) : (
               <p className="status">Run optimize to generate assignments, confidence, and recipe-backed output.</p>
@@ -1521,13 +1706,30 @@ function App() {
 
             {recommendations && (
               <div className="recommendationStack">
-                <h3>Next unlocks</h3>
-                {recommendations.recommendations.map((recommendation) => {
+                <div className="panelHeader panelHeaderWide">
+                  <div>
+                    <p className="eyebrow">Recommendations</p>
+                    <h3>Next unlocks</h3>
+                  </div>
+                  <span className="miniStat">{recommendationEntries.length} candidates</span>
+                </div>
+                <div className="resultSummaryGrid recommendationSummaryGrid">
+                  <div className="resultMetric">
+                    <span>Baseline score</span>
+                    <strong>{recommendations.baselineScore.toFixed(2)}</strong>
+                  </div>
+                  <div className="resultMetric">
+                    <span>Ranking mode</span>
+                    <strong>{formatLabel(recommendations.rankingMode)}</strong>
+                  </div>
+                </div>
+                <div className="recommendationGrid">
+                  {recommendationEntries.map((recommendation) => {
                   const operator = operatorsById.get(recommendation.action.operatorId);
                   const skill = operator?.baseSkills.find((entry) => entry.id === recommendation.action.skillId);
                   const extraNotes = getRecommendationExtraNotes(recommendation, operator?.name);
                   return (
-                    <article className="resultCard" key={`${recommendation.action.operatorId}-${recommendation.action.skillId}`}>
+                    <article className="resultCard recommendationCard" key={`${recommendation.action.operatorId}-${recommendation.action.skillId}`}>
                       <div className="resultHeader">
                         <div>
                           <OperatorChip
@@ -1549,24 +1751,58 @@ function App() {
                               : recommendation.action.skillId}
                           />
                         </div>
-                        <span>{recommendation.scoreDelta.toFixed(2)} delta</span>
+                        <span className="miniStat">{recommendation.scoreDelta.toFixed(2)} delta</span>
                       </div>
-                      <p className="resultLine">Current Elite {recommendation.action.currentPromotionTier} Lv{recommendation.action.currentLevel} {"->"} target Elite {recommendation.action.requiredPromotionTier ?? recommendation.action.currentPromotionTier} Lv{recommendation.action.requiredLevel ?? recommendation.action.currentLevel}</p>
-                      {recommendation.action.unlockHint && <p className="resultLine">{recommendation.action.unlockHint}</p>}
-                      <p className="resultLine">Leveling: {formatCosts(recommendation.action.levelMaterialCosts)}</p>
-                      <p className="resultLine">Promotion: {formatCosts(recommendation.action.promotionMaterialCosts)}</p>
-                      <p className="resultLine">Skill: {formatCosts(recommendation.action.skillMaterialCosts)}</p>
-                      {extraNotes.map((note) => (
-                        <p
-                          className={note.includes("does not improve") || note.includes("No bundled upgrade cost") ? "warningText" : "resultLine"}
-                          key={`${recommendation.action.operatorId}-${recommendation.action.skillId}-${note}`}
-                        >
-                          {note}
+                      <div className="resultMetricGrid">
+                        <div className="resultMetric">
+                          <span>Delta</span>
+                          <strong>{recommendation.scoreDelta.toFixed(2)}</strong>
+                        </div>
+                        <div className="resultMetric">
+                          <span>ROI</span>
+                          <strong>{recommendation.roi.toFixed(2)}</strong>
+                        </div>
+                        <div className="resultMetric">
+                          <span>ETA</span>
+                          <strong>{recommendation.estimatedDaysToUnlock.toFixed(1)}d</strong>
+                        </div>
+                      </div>
+                      <div className="resultNotesGrid recommendationInfoGrid">
+                        <p className="resultLine resultNoteCell">
+                          Current Elite {recommendation.action.currentPromotionTier} Lv{recommendation.action.currentLevel} {"->"} target Elite {recommendation.action.requiredPromotionTier ?? recommendation.action.currentPromotionTier} Lv{recommendation.action.requiredLevel ?? recommendation.action.currentLevel}
                         </p>
-                      ))}
+                        {recommendation.action.unlockHint && <p className="resultLine resultNoteCell">{recommendation.action.unlockHint}</p>}
+                      </div>
+                      <div className="resultDataGrid">
+                        <div className="resultDataCell">
+                          <span>Leveling</span>
+                          <strong>{formatCosts(recommendation.action.levelMaterialCosts)}</strong>
+                        </div>
+                        <div className="resultDataCell">
+                          <span>Promotion</span>
+                          <strong>{formatCosts(recommendation.action.promotionMaterialCosts)}</strong>
+                        </div>
+                        <div className="resultDataCell">
+                          <span>Skill</span>
+                          <strong>{formatCosts(recommendation.action.skillMaterialCosts)}</strong>
+                        </div>
+                      </div>
+                      {extraNotes.length > 0 && (
+                        <div className="resultNotesGrid">
+                          {extraNotes.map((note) => (
+                            <p
+                              className={`${note.includes("does not improve") || note.includes("No bundled upgrade cost") ? "warningText" : "resultLine"} resultNoteCell`}
+                              key={`${recommendation.action.operatorId}-${recommendation.action.skillId}-${note}`}
+                            >
+                              {note}
+                            </p>
+                          ))}
+                        </div>
+                      )}
                     </article>
                   );
-                })}
+                  })}
+                </div>
               </div>
             )}
           </section>
