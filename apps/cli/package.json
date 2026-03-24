@@ -2,6 +2,7 @@
   "name": "@endfield/cli",
   "version": "0.1.0",
   "private": false,
+  "license": "MIT",
   "type": "module",
   "bin": {
     "endfield-opt": "./dist/endfield-opt.cjs"

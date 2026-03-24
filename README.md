@@ -52,6 +52,12 @@ This repository now contains the full shared runtime, a packaged CLI, a browser 
 - `npm run recommend:example`
 - `npm run sync:promotion-data`
 
+## License
+
+This repository is licensed under the MIT License. Reuse, modification, redistribution, and commercial use are allowed.
+
+That license covers the repository's original code, schemas, docs, normalization work, and authored catalog structure. Arknights: Endfield names, trademarks, and any third-party source-attributed art or other upstream content remain subject to their respective owners and source terms.
+
 ## Current status
 
 The repo now contains:
@@ -66,4 +72,4 @@ The repo now contains:
 - a packaged CLI and browser app using the same shared runtime
 - tests covering data services, optimizer behavior, CLI packaging, and the web app
 
-The current catalog release check passes. The main remaining work is future-facing refinement: more golden scenarios, future catalog refreshes for new game snapshots, and better exactness if a full per-level EXP table becomes source-backed.
+The current repo verify path should pass after normal install and build steps. The stricter catalog release gate remains intentionally blocked by one declared Growth Chamber demand-modeling gap in [`catalogs/2026-03-20-v1.1-phase1/gaps.json`](catalogs/2026-03-20-v1.1-phase1/gaps.json). The main remaining work is future-facing refinement: more golden scenarios, future catalog refreshes for new game snapshots, and better exactness if a full per-level EXP table becomes source-backed.

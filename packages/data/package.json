@@ -2,6 +2,7 @@
   "name": "@endfield/data",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "main": "./dist/data/src/index.js",
   "types": "./dist/data/src/index.d.ts",

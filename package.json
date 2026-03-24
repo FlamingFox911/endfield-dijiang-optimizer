@@ -2,6 +2,7 @@
   "name": "endfield-dijiang-optimizer",
   "private": true,
   "version": "0.1.0",
+  "license": "MIT",
   "type": "module",
   "packageManager": "npm@9.8.0",
   "workspaces": [
