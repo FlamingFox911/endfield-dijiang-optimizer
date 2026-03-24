@@ -135,6 +135,10 @@ function formatDurationMinutes(value: number | undefined): string {
   return value == null ? "Duration not recorded" : `${(value / 60).toFixed(1)}h`;
 }
 
+function formatEstimatedDays(value: number | undefined): string {
+  return value == null ? "N/A" : `${value.toFixed(1)}d`;
+}
+
 function getInitials(name: string): string {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("");
 }
@@ -2012,7 +2016,7 @@ function App() {
                         </div>
                         <div className="resultMetric">
                           <span>ETA</span>
-                          <strong>{recommendation.estimatedDaysToUnlock.toFixed(1)}d</strong>
+                          <strong>{formatEstimatedDays(recommendation.estimatedDaysToUnlock)}</strong>
                         </div>
                       </div>
                       <div className="resultNotesGrid recommendationInfoGrid">

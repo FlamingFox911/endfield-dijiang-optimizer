@@ -58,6 +58,11 @@ const responses = new Map<string, unknown>([
   ["/catalogs/2026-03-20-v1.1-phase1/assets.json", assets],
 ]);
 
+function requireHtmlElement<T extends Element>(element: T | null | undefined): HTMLElement {
+  expect(element).not.toBeNull();
+  return element as unknown as HTMLElement;
+}
+
 describe("App", () => {
   const getOptimizationProfileSelect = () => screen.getByText("Optimization profile").closest("label")!.querySelector("select") as HTMLSelectElement;
   const getSearchEffortSlider = () => screen.getByText("Search effort").closest("label")!.querySelector('input[type="range"]') as HTMLInputElement;
@@ -186,10 +191,9 @@ describe("App", () => {
     });
 
     const roomHeading = screen.getAllByText("Manufacturing Cabin 1").find((element) => element.closest(".resultCard"));
-    const roomCard = roomHeading?.closest(".resultCard");
-    expect(roomCard).not.toBeNull();
-    expect(within(roomCard!).getByRole("img", { name: "Chen Qianyu portrait" })).toBeInTheDocument();
-    expect(within(roomCard!).getByRole("img", { name: "Xaihi portrait" })).toBeInTheDocument();
+    const roomCard = requireHtmlElement(roomHeading?.closest(".resultCard"));
+    expect(within(roomCard).getByRole("img", { name: "Chen Qianyu portrait" })).toBeInTheDocument();
+    expect(within(roomCard).getByRole("img", { name: "Xaihi portrait" })).toBeInTheDocument();
   });
 
   it("omits empty recipe text for support rooms and renders growth recipes without pipe separators", async () => {
@@ -269,8 +273,7 @@ describe("App", () => {
     expect(screen.queryByText("No recipe selected")).not.toBeInTheDocument();
 
     const growthHeading = screen.getAllByText("Growth Chamber 1").find((element) => element.closest(".resultCard"));
-    const growthCard = growthHeading?.closest(".resultCard");
-    expect(growthCard).not.toBeNull();
+    const growthCard = requireHtmlElement(growthHeading?.closest(".resultCard"));
     expect(growthCard).toHaveTextContent("Wulingstone");
     expect(growthCard).toHaveTextContent("False Aggela");
     expect(growthCard).toHaveTextContent("Cosmagaric");
@@ -286,7 +289,7 @@ describe("App", () => {
       "src",
       "/catalogs/2026-03-20-v1.1-phase1/assets/operators/chen-qianyu.webp",
     );
-    expect(portrait.closest(".avatar")).toHaveAttribute("data-rarity", "5");
+    expect(requireHtmlElement(portrait.closest(".avatar"))).toHaveAttribute("data-rarity", "5");
   });
 
   it("renders Base Skill icons in the roster, operator editor, and recommendations", async () => {
@@ -351,7 +354,7 @@ describe("App", () => {
     });
 
     const recommendationCard = await screen.findByText("Blade Critique");
-    expect(recommendationCard.closest(".resultCard")).not.toBeNull();
+    expect(requireHtmlElement(recommendationCard.closest(".resultCard"))).not.toBeNull();
     expect(screen.getByAltText("Blade Critique icon")).toBeInTheDocument();
   });
 
@@ -408,14 +411,13 @@ describe("App", () => {
       });
     });
 
-    const recommendationCard = (await screen.findByText("Blade Critique")).closest(".resultCard");
-    expect(recommendationCard).not.toBeNull();
-    expect(within(recommendationCard!).queryByText("Operator: Chen Qianyu")).not.toBeInTheDocument();
-    expect(within(recommendationCard!).queryByText(/Leveling materials:/)).not.toBeInTheDocument();
-    expect(within(recommendationCard!).queryByText(/Includes promotion materials:/)).not.toBeInTheDocument();
-    expect(within(recommendationCard!).queryByText(/Includes Base Skill node materials:/)).not.toBeInTheDocument();
-    expect(within(recommendationCard!).getByText("100 Operator EXP and 200 T-Creds for leveling.")).toBeInTheDocument();
-    expect(within(recommendationCard!).getByText("Approximate effort score 12.0 derived from bundled promotion costs, Base Skill costs, and level gating.")).toBeInTheDocument();
+    const recommendationCard = requireHtmlElement((await screen.findByText("Blade Critique")).closest(".resultCard"));
+    expect(within(recommendationCard).queryByText("Operator: Chen Qianyu")).not.toBeInTheDocument();
+    expect(within(recommendationCard).queryByText(/Leveling materials:/)).not.toBeInTheDocument();
+    expect(within(recommendationCard).queryByText(/Includes promotion materials:/)).not.toBeInTheDocument();
+    expect(within(recommendationCard).queryByText(/Includes Base Skill node materials:/)).not.toBeInTheDocument();
+    expect(within(recommendationCard).getByText("100 Operator EXP and 200 T-Creds for leveling.")).toBeInTheDocument();
+    expect(within(recommendationCard).getByText("Approximate effort score 12.0 derived from bundled promotion costs, Base Skill costs, and level gating.")).toBeInTheDocument();
   });
 
   it("orders facilities like the in-game layout and operators by rarity then name", async () => {
@@ -431,9 +433,8 @@ describe("App", () => {
     expect(operatorNames.indexOf("Gilberta")).toBeLessThan(operatorNames.indexOf("Tangtang"));
 
     await userEvent.click(screen.getByRole("tab", { name: /Planner/i }));
-    const plannerPanel = screen.getByText("Dijiang layout").closest(".plannerPanel");
-    expect(plannerPanel).not.toBeNull();
-    const facilityHeadings = within(plannerPanel!).getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent);
+    const plannerPanel = requireHtmlElement(screen.getByText("Dijiang layout").closest(".plannerPanel"));
+    const facilityHeadings = within(plannerPanel).getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent);
     expect(facilityHeadings.slice(0, 5)).toEqual([
       "Control Nexus",
       "Reception Room",
@@ -835,7 +836,7 @@ describe("App", () => {
       expect(container.querySelectorAll(".hardAssignmentRow").length).toBe(2);
     });
 
-    const [firstRow, secondRow] = Array.from(container.querySelectorAll(".hardAssignmentRow"));
+    const [firstRow, secondRow] = Array.from(container.querySelectorAll<HTMLElement>(".hardAssignmentRow"));
     const firstOperatorSelect = within(firstRow!).getByRole("combobox", { name: "Operator" }) as HTMLSelectElement;
     const secondOperatorSelect = within(secondRow!).getByRole("combobox", { name: "Operator" }) as HTMLSelectElement;
     const firstOperatorId = firstOperatorSelect.value;
@@ -853,7 +854,7 @@ describe("App", () => {
     await userEvent.selectOptions(firstOperatorSelect, nextFirstOperatorId!);
 
     await waitFor(() => {
-      const updatedRows = Array.from(container.querySelectorAll(".hardAssignmentRow"));
+      const updatedRows = Array.from(container.querySelectorAll<HTMLElement>(".hardAssignmentRow"));
       const updatedFirstOperatorSelect = within(updatedRows[0]!).getByRole("combobox", { name: "Operator" }) as HTMLSelectElement;
       const updatedSecondOperatorSelect = within(updatedRows[1]!).getByRole("combobox", { name: "Operator" }) as HTMLSelectElement;
       const updatedSecondOptions = Array.from(updatedSecondOperatorSelect.options).map((option) => option.value);
