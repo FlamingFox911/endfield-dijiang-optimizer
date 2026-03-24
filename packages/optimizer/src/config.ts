@@ -3,18 +3,20 @@ import type { OptimizationProfile } from "@endfield/domain";
 import type { OptimizationSearchConfig } from "./types.js";
 
 export const SUPPORT_WEIGHTS = {
-  version: "2026-03-22-v4",
+  version: "2026-03-23-v5",
   controlNexusMoodRegenWeight: 0.55,
   controlNexusMoodDropReductionWeight: 0.45,
   assignedOperatorProductionEfficiencyPercent: 40,
   baselineMoodDrainPerHour: 3_600,
   baselineMoodRegenPerHour: 6_000,
   baselineMoodWorkingUptime: 0.625,
-  receptionClueCollectionWeight: 0.75,
+  // Reception Room credits matter, but guide priority and community discussion both put
+  // them below steady production once social-loop and store RNG variance are accounted for.
+  receptionClueCollectionWeight: 0.01,
   receptionClueRateWeight: 0,
-  offRoomClueWeight: 0.2,
+  offRoomClueWeight: 0.003,
   fallbackProductionPercentPerRank: 10,
-  fallbackSupportPercentPerRank: 8,
+  fallbackSupportPercentPerRank: 0.2,
   estimatedEffortPerDay: 18,
 } as const;
 

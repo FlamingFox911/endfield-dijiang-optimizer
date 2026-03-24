@@ -54,6 +54,52 @@ describe("optimizer runtime", () => {
     expect(manufacturingPlan!.scoreBreakdown.directProductionScore).toBeCloseTo(baseUnits * 1.4, 6);
   });
 
+  it("keeps Reception Room clue utility on a conservative support scale", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    const ardelia = scenario.roster.find((operator) => operator.operatorId === "ardelia");
+    const estella = scenario.roster.find((operator) => operator.operatorId === "estella");
+
+    expect(ardelia).toBeDefined();
+    expect(estella).toBeDefined();
+
+    for (const operator of scenario.roster) {
+      operator.owned = operator.operatorId === "ardelia" || operator.operatorId === "estella";
+    }
+
+    ardelia!.owned = true;
+    ardelia!.baseSkillStates = ardelia!.baseSkillStates.map((state) => ({
+      ...state,
+      unlockedRank: state.skillId === "tales-of-the-land" ? 2 : 0,
+    }));
+    estella!.owned = true;
+    estella!.baseSkillStates = estella!.baseSkillStates.map((state) => ({
+      ...state,
+      unlockedRank: state.skillId === "frequency-monitoring" ? 2 : 0,
+    }));
+
+    scenario.facilities.controlNexus.level = 5;
+    scenario.facilities.hardAssignments = [
+      { operatorId: "ardelia", roomId: "reception-1" },
+      { operatorId: "estella", roomId: "reception-1" },
+    ];
+    scenario.facilities.manufacturingCabins[0]!.enabled = false;
+    scenario.facilities.manufacturingCabins[1]!.enabled = false;
+    scenario.facilities.growthChambers[0]!.enabled = false;
+    scenario.facilities.receptionRoom!.enabled = true;
+    scenario.facilities.receptionRoom!.level = 3;
+
+    const result = solveScenario(catalog, scenario);
+    const receptionPlan = result.roomPlans.find((room) => room.roomId === "reception-1");
+
+    expect(receptionPlan).toBeDefined();
+    expect(receptionPlan!.assignedOperatorIds).toEqual(["ardelia", "estella"]);
+    expect(receptionPlan!.scoreBreakdown.supportRoomScore).toBeCloseTo(
+      (30 + 30) * SUPPORT_WEIGHTS.receptionClueCollectionWeight,
+      6,
+    );
+  });
+
   it("values production-room Mood sustain from long-run uptime against the staffed seat and personal bonuses", async () => {
     const catalog = await loadDefaultCatalog();
     const scenario = createStarterScenario(catalog);

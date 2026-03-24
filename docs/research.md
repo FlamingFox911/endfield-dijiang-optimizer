@@ -1,6 +1,6 @@
 # Research Snapshot
 
-Snapshot date: March 20, 2026.
+Snapshot date: March 23, 2026.
 
 This document records the source-backed facts that shaped the application architecture, plus the gaps that still need manual validation or in-game verification.
 Operational retrieval notes for each source domain live in `docs/source-tactics.md`.
@@ -25,6 +25,10 @@ Operational retrieval notes for each source domain live in `docs/source-tactics.
   - exact Manufacturing Cabin load and production times for `Advanced Cognitive Carrier` and `Arms INSP Set`
   - exact Growth Chamber production times for early fungal, plant, and mineral recipes such as `Pink Bolete`, `Kalkodendra`, and `Kalkonyx`
   Sources: [OMV Dijiang Facility](https://endfield.wiki.gg/wiki/OMV_Dijiang/Facility), [Chen Qianyu](https://endfield.wiki.gg/wiki/Chen_Qianyu), [Xaihi](https://endfield.wiki.gg/wiki/Xaihi), [Snowshine](https://endfield.wiki.gg/wiki/Snowshine).
+- GameWith's Credits guide confirms that a meaningful share of daily Credits comes from social-loop and daily-task sources such as Clue Exchange, received clues, Production Assists, and Node Delivery. This means Reception Room value is real, but it is not purely a room-local yield number. Source: [GameWith Credits guide](https://gamewith.net/akendfield/72728).
+- Game8's Clue Room guide separates general clue-efficiency operators such as Ardelia and Estella from specific clue-target operators. That reinforces the current product decision that clue-target skills are more scenario-dependent than generic clue-efficiency skills. Source: [Game8 Clue Room guide](https://game8.co/games/Arknights-Endfield/archives/575973).
+- GameWith's Control Nexus leveling guide currently ranks cabin upgrade priority as Growth Chamber `3/3`, Manufacturing Cabin `2/3`, and Reception Room `1/3`. That is a strong signal that Reception utility should be present but conservative relative to steady production rooms. Source: [GameWith Control Nexus leveling guide](https://gamewith.net/akendfield/72964).
+- GameWith's Protocol Space guide says that after unlocking Dijiang and crafting character progression materials in the Manufacturing Cabin, players can shift Sanity spending toward Weapon Progression. This supports treating Dijiang as a complementary passive source rather than a full replacement for farmed progression materials. Source: [GameWith Protocol Space guide](https://gamewith.net/akendfield/72754).
 
 ## Ambiguities and gaps
 
@@ -41,6 +45,8 @@ Operational retrieval notes for each source domain live in `docs/source-tactics.
 - The optimizer now uses those rates as the basis of its long-run Mood uptime model for production-room sustain and Control Nexus ship-wide sustain.
 - The current implementation still intentionally stops short of a full per-operator rest-cycle simulator. It does not track current Mood, explicit rest windows, or operator rotation schedules over time.
 - Future Mood work should focus on raising fidelity from this calibrated uptime model rather than going back to flat sustain weights.
+- A March 2026 Reddit post reports that a highly optimized clue setup can sustain daily clue exchanges and generate substantial premium-currency value from the Credit Store. This is evidence that Reception Room performance should not be treated as worthless. Source: [Reddit clue-exchange post](https://www.reddit.com/r/Endfield/comments/1r9hb6r/using_this_operator_combo_i_have_been_exchanging/).
+- A later Reddit setup discussion argues the opposite extreme: continuous Manufacturing staffing often matters more than Growth or Control Nexus when compared against world gathering and the effort of operator rotation. This is a useful counterweight against letting Reception or support rooms dominate the whole objective. Source: [Reddit Dijiang setup discussion](https://www.reddit.com/r/Endfield/comments/1qu1o0h/dijiang_setup_do_the_optimal_setup_but_when/).
 
 ## Working assumptions for the first implementation
 
