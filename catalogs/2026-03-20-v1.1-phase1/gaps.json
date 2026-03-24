@@ -1,4 +1,34 @@
 {
   "catalogVersion": "2026-03-20/v1.1-phase1",
-  "gaps": []
+  "gaps": [
+    {
+      "id": "growth-material-threshold-demand-not-modeled",
+      "summary": "Growth Chamber materials are cataloged by recipe and family, but their downstream progression thresholds and demand curves are not yet modeled.",
+      "impact": "high",
+      "mitigation": "Keep Growth scoring conservative until the catalog records exact material applicability bands and consumption data for operator promotions, weapon tuning, Ability Matrix progression, Artificing, and related systems.",
+      "sourceRefs": [
+        {
+          "id": "game8-leveling-guide",
+          "label": "Game8 character leveling guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/576406",
+          "retrievedOn": "2026-03-23",
+          "confidence": "guide_site"
+        },
+        {
+          "id": "game8-umbronyx-guide",
+          "label": "Game8 Umbronyx guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/584615",
+          "retrievedOn": "2026-03-23",
+          "confidence": "guide_site"
+        },
+        {
+          "id": "game8-artzy-tyrannical",
+          "label": "Game8 Artzy Tyrannical weapon guide",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/575592",
+          "retrievedOn": "2026-03-23",
+          "confidence": "guide_site"
+        }
+      ]
+    }
+  ]
 }

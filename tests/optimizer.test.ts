@@ -30,17 +30,18 @@ describe("optimizer runtime", () => {
   it("applies the baseline production efficiency from assigned production-room seats", async () => {
     const catalog = await loadDefaultCatalog();
     const scenario = createStarterScenario(catalog);
-    const recipe = catalog.recipes.find((entry) => entry.id === scenario.facilities.manufacturingCabins[0]?.fixedRecipeId);
+    const recipe = catalog.recipes.find((entry) => entry.id === "arms-insp-set");
     const snowshine = scenario.roster.find((operator) => operator.operatorId === "snowshine");
 
     expect(recipe).toBeDefined();
     expect(snowshine).toBeDefined();
 
     snowshine!.owned = true;
-    scenario.facilities.controlNexus.level = 1;
+    scenario.facilities.controlNexus.level = 3;
     scenario.facilities.hardAssignments = [];
     scenario.facilities.manufacturingCabins[0]!.enabled = true;
-    scenario.facilities.manufacturingCabins[0]!.level = 1;
+    scenario.facilities.manufacturingCabins[0]!.level = 3;
+    scenario.facilities.manufacturingCabins[0]!.fixedRecipeId = "arms-insp-set";
     scenario.facilities.manufacturingCabins[1]!.enabled = false;
     scenario.facilities.growthChambers[0]!.enabled = false;
     scenario.facilities.receptionRoom!.enabled = false;
@@ -52,6 +53,177 @@ describe("optimizer runtime", () => {
     expect(manufacturingPlan).toBeDefined();
     expect(manufacturingPlan!.assignedOperatorIds).toEqual(["snowshine"]);
     expect(manufacturingPlan!.scoreBreakdown.directProductionScore).toBeCloseTo(baseUnits * 1.4, 6);
+  });
+
+  it("normalizes low-tier manufacturing recipes below top-tier item value", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    const recipe = catalog.recipes.find((entry) => entry.id === "arms-inspector");
+    const snowshine = scenario.roster.find((operator) => operator.operatorId === "snowshine");
+
+    expect(recipe).toBeDefined();
+    expect(snowshine).toBeDefined();
+
+    snowshine!.owned = true;
+    scenario.facilities.controlNexus.level = 1;
+    scenario.facilities.hardAssignments = [];
+    scenario.facilities.manufacturingCabins[0]!.enabled = true;
+    scenario.facilities.manufacturingCabins[0]!.level = 1;
+    scenario.facilities.manufacturingCabins[0]!.fixedRecipeId = "arms-inspector";
+    scenario.facilities.manufacturingCabins[1]!.enabled = false;
+    scenario.facilities.growthChambers[0]!.enabled = false;
+    scenario.facilities.receptionRoom!.enabled = false;
+
+    const result = solveScenario(catalog, scenario);
+    const manufacturingPlan = result.roomPlans.find((room) => room.roomId === "mfg-1");
+    const baseUnits = (60 / recipe!.baseDurationMinutes!) * (recipe!.outputAmount ?? 1);
+    const expectedScoreUnits = baseUnits * 1.4 * (200 / 10_000);
+
+    expect(manufacturingPlan).toBeDefined();
+    expect(manufacturingPlan!.scoreBreakdown.directProductionScore).toBeCloseTo(expectedScoreUnits, 6);
+    expect(manufacturingPlan!.projectedOutputs.weapon_exp).toBeCloseTo(baseUnits * 1.4, 6);
+    expect(result.projectedRecipeOutputs["arms-inspector"]).toBeCloseTo(baseUnits * 1.4, 6);
+  });
+
+  it("applies custom demand weights to long-run production scoring without changing raw outputs", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    const recipe = catalog.recipes.find((entry) => entry.id === "arms-inspector");
+    const snowshine = scenario.roster.find((operator) => operator.operatorId === "snowshine");
+
+    expect(recipe).toBeDefined();
+    expect(snowshine).toBeDefined();
+
+    snowshine!.owned = true;
+    scenario.options.demandProfile = {
+      preset: "custom",
+      productWeights: {
+        operator_exp: 1,
+        weapon_exp: 3,
+        fungal: 1,
+        vitrified_plant: 1,
+        rare_mineral: 1,
+      },
+      receptionWeight: 1,
+    };
+    scenario.facilities.controlNexus.level = 1;
+    scenario.facilities.hardAssignments = [];
+    scenario.facilities.manufacturingCabins[0]!.enabled = true;
+    scenario.facilities.manufacturingCabins[0]!.level = 1;
+    scenario.facilities.manufacturingCabins[0]!.fixedRecipeId = "arms-inspector";
+    scenario.facilities.manufacturingCabins[1]!.enabled = false;
+    scenario.facilities.growthChambers[0]!.enabled = false;
+    scenario.facilities.receptionRoom!.enabled = false;
+
+    const result = solveScenario(catalog, scenario);
+    const manufacturingPlan = result.roomPlans.find((room) => room.roomId === "mfg-1");
+    const baseUnits = (60 / recipe!.baseDurationMinutes!) * (recipe!.outputAmount ?? 1);
+    const expectedScoreUnits = baseUnits * 1.4 * (200 / 10_000) * 3;
+
+    expect(manufacturingPlan).toBeDefined();
+    expect(manufacturingPlan!.scoreBreakdown.directProductionScore).toBeCloseTo(expectedScoreUnits, 6);
+    expect(manufacturingPlan!.projectedOutputs.weapon_exp).toBeCloseTo(baseUnits * 1.4, 6);
+  });
+
+  it("boosts an exact priority recipe on top of the broader demand profile", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    const recipe = catalog.recipes.find((entry) => entry.id === "arms-inspector");
+    const snowshine = scenario.roster.find((operator) => operator.operatorId === "snowshine");
+
+    expect(recipe).toBeDefined();
+    expect(snowshine).toBeDefined();
+
+    snowshine!.owned = true;
+    scenario.options.demandProfile = {
+      preset: "balanced",
+      productWeights: {
+        operator_exp: 1,
+        weapon_exp: 1,
+        fungal: 1,
+        vitrified_plant: 1,
+        rare_mineral: 1,
+      },
+      receptionWeight: 1,
+      priorityRecipeId: "arms-inspector",
+    };
+    scenario.facilities.controlNexus.level = 1;
+    scenario.facilities.hardAssignments = [];
+    scenario.facilities.manufacturingCabins[0]!.enabled = true;
+    scenario.facilities.manufacturingCabins[0]!.level = 1;
+    scenario.facilities.manufacturingCabins[0]!.fixedRecipeId = "arms-inspector";
+    scenario.facilities.manufacturingCabins[1]!.enabled = false;
+    scenario.facilities.growthChambers[0]!.enabled = false;
+    scenario.facilities.receptionRoom!.enabled = false;
+
+    const result = solveScenario(catalog, scenario);
+    const manufacturingPlan = result.roomPlans.find((room) => room.roomId === "mfg-1");
+    const baseUnits = (60 / recipe!.baseDurationMinutes!) * (recipe!.outputAmount ?? 1);
+    const expectedScoreUnits =
+      baseUnits
+      * 1.4
+      * (200 / 10_000)
+      * SUPPORT_WEIGHTS.priorityRecipeFocusMultiplier;
+
+    expect(manufacturingPlan).toBeDefined();
+    expect(manufacturingPlan!.scoreBreakdown.directProductionScore).toBeCloseTo(expectedScoreUnits, 6);
+    expect(result.projectedRecipeOutputs["arms-inspector"]).toBeCloseTo(baseUnits * 1.4, 6);
+  });
+
+  it("applies custom reception demand weights to clue utility scoring", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    const ardelia = scenario.roster.find((operator) => operator.operatorId === "ardelia");
+    const estella = scenario.roster.find((operator) => operator.operatorId === "estella");
+
+    expect(ardelia).toBeDefined();
+    expect(estella).toBeDefined();
+
+    for (const operator of scenario.roster) {
+      operator.owned = operator.operatorId === "ardelia" || operator.operatorId === "estella";
+    }
+
+    ardelia!.owned = true;
+    ardelia!.baseSkillStates = ardelia!.baseSkillStates.map((state) => ({
+      ...state,
+      unlockedRank: state.skillId === "tales-of-the-land" ? 2 : 0,
+    }));
+    estella!.owned = true;
+    estella!.baseSkillStates = estella!.baseSkillStates.map((state) => ({
+      ...state,
+      unlockedRank: state.skillId === "frequency-monitoring" ? 2 : 0,
+    }));
+
+    scenario.options.demandProfile = {
+      preset: "custom",
+      productWeights: {
+        operator_exp: 1,
+        weapon_exp: 1,
+        fungal: 1,
+        vitrified_plant: 1,
+        rare_mineral: 1,
+      },
+      receptionWeight: 2.5,
+    };
+    scenario.facilities.controlNexus.level = 5;
+    scenario.facilities.hardAssignments = [
+      { operatorId: "ardelia", roomId: "reception-1" },
+      { operatorId: "estella", roomId: "reception-1" },
+    ];
+    scenario.facilities.manufacturingCabins[0]!.enabled = false;
+    scenario.facilities.manufacturingCabins[1]!.enabled = false;
+    scenario.facilities.growthChambers[0]!.enabled = false;
+    scenario.facilities.receptionRoom!.enabled = true;
+    scenario.facilities.receptionRoom!.level = 3;
+
+    const result = solveScenario(catalog, scenario);
+    const receptionPlan = result.roomPlans.find((room) => room.roomId === "reception-1");
+
+    expect(receptionPlan).toBeDefined();
+    expect(receptionPlan!.scoreBreakdown.supportRoomScore).toBeCloseTo(
+      (30 + 30) * SUPPORT_WEIGHTS.receptionClueCollectionWeight * 2.5,
+      6,
+    );
   });
 
   it("keeps Reception Room clue utility on a conservative support scale", async () => {

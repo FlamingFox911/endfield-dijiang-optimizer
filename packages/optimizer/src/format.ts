@@ -41,7 +41,7 @@ export function formatOptimizationResultText(
   const lines = [
     `Catalog: ${result.catalogVersion}`,
     `Total score: ${result.totalScore.toFixed(2)}`,
-    `Support weights: ${result.supportWeightsVersion}`,
+    `Score model: ${result.supportWeightsVersion}`,
     "",
     "Room plans",
   ];

@@ -140,6 +140,35 @@ The result payload returns:
 - Opportunity-cost warnings when hard assignments reduce production.
 - The source catalog version used for the run.
 
+## Long-run objective direction
+
+The long-run Dijiang objective is not a single universal weight table. Different players will want different mixes of:
+
+- Operator EXP
+- Weapon EXP
+- Growth Chamber materials by family or exact recipe
+  Examples: `Pink Bolete` at operator level `20`, `Red Bolete` at `40`, `Ruby Bolete` at `60`, `Bloodcap` at `80`, and weapon minerals such as `Kalkonyx` `20 → 40`, `Auronyx` `40 → 60`, `Umbronyx` `60 → 80`, and `Wulingstone` `80 → 90`
+- Reception Room clue throughput or specific clue targeting
+- Credit-oriented support value derived from clue loops and related systems
+
+The optimizer should therefore move toward a demand-aware score model rather than a static global priority order.
+
+Each output should eventually be scored against three questions:
+
+- what is it used for in long-run account progression
+- how much of it does a player plausibly need over a full-build horizon
+- how efficiently can it be obtained through Dijiang versus outside sources such as farming, gathering, social systems, or shops
+
+That means future weighting work should be user-configurable and constraint-aware:
+
+- let the user express what they currently value, such as Operator EXP, Weapon EXP, a specific rare material, or Reception utility
+- keep item-level constraints in view, such as Combat Records only applying to levels `1-60` and Cognitive Carriers only applying to levels `61-90`
+- keep Growth recipe thresholds in view, since many fungi and minerals are tied to specific promotion or tuning stages rather than a single interchangeable bucket
+- compare Dijiang production against external procurement paths instead of treating every produced unit as equally valuable
+- retain explainability so the UI can show why a room or operator combination won under the active objective
+
+The current solver only partially satisfies that direction. It now values Manufacturing recipes by item value instead of raw unit count, and the data layer can estimate a full Dijiang base-build path, but the final objective is still not yet driven by a user-selected long-run demand profile.
+
 ## Why not start with CP-SAT
 
 The problem is small enough to solve exactly without introducing a heavy native dependency on day one. An exact branch-and-bound search over room slot assignments keeps the core portable across CLI and browser builds.
@@ -179,9 +208,11 @@ Current runtime status:
 - the packaged CLI and web app both expose counterfactual next-unlock evaluation
 - bundled Base Skill costs, Elite promotion costs, and Promotion IV operator overrides are used directly
 - bundled level milestones and EXP item values are used to estimate the leveling gate
+- bundled EXP item level bands are respected when estimating progression materials, so Combat Records cover levels `1-60` and Cognitive Carriers cover levels `61-90`
 - leveling costs are exact at bundled milestone caps and conservative upper bounds between those caps
 - explicit user-selectable ranking modes are implemented across CLI, shared runtime, and web
 - the web app runs both optimization and upgrade recommendation work in a dedicated worker and shows progress/cancel UI for each run
+- the data layer can estimate a full Dijiang base-build path from the current operator state to level `90`, Promotion `4`, and all known Base Skill ranks, but the solver does not yet weight room value against that full-build demand model
 
 ## Max-facilities scenario
 

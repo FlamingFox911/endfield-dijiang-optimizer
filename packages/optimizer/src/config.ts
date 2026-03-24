@@ -3,7 +3,7 @@ import type { OptimizationProfile } from "@endfield/domain";
 import type { OptimizationSearchConfig } from "./types.js";
 
 export const SUPPORT_WEIGHTS = {
-  version: "2026-03-23-v5",
+  version: "v2",
   controlNexusMoodRegenWeight: 0.55,
   controlNexusMoodDropReductionWeight: 0.45,
   assignedOperatorProductionEfficiencyPercent: 40,
@@ -17,6 +17,7 @@ export const SUPPORT_WEIGHTS = {
   offRoomClueWeight: 0.003,
   fallbackProductionPercentPerRank: 10,
   fallbackSupportPercentPerRank: 0.2,
+  priorityRecipeFocusMultiplier: 2.5,
   estimatedEffortPerDay: 18,
 } as const;
 

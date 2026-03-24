@@ -13,7 +13,13 @@ import type {
   ScoreBreakdown,
 } from "@endfield/domain";
 
-import { createProjectedOutputs, getGrowthSlotCap, getMaxFacilityRoomCounts, getRoomSlotCap } from "@endfield/data";
+import {
+  createProjectedOutputs,
+  getGrowthSlotCap,
+  getMaxFacilityRoomCounts,
+  getRoomSlotCap,
+  resolveDemandProfile,
+} from "@endfield/data";
 
 import {
   DEFAULT_OPTIMIZATION_EFFORT,
@@ -47,7 +53,10 @@ interface OperatorRoomEvaluation {
   reasons: string[];
   usedFallbackHeuristics: boolean;
   dataConfidence: DataConfidence;
+  productionDirectScoreUnits: number;
   productionDirectUnits: number;
+  localMoodSustainScoreUnits: number;
+  localMoodSustainUnits: number;
   localMoodRegenPercent: number;
   localMoodDropReductionPercent: number;
   globalMoodRegenPercent: number;
@@ -55,6 +64,40 @@ interface OperatorRoomEvaluation {
 }
 
 const STEADY_STATE_HOURS = 1;
+// Score EXP recipes by normalized value, but keep projected outputs in raw units per hour.
+const TOP_TIER_PROGRESS_EXP_VALUE = 10_000;
+const WEAPON_EXP_VALUE_BY_RECIPE_ID = {
+  "arms-inspector": 200,
+  "arms-insp-kit": 1_000,
+  "arms-insp-set": 10_000,
+} as const;
+
+function buildRecipeScoreWeightById(
+  catalog: GameCatalog,
+  scenario: OptimizationScenario,
+) {
+  const demandProfile = resolveDemandProfile(scenario.options.demandProfile);
+  const weights = new Map<string, number>();
+
+  for (const expItem of catalog.progression.expItems) {
+    weights.set(expItem.itemId, expItem.expValue / TOP_TIER_PROGRESS_EXP_VALUE);
+  }
+
+  for (const [recipeId, expValue] of Object.entries(WEAPON_EXP_VALUE_BY_RECIPE_ID)) {
+    weights.set(recipeId, expValue / TOP_TIER_PROGRESS_EXP_VALUE);
+  }
+
+  for (const recipe of catalog.recipes) {
+    const productWeight = demandProfile.productWeights[recipe.productKind] ?? 1;
+    const priorityWeight =
+      demandProfile.priorityRecipeId === recipe.id
+        ? SUPPORT_WEIGHTS.priorityRecipeFocusMultiplier
+        : 1;
+    weights.set(recipe.id, (weights.get(recipe.id) ?? 1) * productWeight * priorityWeight);
+  }
+
+  return { weights, demandProfile };
+}
 
 export class OptimizationCancelledError extends Error {
   constructor(message = "Optimization canceled.") {
@@ -247,6 +290,27 @@ function getBaseRoomUnits(room: NormalizedRoom, horizonHours: number, warnings: 
   );
 }
 
+function getRecipeBaseScoreUnits(
+  recipe: RecipeDefinition,
+  recipeScoreWeightById: Map<string, number>,
+  horizonHours: number,
+  warnings: string[],
+) {
+  return getRecipeBaseUnits(recipe, horizonHours, warnings) * (recipeScoreWeightById.get(recipe.id) ?? 1);
+}
+
+function getBaseRoomScoreUnits(
+  room: NormalizedRoom,
+  recipeScoreWeightById: Map<string, number>,
+  horizonHours: number,
+  warnings: string[],
+) {
+  return room.recipes.reduce(
+    (sum, recipe) => sum + getRecipeBaseScoreUnits(recipe, recipeScoreWeightById, horizonHours, warnings),
+    0,
+  );
+}
+
 function getProductionOccupancyBonusUnits(
   room: NormalizedRoom,
   baseUnits: number,
@@ -274,6 +338,21 @@ function getMatchingBaseUnits(
       return sum;
     }
     return sum + getRecipeBaseUnits(recipe, horizonHours, warnings);
+  }, 0);
+}
+
+function getMatchingBaseScoreUnits(
+  room: NormalizedRoom,
+  recipeScoreWeightById: Map<string, number>,
+  horizonHours: number,
+  warnings: string[],
+  appliesTo: ProductKind | "all",
+) {
+  return room.recipes.reduce((sum, recipe) => {
+    if (appliesTo !== "all" && recipe.productKind !== appliesTo) {
+      return sum;
+    }
+    return sum + getRecipeBaseScoreUnits(recipe, recipeScoreWeightById, horizonHours, warnings);
   }, 0);
 }
 
@@ -314,13 +393,18 @@ function getLocalMoodSustainUnits(
 function evaluateRankModifiers(
   rankDef: BaseSkillRankDefinition,
   room: NormalizedRoom,
+  recipeScoreWeightById: Map<string, number>,
+  receptionWeight: number,
   horizonHours: number,
   warnings: string[],
 ): OperatorRoomEvaluation {
   let directScore = 0;
   let supportScore = 0;
   let crossRoomScore = 0;
+  let productionDirectScoreUnits = 0;
   let productionDirectUnits = 0;
+  let localMoodSustainScoreUnits = 0;
+  let localMoodSustainUnits = 0;
   let localMoodRegenPercent = 0;
   let localMoodDropReductionPercent = 0;
   let globalMoodRegenPercent = 0;
@@ -329,6 +413,13 @@ function evaluateRankModifiers(
 
   for (const modifier of rankDef.modifiers) {
     const matchingBaseUnits = getMatchingBaseUnits(room, horizonHours, warnings, modifier.appliesTo);
+    const matchingBaseScoreUnits = getMatchingBaseScoreUnits(
+      room,
+      recipeScoreWeightById,
+      horizonHours,
+      warnings,
+      modifier.appliesTo,
+    );
     if (modifier.appliesTo !== "all" && matchingBaseUnits <= 0) {
       continue;
     }
@@ -336,7 +427,8 @@ function evaluateRankModifiers(
     switch (modifier.metric) {
       case "production_efficiency":
       case "growth_rate":
-        directScore += matchingBaseUnits * (modifier.value / 100);
+        directScore += matchingBaseScoreUnits * (modifier.value / 100);
+        productionDirectScoreUnits += matchingBaseScoreUnits * (modifier.value / 100);
         productionDirectUnits += matchingBaseUnits * (modifier.value / 100);
         reasons.push(`${modifier.metric} +${modifier.value}%`);
         break;
@@ -366,12 +458,12 @@ function evaluateRankModifiers(
       case "clue_collection_efficiency":
         supportScore +=
           room.roomKind === "reception_room"
-            ? modifier.value * SUPPORT_WEIGHTS.receptionClueCollectionWeight
+            ? modifier.value * SUPPORT_WEIGHTS.receptionClueCollectionWeight * receptionWeight
             : modifier.value * SUPPORT_WEIGHTS.offRoomClueWeight;
         reasons.push(`clue utility +${modifier.value}%`);
         break;
       case "clue_rate_up":
-        supportScore += 0;
+        supportScore += modifier.value * SUPPORT_WEIGHTS.receptionClueRateWeight * receptionWeight;
         reasons.push(
           `clue targeting recorded (+${modifier.value}%) but treated as score-neutral; use hard assignments if you want a specific clue number.`,
         );
@@ -386,7 +478,10 @@ function evaluateRankModifiers(
     reasons,
     usedFallbackHeuristics: false,
     dataConfidence: rankDef.dataConfidence ?? "verified",
+    productionDirectScoreUnits,
     productionDirectUnits,
+    localMoodSustainScoreUnits,
+    localMoodSustainUnits,
     localMoodRegenPercent,
     localMoodDropReductionPercent,
     globalMoodRegenPercent,
@@ -398,6 +493,8 @@ function fallbackEvaluation(
   operatorDef: OperatorDefinition,
   unlockedRank: number,
   room: NormalizedRoom,
+  recipeScoreWeightById: Map<string, number>,
+  receptionWeight: number,
   horizonHours: number,
   warnings: string[],
 ): OperatorRoomEvaluation {
@@ -406,7 +503,7 @@ function fallbackEvaluation(
       directScore: 0,
       supportScore:
         room.roomKind === "reception_room"
-          ? unlockedRank * SUPPORT_WEIGHTS.fallbackSupportPercentPerRank
+          ? unlockedRank * SUPPORT_WEIGHTS.fallbackSupportPercentPerRank * receptionWeight
           : 0,
       crossRoomScore:
         room.roomKind === "control_nexus"
@@ -415,7 +512,10 @@ function fallbackEvaluation(
       reasons: [`${operatorDef.name} uses fallback support scoring because precise modifiers are missing.`],
       usedFallbackHeuristics: true,
       dataConfidence: "heuristic",
+      productionDirectScoreUnits: 0,
       productionDirectUnits: 0,
+      localMoodSustainScoreUnits: 0,
+      localMoodSustainUnits: 0,
       localMoodRegenPercent: 0,
       localMoodDropReductionPercent: 0,
       globalMoodRegenPercent: 0,
@@ -424,14 +524,19 @@ function fallbackEvaluation(
   }
 
   const baseUnits = getBaseRoomUnits(room, horizonHours, warnings);
+  const baseScoreUnits = getBaseRoomScoreUnits(room, recipeScoreWeightById, horizonHours, warnings);
   return {
-    directScore: baseUnits * ((unlockedRank * SUPPORT_WEIGHTS.fallbackProductionPercentPerRank) / 100),
+    directScore: baseScoreUnits * ((unlockedRank * SUPPORT_WEIGHTS.fallbackProductionPercentPerRank) / 100),
     supportScore: 0,
     crossRoomScore: 0,
     reasons: [`${operatorDef.name} uses fallback production scoring because precise modifiers are missing.`],
     usedFallbackHeuristics: true,
     dataConfidence: "heuristic",
+    productionDirectScoreUnits:
+      baseScoreUnits * ((unlockedRank * SUPPORT_WEIGHTS.fallbackProductionPercentPerRank) / 100),
     productionDirectUnits: baseUnits * ((unlockedRank * SUPPORT_WEIGHTS.fallbackProductionPercentPerRank) / 100),
+    localMoodSustainScoreUnits: 0,
+    localMoodSustainUnits: 0,
     localMoodRegenPercent: 0,
     localMoodDropReductionPercent: 0,
     globalMoodRegenPercent: 0,
@@ -443,13 +548,18 @@ function evaluateOperatorForRoom(
   operatorDef: OperatorDefinition,
   ownedOperator: OptimizationScenario["roster"][number],
   room: NormalizedRoom,
+  recipeScoreWeightById: Map<string, number>,
+  receptionWeight: number,
   horizonHours: number,
   warnings: string[],
 ): OperatorRoomEvaluation {
   let directScore = 0;
   let supportScore = 0;
   let crossRoomScore = 0;
+  let productionDirectScoreUnits = 0;
   let productionDirectUnits = 0;
+  let localMoodSustainScoreUnits = 0;
+  let localMoodSustainUnits = 0;
   let usedFallbackHeuristics = false;
   let localMoodRegenPercent = 0;
   let localMoodDropReductionPercent = 0;
@@ -458,9 +568,14 @@ function evaluateOperatorForRoom(
   const reasons: string[] = [];
   const confidences: DataConfidence[] = [];
   const baseUnits = getBaseRoomUnits(room, horizonHours, warnings);
+  const baseScoreUnits = getBaseRoomScoreUnits(room, recipeScoreWeightById, horizonHours, warnings);
   const seatOccupancyUnits =
     room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber"
       ? baseUnits * (SUPPORT_WEIGHTS.assignedOperatorProductionEfficiencyPercent / 100)
+      : 0;
+  const seatOccupancyScoreUnits =
+    room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber"
+      ? baseScoreUnits * (SUPPORT_WEIGHTS.assignedOperatorProductionEfficiencyPercent / 100)
       : 0;
 
   for (const skill of operatorDef.baseSkills) {
@@ -475,11 +590,22 @@ function evaluateOperatorForRoom(
 
     const rankDef = skill.ranks.find((entry) => entry.rank === unlockedRank);
     if (!rankDef || rankDef.modifiers.length === 0) {
-      const fallback = fallbackEvaluation(operatorDef, unlockedRank, room, horizonHours, warnings);
+      const fallback = fallbackEvaluation(
+        operatorDef,
+        unlockedRank,
+        room,
+        recipeScoreWeightById,
+        receptionWeight,
+        horizonHours,
+        warnings,
+      );
       directScore += fallback.directScore;
       supportScore += fallback.supportScore;
       crossRoomScore += fallback.crossRoomScore;
+      productionDirectScoreUnits += fallback.productionDirectScoreUnits;
       productionDirectUnits += fallback.productionDirectUnits;
+      localMoodSustainScoreUnits += fallback.localMoodSustainScoreUnits;
+      localMoodSustainUnits += fallback.localMoodSustainUnits;
       usedFallbackHeuristics ||= fallback.usedFallbackHeuristics;
       reasons.push(...fallback.reasons);
       confidences.push(fallback.dataConfidence);
@@ -490,11 +616,21 @@ function evaluateOperatorForRoom(
       continue;
     }
 
-    const evaluation = evaluateRankModifiers(rankDef, room, horizonHours, warnings);
+    const evaluation = evaluateRankModifiers(
+      rankDef,
+      room,
+      recipeScoreWeightById,
+      receptionWeight,
+      horizonHours,
+      warnings,
+    );
     directScore += evaluation.directScore;
     supportScore += evaluation.supportScore;
     crossRoomScore += evaluation.crossRoomScore;
+    productionDirectScoreUnits += evaluation.productionDirectScoreUnits;
     productionDirectUnits += evaluation.productionDirectUnits;
+    localMoodSustainScoreUnits += evaluation.localMoodSustainScoreUnits;
+    localMoodSustainUnits += evaluation.localMoodSustainUnits;
     usedFallbackHeuristics ||= evaluation.usedFallbackHeuristics;
     localMoodRegenPercent += evaluation.localMoodRegenPercent;
     localMoodDropReductionPercent += evaluation.localMoodDropReductionPercent;
@@ -511,7 +647,13 @@ function evaluateOperatorForRoom(
     (room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber")
     && (localMoodRegenPercent > 0 || localMoodDropReductionPercent > 0)
   ) {
-    const preservedActiveContributionUnits = seatOccupancyUnits + directScore;
+    const preservedActiveContributionScoreUnits = seatOccupancyScoreUnits + productionDirectScoreUnits;
+    const preservedActiveContributionUnits = seatOccupancyUnits + productionDirectUnits;
+    const moodSustainScoreUnits = getLocalMoodSustainUnits(
+      preservedActiveContributionScoreUnits,
+      localMoodDropReductionPercent,
+      localMoodRegenPercent,
+    );
     const moodSustainUnits = getLocalMoodSustainUnits(
       preservedActiveContributionUnits,
       localMoodDropReductionPercent,
@@ -519,9 +661,11 @@ function evaluateOperatorForRoom(
     );
     const boostedUptime = getLongRunMoodWorkingUptime(localMoodDropReductionPercent, localMoodRegenPercent);
 
-    directScore += moodSustainUnits;
+    directScore += moodSustainScoreUnits;
+    localMoodSustainScoreUnits += moodSustainScoreUnits;
+    localMoodSustainUnits += moodSustainUnits;
     reasons.push(
-      `Long-run Mood sustain: +${(boostedUptime * 100).toFixed(1)}% working uptime, preserving ${moodSustainUnits.toFixed(2)} score.`,
+      `Long-run Mood sustain: +${(boostedUptime * 100).toFixed(1)}% working uptime, preserving ${moodSustainScoreUnits.toFixed(2)} score.`,
     );
   }
 
@@ -536,7 +680,10 @@ function evaluateOperatorForRoom(
       : confidences.includes("provisional")
         ? "provisional"
         : "verified",
+    productionDirectScoreUnits,
     productionDirectUnits,
+    localMoodSustainScoreUnits,
+    localMoodSustainUnits,
     localMoodRegenPercent,
     localMoodDropReductionPercent,
     globalMoodRegenPercent,
@@ -603,15 +750,15 @@ function cloneAssignedByRoom(assignedByRoom: Map<string, Array<string | null>>) 
 
 function buildScoreBreakdown(
   room: NormalizedRoom,
-  baseUnits: number,
-  occupancyBonusUnits: number,
+  baseScoreUnits: number,
+  occupancyBonusScoreUnits: number,
   aggregateDirectScore: number,
   aggregateSupportScore: number,
   aggregateCrossRoomScore: number,
 ): ScoreBreakdown {
   const directProductionScore =
     room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber"
-      ? baseUnits + occupancyBonusUnits + aggregateDirectScore
+      ? baseScoreUnits + occupancyBonusScoreUnits + aggregateDirectScore
       : 0;
   const supportRoomScore = room.roomKind === "reception_room" ? aggregateSupportScore : 0;
   const crossRoomBonusContribution = room.roomKind === "control_nexus" ? aggregateCrossRoomScore : 0;
@@ -629,17 +776,32 @@ function computeRoomPlan(
   assignedOperatorIds: Array<string | null>,
   operatorDefs: Map<string, OperatorDefinition>,
   ownedOperators: Map<string, OptimizationScenario["roster"][number]>,
+  recipeScoreWeightById: Map<string, number>,
+  receptionWeight: number,
   horizonHours: number,
   inheritedWarnings: string[],
-): { roomPlan: RoomPlan; explanations: AssignmentExplanation[] } {
+): {
+  roomPlan: RoomPlan;
+  explanations: AssignmentExplanation[];
+  projectedRecipeOutputs: Record<string, number>;
+} {
   const warnings = [...inheritedWarnings];
   const projectedOutputs = createProjectedOutputs();
+  const projectedRecipeOutputs: Record<string, number> = {};
   const explanations: AssignmentExplanation[] = [];
   const baseUnits = getBaseRoomUnits(room, horizonHours, warnings);
+  const baseScoreUnits = getBaseRoomScoreUnits(room, recipeScoreWeightById, horizonHours, warnings);
   const assignedOperatorCount = assignedOperatorIds.filter(Boolean).length;
   const occupancyBonusUnits = getProductionOccupancyBonusUnits(room, baseUnits, assignedOperatorCount);
+  const occupancyBonusScoreUnits = getProductionOccupancyBonusUnits(
+    room,
+    baseScoreUnits,
+    assignedOperatorCount,
+  );
 
   let aggregateDirectScore = 0;
+  let aggregateDirectUnits = 0;
+  let aggregateMoodSustainUnits = 0;
   let aggregateSupportScore = 0;
   let aggregateCrossRoomScore = 0;
   let usedFallbackHeuristics = false;
@@ -656,8 +818,18 @@ function computeRoomPlan(
       continue;
     }
 
-    const evaluation = evaluateOperatorForRoom(operatorDef, ownedOperator, room, horizonHours, warnings);
+    const evaluation = evaluateOperatorForRoom(
+      operatorDef,
+      ownedOperator,
+      room,
+      recipeScoreWeightById,
+      receptionWeight,
+      horizonHours,
+      warnings,
+    );
     aggregateDirectScore += evaluation.directScore;
+    aggregateDirectUnits += evaluation.productionDirectUnits;
+    aggregateMoodSustainUnits += evaluation.localMoodSustainUnits;
     aggregateSupportScore += evaluation.supportScore;
     aggregateCrossRoomScore += evaluation.crossRoomScore;
     usedFallbackHeuristics ||= evaluation.usedFallbackHeuristics;
@@ -684,19 +856,21 @@ function computeRoomPlan(
 
   const scoreBreakdown = buildScoreBreakdown(
     room,
-    baseUnits,
-    occupancyBonusUnits,
+    baseScoreUnits,
+    occupancyBonusScoreUnits,
     aggregateDirectScore,
     aggregateSupportScore,
     aggregateCrossRoomScore,
   );
 
   if (room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber") {
-    const roomDirectBonus = Math.max(scoreBreakdown.directProductionScore - baseUnits, 0);
+    const roomDirectBonusUnits = occupancyBonusUnits + aggregateDirectUnits + aggregateMoodSustainUnits;
     for (const recipe of room.recipes) {
       const recipeBaseUnits = getRecipeBaseUnits(recipe, horizonHours, warnings);
       const recipeShare = baseUnits > 0 ? recipeBaseUnits / baseUnits : 0;
-      projectedOutputs[recipe.productKind] += recipeBaseUnits + (roomDirectBonus * recipeShare);
+      const projectedRecipeOutput = recipeBaseUnits + (roomDirectBonusUnits * recipeShare);
+      projectedOutputs[recipe.productKind] += projectedRecipeOutput;
+      projectedRecipeOutputs[recipe.id] = (projectedRecipeOutputs[recipe.id] ?? 0) + projectedRecipeOutput;
     }
   }
 
@@ -716,12 +890,14 @@ function computeRoomPlan(
       dataConfidence,
     },
     explanations,
+    projectedRecipeOutputs,
   };
 }
 
 interface ProductionMoodTarget {
   operatorId: string;
   roomId: string;
+  activeContributionScoreUnits: number;
   activeContributionUnits: number;
   localMoodRegenPercent: number;
   localMoodDropReductionPercent: number;
@@ -768,7 +944,7 @@ function solveAverageControlMoodSupport(sources: ControlMoodSource[]) {
 function getShipwideControlMoodSupportGains(
   sources: ControlMoodSource[],
   targets: ProductionMoodTarget[],
-): Array<ProductionMoodTarget & { gainUnits: number }> {
+): Array<ProductionMoodTarget & { gainScoreUnits: number; gainUnits: number }> {
   if (sources.length === 0 || targets.length === 0) {
     return [];
   }
@@ -788,6 +964,7 @@ function getShipwideControlMoodSupportGains(
 
     return {
       ...target,
+      gainScoreUnits: target.activeContributionScoreUnits * Math.max(0, relativeUptimeGain),
       gainUnits: target.activeContributionUnits * Math.max(0, relativeUptimeGain),
     };
   });
@@ -798,16 +975,19 @@ function getShipwideControlMoodSupportUnits(
   targets: ProductionMoodTarget[],
 ): number {
   return getShipwideControlMoodSupportGains(sources, targets)
-    .reduce((sum, target) => sum + target.gainUnits, 0);
+    .reduce((sum, target) => sum + target.gainScoreUnits, 0);
 }
 
 function applyControlNexusMoodSupport(
   rooms: NormalizedRoom[],
   assignedByRoom: Map<string, Array<string | null>>,
   roomPlans: RoomPlan[],
+  projectedRecipeOutputsByRoomId: Map<string, Record<string, number>>,
   explanations: AssignmentExplanation[],
   operatorDefs: Map<string, OperatorDefinition>,
   ownedOperators: Map<string, OptimizationScenario["roster"][number]>,
+  recipeScoreWeightById: Map<string, number>,
+  receptionWeight: number,
   horizonHours: number,
   warnings: string[],
 ) {
@@ -826,6 +1006,8 @@ function applyControlNexusMoodSupport(
     controlRoom,
     operatorDefs,
     ownedOperators,
+    recipeScoreWeightById,
+    receptionWeight,
     horizonHours,
     warnings,
   );
@@ -845,12 +1027,14 @@ function applyControlNexusMoodSupport(
     assignedByRoom,
     operatorDefs,
     ownedOperators,
+    recipeScoreWeightById,
+    receptionWeight,
     horizonHours,
     warnings,
   );
 
   const targetGains = getShipwideControlMoodSupportGains(controlSources, productionTargets);
-  const exactCrossRoomContribution = targetGains.reduce((sum, target) => sum + target.gainUnits, 0);
+  const exactCrossRoomContribution = targetGains.reduce((sum, target) => sum + target.gainScoreUnits, 0);
   const averageSupport = solveAverageControlMoodSupport(controlSources);
 
   controlPlan.scoreBreakdown.crossRoomBonusContribution = exactCrossRoomContribution;
@@ -867,6 +1051,7 @@ function applyControlNexusMoodSupport(
   for (const [roomId, roomGainUnits] of roomGainById.entries()) {
     const room = roomById.get(roomId);
     const roomPlan = roomPlanById.get(roomId);
+    const projectedRecipeOutputs = projectedRecipeOutputsByRoomId.get(roomId);
     if (!room || !roomPlan || roomGainUnits <= 0) {
       continue;
     }
@@ -879,7 +1064,11 @@ function applyControlNexusMoodSupport(
     for (const recipe of room.recipes) {
       const recipeBaseUnits = getRecipeBaseUnits(recipe, horizonHours, warnings);
       const recipeShare = recipeBaseUnits / baseUnits;
-      roomPlan.projectedOutputs[recipe.productKind] += roomGainUnits * recipeShare;
+      const recipeGainUnits = roomGainUnits * recipeShare;
+      roomPlan.projectedOutputs[recipe.productKind] += recipeGainUnits;
+      if (projectedRecipeOutputs) {
+        projectedRecipeOutputs[recipe.id] = (projectedRecipeOutputs[recipe.id] ?? 0) + recipeGainUnits;
+      }
     }
   }
 
@@ -918,6 +1107,8 @@ function collectProductionMoodTargets(
   assignedByRoom: Map<string, Array<string | null>>,
   operatorDefs: Map<string, OperatorDefinition>,
   ownedOperators: Map<string, OptimizationScenario["roster"][number]>,
+  recipeScoreWeightById: Map<string, number>,
+  receptionWeight: number,
   horizonHours: number,
   warnings: string[],
 ): ProductionMoodTarget[] {
@@ -934,7 +1125,10 @@ function collectProductionMoodTargets(
     }
 
     const baseUnits = getBaseRoomUnits(room, horizonHours, warnings);
+    const baseScoreUnits = getBaseRoomScoreUnits(room, recipeScoreWeightById, horizonHours, warnings);
     const seatOccupancyUnits = baseUnits * (SUPPORT_WEIGHTS.assignedOperatorProductionEfficiencyPercent / 100);
+    const seatOccupancyScoreUnits =
+      baseScoreUnits * (SUPPORT_WEIGHTS.assignedOperatorProductionEfficiencyPercent / 100);
 
     for (const operatorId of assignedOperatorIds) {
       const operatorDef = operatorDefs.get(operatorId);
@@ -943,10 +1137,19 @@ function collectProductionMoodTargets(
         continue;
       }
 
-      const evaluation = evaluateOperatorForRoom(operatorDef, ownedOperator, room, horizonHours, warnings);
+      const evaluation = evaluateOperatorForRoom(
+        operatorDef,
+        ownedOperator,
+        room,
+        recipeScoreWeightById,
+        receptionWeight,
+        horizonHours,
+        warnings,
+      );
       productionTargets.push({
         operatorId,
         roomId: room.roomId,
+        activeContributionScoreUnits: seatOccupancyScoreUnits + evaluation.productionDirectScoreUnits,
         activeContributionUnits: seatOccupancyUnits + evaluation.productionDirectUnits,
         localMoodRegenPercent: evaluation.localMoodRegenPercent,
         localMoodDropReductionPercent: evaluation.localMoodDropReductionPercent,
@@ -962,6 +1165,8 @@ function collectControlMoodSources(
   controlRoom: NormalizedRoom,
   operatorDefs: Map<string, OperatorDefinition>,
   ownedOperators: Map<string, OptimizationScenario["roster"][number]>,
+  recipeScoreWeightById: Map<string, number>,
+  receptionWeight: number,
   horizonHours: number,
   warnings: string[],
 ): ControlMoodSource[] {
@@ -974,7 +1179,15 @@ function collectControlMoodSources(
       continue;
     }
 
-    const evaluation = evaluateOperatorForRoom(operatorDef, ownedOperator, controlRoom, horizonHours, warnings);
+    const evaluation = evaluateOperatorForRoom(
+      operatorDef,
+      ownedOperator,
+      controlRoom,
+      recipeScoreWeightById,
+      receptionWeight,
+      horizonHours,
+      warnings,
+    );
     if (evaluation.globalMoodRegenPercent <= 0 && evaluation.globalMoodDropReductionPercent <= 0) {
       continue;
     }
@@ -990,7 +1203,10 @@ function collectControlMoodSources(
   return controlSources;
 }
 
-function summarizePlans(roomPlans: RoomPlan[]) {
+function summarizePlans(
+  roomPlans: RoomPlan[],
+  projectedRecipeOutputsByRoomId: Map<string, Record<string, number>>,
+) {
   const projectedOutputs = createProjectedOutputs();
   const projectedRecipeOutputs: Record<string, number> = {};
   let totalScore = 0;
@@ -1000,9 +1216,12 @@ function summarizePlans(roomPlans: RoomPlan[]) {
     for (const [productKind, value] of Object.entries(roomPlan.projectedOutputs) as Array<[ProductKind, number]>) {
       projectedOutputs[productKind] += value;
     }
-    for (const recipeId of roomPlan.chosenRecipeIds ?? []) {
-      projectedRecipeOutputs[recipeId] =
-        (projectedRecipeOutputs[recipeId] ?? 0) + roomPlan.scoreBreakdown.directProductionScore / Math.max(roomPlan.chosenRecipeIds?.length ?? 1, 1);
+    const roomProjectedRecipeOutputs = projectedRecipeOutputsByRoomId.get(roomPlan.roomId);
+    if (!roomProjectedRecipeOutputs) {
+      continue;
+    }
+    for (const [recipeId, value] of Object.entries(roomProjectedRecipeOutputs)) {
+      projectedRecipeOutputs[recipeId] = (projectedRecipeOutputs[recipeId] ?? 0) + value;
     }
   }
 
@@ -1016,6 +1235,10 @@ export function solveNormalizedScenario(
 ): OptimizationResult {
   const warnings = [...normalizedScenarioResult.warnings];
   const searchConfig = resolveSearchConfig(normalizedScenarioResult.scenario, options);
+  const { weights: recipeScoreWeightById, demandProfile } = buildRecipeScoreWeightById(
+    catalog,
+    normalizedScenarioResult.scenario,
+  );
   const operatorDefs = indexById(catalog.operators);
   const ownedOperators = getOwnedOperatorStateMap(normalizedScenarioResult.scenario);
   const rooms = normalizedScenarioResult.rooms;
@@ -1027,8 +1250,8 @@ export function solveNormalizedScenario(
     .sort((left, right) => {
       const leftRoom = roomMap.get(left.roomId)!;
       const rightRoom = roomMap.get(right.roomId)!;
-      const leftBase = getBaseRoomUnits(leftRoom, STEADY_STATE_HOURS, warnings);
-      const rightBase = getBaseRoomUnits(rightRoom, STEADY_STATE_HOURS, warnings);
+      const leftBase = getBaseRoomScoreUnits(leftRoom, recipeScoreWeightById, STEADY_STATE_HOURS, warnings);
+      const rightBase = getBaseRoomScoreUnits(rightRoom, recipeScoreWeightById, STEADY_STATE_HOURS, warnings);
       return rightBase - leftBase;
     });
 
@@ -1078,9 +1301,10 @@ export function solveNormalizedScenario(
   const optimisticContributionCache = new Map<string, number>();
   const perRoomContributionCache = new Map<string, number>();
   const maxControlMoodSupportUpperBound = productionRooms.reduce((sum, room) => {
-    const baseUnits = getBaseRoomUnits(room, STEADY_STATE_HOURS, warnings);
-    const seatOccupancyUnits = baseUnits * (SUPPORT_WEIGHTS.assignedOperatorProductionEfficiencyPercent / 100);
-    let maxProductionDirectUnits = 0;
+    const baseScoreUnits = getBaseRoomScoreUnits(room, recipeScoreWeightById, STEADY_STATE_HOURS, warnings);
+    const seatOccupancyScoreUnits =
+      baseScoreUnits * (SUPPORT_WEIGHTS.assignedOperatorProductionEfficiencyPercent / 100);
+    let maxProductionDirectScoreUnits = 0;
 
     for (const operatorId of Array.from(ownedOperators.keys())) {
       const operatorDef = operatorDefs.get(operatorId)!;
@@ -1089,15 +1313,17 @@ export function solveNormalizedScenario(
         operatorDef,
         ownedOperator,
         room,
+        recipeScoreWeightById,
+        demandProfile.receptionWeight,
         STEADY_STATE_HOURS,
         warnings,
       );
-      if (evaluation.productionDirectUnits > maxProductionDirectUnits) {
-        maxProductionDirectUnits = evaluation.productionDirectUnits;
+      if (evaluation.productionDirectScoreUnits > maxProductionDirectScoreUnits) {
+        maxProductionDirectScoreUnits = evaluation.productionDirectScoreUnits;
       }
     }
 
-    return sum + (room.slotCap * (seatOccupancyUnits + maxProductionDirectUnits));
+    return sum + (room.slotCap * (seatOccupancyScoreUnits + maxProductionDirectScoreUnits));
   }, 0) * ((1 / SUPPORT_WEIGHTS.baselineMoodWorkingUptime) - 1);
 
   const getOperatorContributionForRoom = (operatorId: string, room: NormalizedRoom) => {
@@ -1113,6 +1339,8 @@ export function solveNormalizedScenario(
       operatorDef,
       ownedOperator,
       room,
+      recipeScoreWeightById,
+      demandProfile.receptionWeight,
       STEADY_STATE_HOURS,
       warnings,
     );
@@ -1137,6 +1365,8 @@ export function solveNormalizedScenario(
       assignedByRoom,
       operatorDefs,
       ownedOperators,
+      recipeScoreWeightById,
+      demandProfile.receptionWeight,
       STEADY_STATE_HOURS,
       warnings,
     );
@@ -1146,6 +1376,8 @@ export function solveNormalizedScenario(
       controlRoom,
       operatorDefs,
       ownedOperators,
+      recipeScoreWeightById,
+      demandProfile.receptionWeight,
       STEADY_STATE_HOURS,
       warnings,
     );
@@ -1154,6 +1386,8 @@ export function solveNormalizedScenario(
       controlRoom,
       operatorDefs,
       ownedOperators,
+      recipeScoreWeightById,
+      demandProfile.receptionWeight,
       STEADY_STATE_HOURS,
       warnings,
     );
@@ -1263,6 +1497,7 @@ export function solveNormalizedScenario(
   }
 
   const roomPlans: RoomPlan[] = [];
+  const projectedRecipeOutputsByRoomId = new Map<string, Record<string, number>>();
   const explanations: AssignmentExplanation[] = [];
   const finalWarnings = [...warnings];
   emitProgress("Scoring best plan", totalSlots);
@@ -1274,10 +1509,13 @@ export function solveNormalizedScenario(
       best.assignedByRoom.get(room.roomId) ?? [],
       operatorDefs,
       ownedOperators,
+      recipeScoreWeightById,
+      demandProfile.receptionWeight,
       STEADY_STATE_HOURS,
       finalWarnings,
     );
     roomPlans.push(plan.roomPlan);
+    projectedRecipeOutputsByRoomId.set(room.roomId, plan.projectedRecipeOutputs);
     explanations.push(...plan.explanations);
     finalWarnings.push(...plan.roomPlan.warnings);
   }
@@ -1286,14 +1524,17 @@ export function solveNormalizedScenario(
     rooms,
     best.assignedByRoom,
     roomPlans,
+    projectedRecipeOutputsByRoomId,
     explanations,
     operatorDefs,
     ownedOperators,
+    recipeScoreWeightById,
+    demandProfile.receptionWeight,
     STEADY_STATE_HOURS,
     finalWarnings,
   );
 
-  const summary = summarizePlans(roomPlans);
+  const summary = summarizePlans(roomPlans, projectedRecipeOutputsByRoomId);
 
   return {
     catalogVersion: normalizedScenarioResult.scenario.catalogVersion,

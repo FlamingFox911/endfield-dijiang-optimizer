@@ -34,6 +34,16 @@ export type SkillRank = 0 | 1 | 2;
 export type ValidationSeverity = "error" | "warning";
 export type UpgradeRankingMode = "fastest" | "roi" | "balanced";
 export type OptimizationProfile = "fast" | "balanced" | "thorough" | "exhaustive" | "custom";
+export type DemandProfilePreset =
+  | "balanced"
+  | "operator_exp"
+  | "weapon_exp"
+  | "growth"
+  | "fungal"
+  | "vitrified_plant"
+  | "rare_mineral"
+  | "reception"
+  | "custom";
 
 export interface SourceRef {
   id: string;
@@ -297,6 +307,18 @@ export interface OwnedOperatorState {
   baseSkillStates: OwnedBaseSkillState[];
 }
 
+export interface OperatorBaseProgressionRequirement {
+  operatorId: string;
+  targetLevel: 90;
+  targetPromotionTier: 4;
+  levelExpCost: number;
+  levelTCredCost: number;
+  levelMaterialCosts: MaterialCost[];
+  promotionMaterialCosts: MaterialCost[];
+  skillMaterialCosts: MaterialCost[];
+  materialCosts: MaterialCost[];
+}
+
 export interface ControlNexusState {
   level: 1 | 2 | 3 | 4 | 5;
 }
@@ -334,11 +356,19 @@ export interface FacilityState {
   hardAssignments: HardAssignment[];
 }
 
+export interface DemandProfile {
+  preset: DemandProfilePreset;
+  productWeights: Record<ProductKind, number>;
+  receptionWeight: number;
+  priorityRecipeId?: string;
+}
+
 export interface BaseOptimizationOptions {
   maxFacilities: boolean;
   upgradeRankingMode?: UpgradeRankingMode;
   optimizationProfile?: OptimizationProfile;
   optimizationEffort?: number;
+  demandProfile?: DemandProfile;
 }
 
 export interface OptimizationScenario {

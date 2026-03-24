@@ -1,17 +1,22 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import type {
+  DemandProfilePreset,
   GameCatalog,
   OptimizationProfile,
   OptimizationResult,
   OptimizationScenario,
+  ProductKind,
   SkillRank,
   UpgradeRecommendationResult,
 } from "@endfield/domain";
 
 import {
   CURRENT_CATALOG_VERSION,
+  DEMAND_PROFILE_PRESETS,
+  clampDemandWeight,
   createStarterScenario,
+  createDefaultDemandProfile,
   fetchGameCatalog,
   getFacilityLevelCapForControlNexus,
   getGrowthSlotCap,
@@ -39,6 +44,13 @@ import type {
 
 const DRAFT_KEY = "endfield-dijiang-optimizer:draft";
 const OPTIMIZATION_PROFILES: Exclude<OptimizationProfile, "custom">[] = ["fast", "balanced", "thorough", "exhaustive"];
+const DEMAND_WEIGHT_ORDER: ProductKind[] = [
+  "operator_exp",
+  "weapon_exp",
+  "fungal",
+  "vitrified_plant",
+  "rare_mineral",
+];
 
 type AppTab = "roster" | "planner" | "results";
 
@@ -409,6 +421,33 @@ function getUpgradeRankingModeSummary(mode: "balanced" | "roi" | "fastest"): str
   }
 }
 
+function getDemandProfileSummary(preset: DemandProfilePreset): string {
+  switch (preset) {
+    case "balanced":
+      return "General long-run value across all current output types.";
+    case "operator_exp":
+      return "Favor Operator EXP rooms and operator-exp recipes.";
+    case "weapon_exp":
+      return "Favor Weapon EXP rooms and weapon-exp recipes.";
+    case "growth":
+      return "Favor Growth Chamber outputs across all material families.";
+    case "fungal":
+      return "Favor operator-promotion fungi such as Pink, Red, Ruby, and Bloodcap.";
+    case "vitrified_plant":
+      return "Favor vitrified plant recipes and related Growth Chamber value.";
+    case "rare_mineral":
+      return "Favor rare minerals such as Kalkonyx, Auronyx, Umbronyx, Igneosite, and Wulingstone.";
+    case "reception":
+      return "Favor Reception Room support value and clue-driven utility.";
+    case "custom":
+      return "Use the sliders below to define your own objective mix.";
+  }
+}
+
+function formatWeight(value: number): string {
+  return `${value.toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1")}x`;
+}
+
 function App() {
   const [catalog, setCatalog] = useState<GameCatalog | null>(null);
   const [scenario, setScenario] = useState<OptimizationScenario | null>(null);
@@ -524,6 +563,10 @@ function App() {
   const operatorsById = useMemo(() => new Map(catalog?.operators.map((operator) => [operator.id, operator]) ?? []), [catalog]);
   const rosterById = useMemo(() => new Map(scenario?.roster.map((entry) => [entry.operatorId, entry]) ?? []), [scenario]);
   const recipesById = useMemo(() => new Map(catalog?.recipes.map((recipe) => [recipe.id, recipe]) ?? []), [catalog]);
+  const priorityRecipeOptions = useMemo(
+    () => [...(catalog?.recipes ?? [])].sort((left, right) => left.name.localeCompare(right.name)),
+    [catalog],
+  );
   const facilitiesByKind = useMemo(() => new Map(catalog?.facilities.map((facility) => [facility.kind, facility]) ?? []), [catalog]);
 
   useEffect(() => {
@@ -585,9 +628,24 @@ function App() {
   const selectedOperator = selectedOperatorId ? operatorsById.get(selectedOperatorId) : sortedOperators[0];
   const selectedOwnedState = selectedOperator ? rosterById.get(selectedOperator.id) : undefined;
   const completedResultsCount = (result ? 1 : 0) + (recommendations ? 1 : 0);
+  const demandProfile = scenario.options.demandProfile ?? createDefaultDemandProfile();
 
   const updateScenario = (updater: (current: OptimizationScenario) => OptimizationScenario) => {
     setScenario((current) => (current ? updater(current) : current));
+  };
+
+  const updateDemandProfile = (
+    updater: (
+      current: NonNullable<OptimizationScenario["options"]["demandProfile"]>,
+    ) => NonNullable<OptimizationScenario["options"]["demandProfile"]>,
+  ) => {
+    updateScenario((current) => ({
+      ...current,
+      options: {
+        ...current.options,
+        demandProfile: updater(current.options.demandProfile ?? createDefaultDemandProfile()),
+      },
+    }));
   };
 
   const setOptimizationProfile = (profile: OptimizationProfile) => {
@@ -616,6 +674,37 @@ function App() {
         optimizationEffort: clampedEffort,
         optimizationProfile: matchingProfile ?? "custom",
       },
+    }));
+  };
+
+  const setDemandPreset = (preset: DemandProfilePreset) => {
+    updateDemandProfile((current) => ({
+      ...current,
+      preset,
+    }));
+  };
+
+  const setDemandWeight = (productKind: ProductKind, weight: number) => {
+    updateDemandProfile((current) => ({
+      ...current,
+      productWeights: {
+        ...current.productWeights,
+        [productKind]: clampDemandWeight(weight),
+      },
+    }));
+  };
+
+  const setReceptionDemandWeight = (weight: number) => {
+    updateDemandProfile((current) => ({
+      ...current,
+      receptionWeight: clampDemandWeight(weight),
+    }));
+  };
+
+  const setPriorityRecipeId = (priorityRecipeId: string) => {
+    updateDemandProfile((current) => ({
+      ...current,
+      priorityRecipeId: priorityRecipeId || undefined,
     }));
   };
 
@@ -883,6 +972,23 @@ function App() {
             <strong>{clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)}/{MAX_OPTIMIZATION_EFFORT}</strong>
             <small>{getOptimizationProfileSummary(scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE)}</small>
           </label>
+          <label className="pill toolbarField toolbarFieldDemand">
+            <span className="labelWithHelp">
+              <span>Demand profile</span>
+              <span
+                className="helpBadge"
+                role="img"
+                aria-label={`Controls which long-run outputs the score model favors. Current mode: ${formatLabel(demandProfile.preset)}.`}
+                title={"Controls which long-run outputs the score model favors.\n\nBalanced keeps a general objective.\nOther presets favor a specific output family.\nCustom unlocks direct per-output weight sliders.\n\nThis changes score weighting only. Projected outputs remain raw units per hour."}
+              >
+                ?
+              </span>
+            </span>
+            <select value={demandProfile.preset} onChange={(event) => setDemandPreset(event.target.value as DemandProfilePreset)}>
+              {DEMAND_PROFILE_PRESETS.map((preset) => <option key={preset} value={preset}>{formatLabel(preset)}</option>)}
+            </select>
+            <small>{getDemandProfileSummary(demandProfile.preset)}</small>
+          </label>
           <label className="pill toolbarField toolbarFieldRanking">
             <span className="labelWithHelp">
               <span>Recommend Unlocks Ranking</span>
@@ -910,6 +1016,31 @@ function App() {
               <option value="fastest">Fastest</option>
             </select>
             <small>{getUpgradeRankingModeSummary(scenario.options.upgradeRankingMode ?? "balanced")}</small>
+          </label>
+          <label className="pill compact toolbarField toolbarFieldPriorityRecipe">
+            <span className="labelWithHelp">
+              <span>Priority recipe</span>
+              <span
+                className="helpBadge"
+                role="img"
+                aria-label={`Boost one exact recipe when you care about a specific material. Current recipe: ${demandProfile.priorityRecipeId ? (catalog.recipes.find((recipe) => recipe.id === demandProfile.priorityRecipeId)?.name ?? demandProfile.priorityRecipeId) : "None"}.`}
+                title={"Boost one exact recipe when you care about a specific material.\n\nExamples: Kalkonyx, Bloodcap, Advanced Combat Record, or Arms INSP Set.\n\nThis changes score weighting only. It does not force a recipe plan or alter raw projected output rates."}
+              >
+                ?
+              </span>
+            </span>
+            <select
+              value={demandProfile.priorityRecipeId ?? ""}
+              onChange={(event) => setPriorityRecipeId(event.target.value)}
+            >
+              <option value="">None</option>
+              {priorityRecipeOptions.map((recipe) => (
+                <option key={recipe.id} value={recipe.id}>
+                  {recipe.name} ({formatLabel(recipe.productKind)})
+                </option>
+              ))}
+            </select>
+            <small>Boost a single exact recipe on top of the broader demand profile.</small>
           </label>
           <label className="toggle toolbarField toolbarFieldOverlay">
             <input
@@ -943,6 +1074,48 @@ function App() {
           <label className="secondary upload">Import JSON<input type="file" accept="application/json" onChange={importScenario} /></label>
         </div>
       </section>
+
+      {demandProfile.preset === "custom" && (
+        <section className="objectivePanel">
+          <div className="panelHeader panelHeaderWide">
+            <div>
+              <p className="eyebrow">Objective</p>
+              <h2>Custom demand weights</h2>
+            </div>
+            <span className="miniStat">{DEMAND_WEIGHT_ORDER.length + 1} sliders</span>
+          </div>
+          <div className="objectiveGrid">
+            {DEMAND_WEIGHT_ORDER.map((productKind) => (
+              <label className="pill rangePill objectiveWeightField" key={productKind}>
+                <span>{formatLabel(productKind)}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={4}
+                  step={0.25}
+                  value={demandProfile.productWeights[productKind]}
+                  onChange={(event) => setDemandWeight(productKind, Number(event.target.value))}
+                />
+                <strong>{formatWeight(demandProfile.productWeights[productKind])}</strong>
+                <small>Score weight only. Raw output rates stay unchanged.</small>
+              </label>
+            ))}
+            <label className="pill rangePill objectiveWeightField">
+              <span>Reception utility</span>
+              <input
+                type="range"
+                min={0}
+                max={4}
+                step={0.25}
+                value={demandProfile.receptionWeight}
+                onChange={(event) => setReceptionDemandWeight(Number(event.target.value))}
+              />
+              <strong>{formatWeight(demandProfile.receptionWeight)}</strong>
+              <small>Applies to clue-collection support scoring, not exact clue-state simulation.</small>
+            </label>
+          </div>
+        </section>
+      )}
 
       {optimizationRun && (
         <section className="modalBackdrop">
@@ -1747,7 +1920,7 @@ function App() {
                       <strong>{result.totalScore.toFixed(2)}</strong>
                     </div>
                     <div className="resultMetric">
-                      <span>Support weights</span>
+                      <span>Score model</span>
                       <strong>{result.supportWeightsVersion}</strong>
                     </div>
                     <div className="resultMetric">

@@ -4,6 +4,8 @@ import type {
   CatalogManifest,
   CatalogVersion,
   DataConfidence,
+  DemandProfile,
+  DemandProfilePreset,
   FacilityDefinition,
   FacilityKind,
   GameCatalog,
@@ -12,9 +14,11 @@ import type {
   MaterialCost,
   OptimizationProfile,
   OptimizationScenario,
+  OperatorBaseProgressionRequirement,
   OperatorExpItemDefinition,
   OperatorDefinition,
   ProgressionDocument,
+  ProductKind,
   PromotionTierProgression,
   RecipeDefinition,
   SourceRef,
@@ -86,15 +90,160 @@ const OPTIMIZATION_PROFILE_EFFORTS: Record<Exclude<OptimizationProfile, "custom"
   thorough: 30,
   exhaustive: 45,
 };
+export const DEMAND_PROFILE_PRESETS = [
+  "balanced",
+  "operator_exp",
+  "weapon_exp",
+  "growth",
+  "fungal",
+  "vitrified_plant",
+  "rare_mineral",
+  "reception",
+  "custom",
+] as const satisfies DemandProfilePreset[];
+const MAX_DEMAND_WEIGHT = 4;
 const DEFAULT_OPTIMIZATION_PROFILE: OptimizationProfile = "balanced";
 const DEFAULT_OPTIMIZATION_EFFORT = OPTIMIZATION_PROFILE_EFFORTS[DEFAULT_OPTIMIZATION_PROFILE];
 const MAX_OPTIMIZATION_EFFORT = 100;
+const DEFAULT_PRODUCT_WEIGHTS: Record<ProductKind, number> = {
+  operator_exp: 1,
+  weapon_exp: 1,
+  fungal: 1,
+  vitrified_plant: 1,
+  rare_mineral: 1,
+};
+const DEMAND_PROFILE_PRESET_OVERRIDES: Record<
+  Exclude<DemandProfilePreset, "custom">,
+  {
+    productWeights?: Partial<Record<ProductKind, number>>;
+    receptionWeight?: number;
+  }
+> = {
+  balanced: {},
+  operator_exp: {
+    productWeights: {
+      operator_exp: 2.5,
+      weapon_exp: 0.75,
+      fungal: 0.75,
+      vitrified_plant: 0.75,
+      rare_mineral: 0.75,
+    },
+    receptionWeight: 0.75,
+  },
+  weapon_exp: {
+    productWeights: {
+      operator_exp: 0.75,
+      weapon_exp: 2.5,
+      fungal: 0.75,
+      vitrified_plant: 0.75,
+      rare_mineral: 0.75,
+    },
+    receptionWeight: 0.75,
+  },
+  growth: {
+    productWeights: {
+      operator_exp: 0.8,
+      weapon_exp: 0.8,
+      fungal: 2,
+      vitrified_plant: 2,
+      rare_mineral: 2,
+    },
+    receptionWeight: 0.75,
+  },
+  fungal: {
+    productWeights: {
+      operator_exp: 0.8,
+      weapon_exp: 0.8,
+      fungal: 2.5,
+      vitrified_plant: 0.8,
+      rare_mineral: 0.8,
+    },
+    receptionWeight: 0.75,
+  },
+  vitrified_plant: {
+    productWeights: {
+      operator_exp: 0.8,
+      weapon_exp: 0.8,
+      fungal: 0.8,
+      vitrified_plant: 2.5,
+      rare_mineral: 0.8,
+    },
+    receptionWeight: 0.75,
+  },
+  rare_mineral: {
+    productWeights: {
+      operator_exp: 0.8,
+      weapon_exp: 0.8,
+      fungal: 0.8,
+      vitrified_plant: 0.8,
+      rare_mineral: 2.5,
+    },
+    receptionWeight: 0.75,
+  },
+  reception: {
+    productWeights: {
+      operator_exp: 0.8,
+      weapon_exp: 0.8,
+      fungal: 0.8,
+      vitrified_plant: 0.8,
+      rare_mineral: 0.8,
+    },
+    receptionWeight: 2.5,
+  },
+};
 
 function clampOptimizationEffort(value: unknown): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return DEFAULT_OPTIMIZATION_EFFORT;
   }
   return Math.min(MAX_OPTIMIZATION_EFFORT, Math.max(1, Math.round(value)));
+}
+
+export function clampDemandWeight(value: unknown): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return 1;
+  }
+  return Math.min(MAX_DEMAND_WEIGHT, Math.max(0, Math.round(value * 4) / 4));
+}
+
+export function createDefaultDemandProfile(): DemandProfile {
+  return {
+    preset: "balanced",
+    productWeights: { ...DEFAULT_PRODUCT_WEIGHTS },
+    receptionWeight: 1,
+  };
+}
+
+export function resolveDemandProfile(demandProfile?: DemandProfile): DemandProfile {
+  const normalized = demandProfile ?? createDefaultDemandProfile();
+  const productWeightsInput = normalized.productWeights ?? DEFAULT_PRODUCT_WEIGHTS;
+  const productWeights = {
+    operator_exp: clampDemandWeight(productWeightsInput.operator_exp),
+    weapon_exp: clampDemandWeight(productWeightsInput.weapon_exp),
+    fungal: clampDemandWeight(productWeightsInput.fungal),
+    vitrified_plant: clampDemandWeight(productWeightsInput.vitrified_plant),
+    rare_mineral: clampDemandWeight(productWeightsInput.rare_mineral),
+  } satisfies Record<ProductKind, number>;
+
+  if (normalized.preset === "custom") {
+    return {
+      preset: "custom",
+      productWeights,
+      receptionWeight: clampDemandWeight(normalized.receptionWeight),
+      priorityRecipeId: normalized.priorityRecipeId,
+    };
+  }
+
+  const preset = DEMAND_PROFILE_PRESET_OVERRIDES[normalized.preset];
+  return {
+    preset: normalized.preset,
+    productWeights: {
+      ...DEFAULT_PRODUCT_WEIGHTS,
+      ...preset.productWeights,
+    },
+    receptionWeight: preset.receptionWeight ?? 1,
+    priorityRecipeId: normalized.priorityRecipeId,
+  };
 }
 
 const MAX_LAYOUT_DEFAULTS = {
@@ -377,6 +526,59 @@ export function estimateLevelingRequirement(
     levelTCredCost,
     levelMaterialCosts,
     levelCostIsUpperBound: currentLevel !== floorLevel,
+  };
+}
+
+export function estimateOperatorMaxBaseProgressionRequirement(
+  catalog: GameCatalog,
+  operatorId: string,
+  currentState?: Pick<OptimizationScenario["roster"][number], "level" | "promotionTier" | "baseSkillStates">,
+): OperatorBaseProgressionRequirement | undefined {
+  const operatorDef = catalog.operators.find((operator) => operator.id === operatorId);
+  if (!operatorDef) {
+    return undefined;
+  }
+
+  const levelingRequirement = estimateLevelingRequirement(catalog, currentState?.level ?? 1, 90);
+  if (!levelingRequirement) {
+    return undefined;
+  }
+
+  const promotionMaterialCosts = mergeMaterialCosts(
+    ...Array.from(
+      { length: Math.max(4 - (currentState?.promotionTier ?? 0), 0) },
+      (_, offset) =>
+        getPromotionTierRequirement(
+          catalog,
+          operatorId,
+          ((currentState?.promotionTier ?? 0) + offset + 1) as 1 | 2 | 3 | 4,
+        )?.materialCosts ?? [],
+    ),
+  );
+
+  const skillMaterialCosts = mergeMaterialCosts(
+    ...operatorDef.baseSkills.flatMap((skill) => {
+      const currentRank = currentState?.baseSkillStates.find((state) => state.skillId === skill.id)?.unlockedRank ?? 0;
+      return skill.ranks
+        .filter((rankDef) => rankDef.rank > currentRank)
+        .map((rankDef) => rankDef.materialCosts);
+    }),
+  );
+
+  return {
+    operatorId,
+    targetLevel: 90,
+    targetPromotionTier: 4,
+    levelExpCost: levelingRequirement.levelExpCost,
+    levelTCredCost: levelingRequirement.levelTCredCost,
+    levelMaterialCosts: levelingRequirement.levelMaterialCosts,
+    promotionMaterialCosts,
+    skillMaterialCosts,
+    materialCosts: mergeMaterialCosts(
+      levelingRequirement.levelMaterialCosts,
+      promotionMaterialCosts,
+      skillMaterialCosts,
+    ),
   };
 }
 
@@ -1136,6 +1338,7 @@ export function createStarterScenario(catalog: GameCatalog): OptimizationScenari
       upgradeRankingMode: "balanced",
       optimizationProfile: DEFAULT_OPTIMIZATION_PROFILE,
       optimizationEffort: DEFAULT_OPTIMIZATION_EFFORT,
+      demandProfile: createDefaultDemandProfile(),
     },
   };
 }
@@ -1320,6 +1523,61 @@ export function migrateScenario(input: unknown): MigrationResult {
       path: "options.optimizationEffort",
       message: `Defaulted optimizationEffort to ${nextEffort}.`,
     });
+  }
+  if (!isObject(options.demandProfile)) {
+    options.demandProfile = createDefaultDemandProfile();
+    changes.push({
+      path: "options.demandProfile",
+      message: "Defaulted missing demandProfile to the balanced objective preset.",
+    });
+  }
+  else {
+    const demandProfile = options.demandProfile as Record<string, unknown>;
+    const nextPreset = demandProfile.preset != null && DEMAND_PROFILE_PRESETS.includes(demandProfile.preset as DemandProfilePreset)
+      ? demandProfile.preset as DemandProfilePreset
+      : "balanced";
+    if (demandProfile.preset !== nextPreset) {
+      demandProfile.preset = nextPreset;
+      changes.push({
+        path: "options.demandProfile.preset",
+        message: `Defaulted invalid demandProfile preset to '${nextPreset}'.`,
+      });
+    }
+
+    const currentProductWeights = isObject(demandProfile.productWeights)
+      ? demandProfile.productWeights as Record<string, unknown>
+      : {};
+    const nextProductWeights = {
+      operator_exp: clampDemandWeight(currentProductWeights.operator_exp),
+      weapon_exp: clampDemandWeight(currentProductWeights.weapon_exp),
+      fungal: clampDemandWeight(currentProductWeights.fungal),
+      vitrified_plant: clampDemandWeight(currentProductWeights.vitrified_plant),
+      rare_mineral: clampDemandWeight(currentProductWeights.rare_mineral),
+    };
+    if (JSON.stringify(demandProfile.productWeights) !== JSON.stringify(nextProductWeights)) {
+      demandProfile.productWeights = nextProductWeights;
+      changes.push({
+        path: "options.demandProfile.productWeights",
+        message: "Normalized demandProfile product weights.",
+      });
+    }
+
+    const nextReceptionWeight = clampDemandWeight(demandProfile.receptionWeight);
+    if (demandProfile.receptionWeight !== nextReceptionWeight) {
+      demandProfile.receptionWeight = nextReceptionWeight;
+      changes.push({
+        path: "options.demandProfile.receptionWeight",
+        message: `Normalized demandProfile receptionWeight to ${nextReceptionWeight}.`,
+      });
+    }
+
+    if (demandProfile.priorityRecipeId != null && typeof demandProfile.priorityRecipeId !== "string") {
+      delete demandProfile.priorityRecipeId;
+      changes.push({
+        path: "options.demandProfile.priorityRecipeId",
+        message: "Removed invalid priorityRecipeId because it was not a string.",
+      });
+    }
   }
 
   if (typeof raw.catalogVersion !== "string") {
@@ -1854,6 +2112,58 @@ export function validateScenarioAgainstCatalog(
         ),
       );
     }
+  const inputDemandProfile = scenario.options.demandProfile;
+  const resolvedDemandProfile = resolveDemandProfile(inputDemandProfile);
+  if (
+    inputDemandProfile?.preset != null &&
+    inputDemandProfile.preset !== resolvedDemandProfile.preset
+  ) {
+    issues.push(
+      makeIssue(
+        "invalid_demand_profile_preset",
+        "options.demandProfile.preset",
+        `Scenario options.demandProfile.preset must be one of: ${DEMAND_PROFILE_PRESETS.join(", ")}.`,
+      ),
+    );
+  }
+  for (const productKind of PRODUCT_KINDS) {
+    if (
+      inputDemandProfile?.productWeights?.[productKind] != null &&
+      clampDemandWeight(inputDemandProfile.productWeights[productKind]) !== inputDemandProfile.productWeights[productKind]
+    ) {
+      issues.push(
+        makeIssue(
+          "invalid_demand_profile_weight",
+          `options.demandProfile.productWeights.${productKind}`,
+          `Scenario options.demandProfile.productWeights.${productKind} must be a number from 0 to ${MAX_DEMAND_WEIGHT} in 0.25 increments.`,
+        ),
+      );
+    }
+  }
+  if (
+    inputDemandProfile?.receptionWeight != null &&
+    clampDemandWeight(inputDemandProfile.receptionWeight) !== inputDemandProfile.receptionWeight
+  ) {
+    issues.push(
+      makeIssue(
+        "invalid_demand_profile_reception_weight",
+        "options.demandProfile.receptionWeight",
+        `Scenario options.demandProfile.receptionWeight must be a number from 0 to ${MAX_DEMAND_WEIGHT} in 0.25 increments.`,
+      ),
+    );
+  }
+  if (
+    inputDemandProfile?.priorityRecipeId != null &&
+    !catalog.recipes.some((recipe) => recipe.id === inputDemandProfile.priorityRecipeId)
+  ) {
+    issues.push(
+      makeIssue(
+        "invalid_demand_profile_priority_recipe",
+        "options.demandProfile.priorityRecipeId",
+        "Scenario options.demandProfile.priorityRecipeId must reference a bundled recipe id.",
+      ),
+    );
+  }
 
   return {
     ok: issues.every((issue) => issue.severity !== "error"),
@@ -1987,6 +2297,68 @@ function validateScenarioShape(scenario: OptimizationScenario): ValidationIssue[
           "Scenario options.optimizationEffort must be a number.",
         ),
       );
+    }
+    if (scenario.options.demandProfile != null) {
+      if (typeof scenario.options.demandProfile !== "object") {
+        issues.push(
+          makeIssue(
+            "invalid_demand_profile",
+            "options.demandProfile",
+            "Scenario options.demandProfile must be an object.",
+          ),
+        );
+      }
+      else {
+        if (
+          scenario.options.demandProfile.preset != null &&
+          !DEMAND_PROFILE_PRESETS.includes(scenario.options.demandProfile.preset)
+        ) {
+          issues.push(
+            makeIssue(
+              "invalid_demand_profile_preset",
+              "options.demandProfile.preset",
+              "Scenario options.demandProfile.preset must be a supported profile string.",
+            ),
+          );
+        }
+        if (
+          scenario.options.demandProfile.receptionWeight != null &&
+          (typeof scenario.options.demandProfile.receptionWeight !== "number"
+            || !Number.isFinite(scenario.options.demandProfile.receptionWeight))
+        ) {
+          issues.push(
+            makeIssue(
+              "invalid_demand_profile_reception_weight",
+              "options.demandProfile.receptionWeight",
+              "Scenario options.demandProfile.receptionWeight must be a number.",
+            ),
+          );
+        }
+        if (
+          scenario.options.demandProfile.priorityRecipeId != null &&
+          typeof scenario.options.demandProfile.priorityRecipeId !== "string"
+        ) {
+          issues.push(
+            makeIssue(
+              "invalid_demand_profile_priority_recipe",
+              "options.demandProfile.priorityRecipeId",
+              "Scenario options.demandProfile.priorityRecipeId must be a string.",
+            ),
+          );
+        }
+        if (
+          !scenario.options.demandProfile.productWeights
+          || typeof scenario.options.demandProfile.productWeights !== "object"
+        ) {
+          issues.push(
+            makeIssue(
+              "invalid_demand_profile_weights",
+              "options.demandProfile.productWeights",
+              "Scenario options.demandProfile.productWeights must be an object.",
+            ),
+          );
+        }
+      }
     }
   }
 

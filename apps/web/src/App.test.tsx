@@ -61,6 +61,13 @@ const responses = new Map<string, unknown>([
 describe("App", () => {
   const getOptimizationProfileSelect = () => screen.getByText("Optimization profile").closest("label")!.querySelector("select") as HTMLSelectElement;
   const getSearchEffortSlider = () => screen.getByText("Search effort").closest("label")!.querySelector('input[type="range"]') as HTMLInputElement;
+  const getDemandProfileSelect = () => screen.getByText("Demand profile").closest("label")!.querySelector("select") as HTMLSelectElement;
+  const getPriorityRecipeSelect = () => screen.getByText("Priority recipe").closest("label")!.querySelector("select") as HTMLSelectElement;
+  const getDemandSlider = (label: string) => screen
+    .getAllByText(label)
+    .find((element) => element.closest(".objectiveWeightField"))
+    ?.closest("label")
+    ?.querySelector('input[type="range"]') as HTMLInputElement;
   const seedDraft = (ownedOperatorIds: string[]) => {
     localStorage.setItem(
       "endfield-dijiang-optimizer:draft",
@@ -738,6 +745,44 @@ describe("App", () => {
     await waitFor(() => {
       expect(getOptimizationProfileSelect()).toHaveValue("custom");
       expect(getSearchEffortSlider()).toHaveValue("17");
+    });
+  });
+
+  it("sends the selected demand profile and priority recipe to optimization runs", async () => {
+    render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    await userEvent.selectOptions(getDemandProfileSelect(), "custom");
+    await waitFor(() => {
+      expect(screen.getByText("Custom demand weights")).toBeInTheDocument();
+    });
+
+    fireEvent.change(getDemandSlider("Operator Exp"), {
+      target: { value: "3.5" },
+    });
+    fireEvent.change(getDemandSlider("Reception utility"), {
+      target: { value: "2.25" },
+    });
+    await userEvent.selectOptions(getPriorityRecipeSelect(), "arms-inspector");
+    await userEvent.click(screen.getByRole("button", { name: "Optimize" }));
+
+    await waitFor(() => {
+      expect(workerInstances[0]!.postMessage).toHaveBeenCalledTimes(1);
+    });
+
+    const message = workerInstances[0]!.postMessage.mock.calls[0]![0];
+    expect(message.type).toBe("start-optimization");
+    expect(message.scenario.options.demandProfile).toEqual({
+      preset: "custom",
+      productWeights: {
+        operator_exp: 3.5,
+        weapon_exp: 1,
+        fungal: 1,
+        vitrified_plant: 1,
+        rare_mineral: 1,
+      },
+      receptionWeight: 2.25,
+      priorityRecipeId: "arms-inspector",
     });
   });
 

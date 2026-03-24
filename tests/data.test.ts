@@ -4,6 +4,7 @@ import {
   CURRENT_SCENARIO_FORMAT_VERSION,
   createStarterScenario,
   estimateLevelingRequirement,
+  estimateOperatorMaxBaseProgressionRequirement,
   getCatalogBundleStatus,
   getPromotionTierRequirement,
   hydrateScenarioForCatalog,
@@ -24,6 +25,17 @@ describe("data services", () => {
     expect(scenario.options.upgradeRankingMode).toBe("balanced");
     expect(scenario.options.optimizationProfile).toBe("balanced");
     expect(scenario.options.optimizationEffort).toBe(18);
+    expect(scenario.options.demandProfile).toEqual({
+      preset: "balanced",
+      productWeights: {
+        operator_exp: 1,
+        weapon_exp: 1,
+        fungal: 1,
+        vitrified_plant: 1,
+        rare_mineral: 1,
+      },
+      receptionWeight: 1,
+    });
     expect(scenario.facilities.manufacturingCabins).toHaveLength(2);
     expect(scenario.facilities.manufacturingCabins[0]?.enabled).toBe(true);
     expect(scenario.facilities.manufacturingCabins[1]?.enabled).toBe(false);
@@ -53,6 +65,17 @@ describe("data services", () => {
     expect(migration.scenario.options.upgradeRankingMode).toBe("balanced");
     expect(migration.scenario.options.optimizationProfile).toBe("balanced");
     expect(migration.scenario.options.optimizationEffort).toBe(18);
+    expect(migration.scenario.options.demandProfile).toEqual({
+      preset: "balanced",
+      productWeights: {
+        operator_exp: 1,
+        weapon_exp: 1,
+        fungal: 1,
+        vitrified_plant: 1,
+        rare_mineral: 1,
+      },
+      receptionWeight: 1,
+    });
     expect(migration.scenario.facilities.manufacturingCabins).toHaveLength(2);
     expect(migration.scenario.facilities.growthChambers).toHaveLength(1);
     expect(migration.scenario.facilities.receptionRoom?.id).toBe("reception-1");
@@ -248,6 +271,59 @@ describe("data services", () => {
         { itemId: "t-creds", quantity: 12540 },
       ],
       levelCostIsUpperBound: true,
+    });
+  });
+
+  it("estimates full Dijiang build costs from level 1 to max with level-banded EXP items", async () => {
+    const catalog = await loadDefaultCatalog();
+    const requirement = estimateOperatorMaxBaseProgressionRequirement(catalog, "tangtang");
+
+    expect(requirement).toEqual({
+      operatorId: "tangtang",
+      targetLevel: 90,
+      targetPromotionTier: 4,
+      levelExpCost: 1792290,
+      levelTCredCost: 385420,
+      levelMaterialCosts: [
+        { itemId: "advanced-combat-record", quantity: 74 },
+        { itemId: "intermediate-combat-record", quantity: 7 },
+        { itemId: "elementary-combat-record", quantity: 1 },
+        { itemId: "advanced-cognitive-carrier", quantity: 104 },
+        { itemId: "elementary-cognitive-carrier", quantity: 6 },
+        { itemId: "t-creds", quantity: 385420 },
+      ],
+      promotionMaterialCosts: [
+        { itemId: "protodisk", quantity: 33 },
+        { itemId: "pink-bolete", quantity: 3 },
+        { itemId: "t-creds", quantity: 126100 },
+        { itemId: "red-bolete", quantity: 5 },
+        { itemId: "protoset", quantity: 60 },
+        { itemId: "ruby-bolete", quantity: 5 },
+        { itemId: "metadiastima-photoemission-tube", quantity: 20 },
+        { itemId: "bloodcap", quantity: 8 },
+      ],
+      skillMaterialCosts: [
+        { itemId: "protoprism", quantity: 18 },
+        { itemId: "t-creds", quantity: 32600 },
+        { itemId: "protohedron", quantity: 32 },
+      ],
+      materialCosts: [
+        { itemId: "advanced-combat-record", quantity: 74 },
+        { itemId: "intermediate-combat-record", quantity: 7 },
+        { itemId: "elementary-combat-record", quantity: 1 },
+        { itemId: "advanced-cognitive-carrier", quantity: 104 },
+        { itemId: "elementary-cognitive-carrier", quantity: 6 },
+        { itemId: "t-creds", quantity: 544120 },
+        { itemId: "protodisk", quantity: 33 },
+        { itemId: "pink-bolete", quantity: 3 },
+        { itemId: "red-bolete", quantity: 5 },
+        { itemId: "protoset", quantity: 60 },
+        { itemId: "ruby-bolete", quantity: 5 },
+        { itemId: "metadiastima-photoemission-tube", quantity: 20 },
+        { itemId: "bloodcap", quantity: 8 },
+        { itemId: "protoprism", quantity: 18 },
+        { itemId: "protohedron", quantity: 32 },
+      ],
     });
   });
 
