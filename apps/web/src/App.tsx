@@ -12,6 +12,7 @@ import type {
 } from "@endfield/domain";
 
 import {
+  CURRENT_CATALOG_BUNDLE_ID,
   CURRENT_CATALOG_VERSION,
   DEMAND_PROFILE_PRESETS,
   clampDemandWeight,
@@ -51,6 +52,11 @@ const DEMAND_WEIGHT_ORDER: ProductKind[] = [
   "vitrified_plant",
   "rare_mineral",
 ];
+const APP_BASE_PATH = import.meta.env.BASE_URL;
+
+function resolveAppPath(pathname: string): string {
+  return `${APP_BASE_PATH}${pathname.replace(/^\/+/, "")}`;
+}
 
 type AppTab = "roster" | "planner" | "results";
 
@@ -149,7 +155,7 @@ function getCatalogAssetUrl(catalog: GameCatalog, assetPath: string): string {
     return assetPath;
   }
 
-  return `/catalogs/${catalog.manifest.catalogId}/${assetPath.replace(/^\/+/, "")}`;
+  return resolveAppPath(`catalogs/${catalog.manifest.catalogId}/${assetPath.replace(/^\/+/, "")}`);
 }
 
 function getOperatorPortraitUrl(
@@ -467,13 +473,13 @@ function App() {
   const nextRunIdRef = useRef(1);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const nextCatalog = await fetchGameCatalog();
-        if (cancelled) {
-          return;
-        }
+      let cancelled = false;
+      (async () => {
+        try {
+          const nextCatalog = await fetchGameCatalog(resolveAppPath(`catalogs/${CURRENT_CATALOG_BUNDLE_ID}`));
+          if (cancelled) {
+            return;
+          }
 
         const savedDraft = localStorage.getItem(DRAFT_KEY);
         if (!savedDraft) {
