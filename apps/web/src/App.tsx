@@ -44,6 +44,7 @@ import type {
 } from "@endfield/optimizer";
 
 const DRAFT_KEY = "endfield-dijiang-optimizer:draft";
+const MAX_IMPORT_FILE_BYTES = 1_000_000;
 const OPTIMIZATION_PROFILES: Exclude<OptimizationProfile, "custom">[] = ["fast", "balanced", "thorough", "exhaustive"];
 const DEMAND_WEIGHT_ORDER: ProductKind[] = [
   "operator_exp",
@@ -56,6 +57,12 @@ const APP_BASE_PATH = import.meta.env.BASE_URL;
 
 function resolveAppPath(pathname: string): string {
   return `${APP_BASE_PATH}${pathname.replace(/^\/+/, "")}`;
+}
+
+function isLikelyJsonFile(file: File): boolean {
+  return file.type === "application/json"
+    || file.type === "text/json"
+    || /\.json$/i.test(file.name);
 }
 
 type AppTab = "roster" | "planner" | "results";
@@ -916,8 +923,22 @@ function App() {
       return;
     }
     try {
+      if (!isLikelyJsonFile(file)) {
+        throw new Error("Import requires a JSON file.");
+      }
+      if (file.size > MAX_IMPORT_FILE_BYTES) {
+        throw new Error(`Import file is too large. Keep scenario files at or below ${Math.floor(MAX_IMPORT_FILE_BYTES / 1000)} KB.`);
+      }
+
       const migration = migrateScenario(JSON.parse(await file.text()));
+      if (!migration.ok) {
+        throw new Error(migration.warnings.map((issue) => issue.message).join(" "));
+      }
       const hydration = hydrateScenarioForCatalog(catalog, migration.scenario);
+      const importedValidation = validateScenarioAgainstCatalog(catalog, hydration.scenario);
+      if (!importedValidation.ok) {
+        throw new Error(importedValidation.issues.map((issue) => issue.message).join(" "));
+      }
       setScenario(hydration.scenario);
       setMessages([
         migration.migrated ? `Imported scenario and migrated it from format ${migration.fromFormatVersion} to ${migration.toFormatVersion}.` : "Imported scenario.",

@@ -749,6 +749,91 @@ describe("App", () => {
     });
   });
 
+  it("rejects non-JSON imports before reading them", async () => {
+    render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(["not json"], "scenario.txt", { type: "text/plain" });
+    const textSpy = vi.fn(async () => "not json");
+    Object.defineProperty(file, "text", {
+      value: textSpy,
+    });
+
+    fireEvent.change(fileInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Import requires a JSON file.")).toBeInTheDocument();
+    });
+    expect(textSpy).not.toHaveBeenCalled();
+  });
+
+  it("rejects oversized JSON imports before reading them", async () => {
+    render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File([new Uint8Array(1_000_001)], "scenario.json", { type: "application/json" });
+    const textSpy = vi.fn(async () => "{}");
+    Object.defineProperty(file, "text", {
+      value: textSpy,
+    });
+
+    fireEvent.change(fileInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Import file is too large/i)).toBeInTheDocument();
+    });
+    expect(textSpy).not.toHaveBeenCalled();
+  });
+
+  it("rejects imported scenarios that fail catalog validation", async () => {
+    render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const importedScenario = {
+      scenarioFormatVersion: 1,
+      catalogVersion: "2026-03-20/v1.1-phase1",
+      roster: [],
+      facilities: {
+        controlNexus: { level: 3 },
+        manufacturingCabins: [{ id: "mfg-1", enabled: true, level: 2, fixedRecipeId: "definitely-not-a-real-recipe" }],
+        growthChambers: [],
+        receptionRoom: { id: "reception-1", enabled: true, level: 1 },
+        hardAssignments: [],
+      },
+      options: {
+        maxFacilities: false,
+        upgradeRankingMode: "balanced",
+      },
+    };
+
+    const file = new File([JSON.stringify(importedScenario)], "scenario.json", { type: "application/json" });
+    Object.defineProperty(file, "text", {
+      value: vi.fn(async () => JSON.stringify(importedScenario)),
+    });
+
+    fireEvent.change(fileInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/references unknown recipe/i)).toBeInTheDocument();
+      expect(getOptimizationProfileSelect()).toHaveValue("balanced");
+    });
+  });
+
   it("sends the selected demand profile and priority recipe to optimization runs", async () => {
     render(<App />);
     await screen.findByText("Endfield Dijiang Optimizer");
