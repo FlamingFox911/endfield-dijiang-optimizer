@@ -4,6 +4,8 @@ Source thread: https://www.reddit.com/r/Endfield/comments/1s259qo/made_a_manual_
 
 This document records the issues raised in the Reddit feedback thread so they can be tracked and addressed in batches later. Maintainer replies by `FlamingFox911` were reviewed and noted where they clarify intent or likely direction.
 
+Resolved items are removed from this active backlog once they are shipped.
+
 Effort buckets:
 
 - `Small`: localized copy, styling, or interaction polish.
@@ -67,16 +69,6 @@ Maintainer reply references:
   Effort: `Medium`
   Sources: `oc7nggy`
 
-- `RF-007` Checkbox affordances are weak. Checkboxes and labels do not clearly signal interactivity, including missing `cursor:pointer`.
-  Type: `visual_accessibility`
-  Effort: `Small`
-  Sources: `oc7nggy`
-
-- `RF-008` Labels such as `Level` and `Promotion` are visually disconnected from their inputs and blend into the background.
-  Type: `visual_accessibility`
-  Effort: `Small`
-  Sources: `oc7nggy`
-
 - `RF-009` Some labels are ambiguous or under-explained, including `Owned`, `Sources`, `Gaps`, and `Search effort`.
   Type: `navigation_copy`
   Effort: `Small`
@@ -95,11 +87,6 @@ Maintainer reply references:
 - `RF-012` Mobile usability likely needs work. The current layout appears scroll-heavy and awkward on smaller screens.
   Type: `responsive_layout`
   Effort: `Medium`
-  Sources: `oc7nggy`
-
-- `RF-013` The unowned-character state is not visually obvious enough. The lock icon is barely visible.
-  Type: `visual_accessibility`
-  Effort: `Small`
   Sources: `oc7nggy`
 
 - `RF-014` The current Control Nexus level UI is redundant or confusing because `Current Level 5` and `Level` appear to communicate the same thing.
@@ -181,6 +168,6 @@ Maintainer reply references:
 ## Likely implementation batches
 
 - `Batch A`: setup acceleration and onboarding (`RF-001` to `RF-004`)
-- `Batch B`: navigation, labels, layout, and accessibility (`RF-005` to `RF-015`)
+- `Batch B`: navigation, labels, layout, and accessibility (`RF-005`, `RF-006`, `RF-009` to `RF-012`, `RF-014`, `RF-015`)
 - `Batch C`: roster controls, batch editing, search, and tooltip behavior (`RF-016` to `RF-021`)
 - `Batch D`: optimizer weighting, room valuation, and recommendation trust (`RF-022` to `RF-026`)

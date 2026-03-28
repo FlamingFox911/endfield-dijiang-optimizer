@@ -13,6 +13,8 @@
   --panel-strong: rgba(247, 237, 223, 0.92);
   --outline: rgba(31, 36, 49, 0.1);
   --shadow: 0 20px 48px rgba(63, 45, 30, 0.1);
+  --control-max-inline: 26rem;
+  --number-control-inline: 7.5rem;
   color-scheme: light;
   font-family: "Trebuchet MS", "Gill Sans", "Segoe UI Variable", sans-serif;
   background:
@@ -36,6 +38,16 @@ select {
   font: inherit;
 }
 
+button,
+.upload,
+.tabButton,
+.portraitTile,
+select,
+input[type="checkbox"],
+input[type="range"] {
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease, background-color 140ms ease;
+}
+
 button {
   border: none;
   border-radius: 999px;
@@ -50,13 +62,47 @@ button:disabled {
   opacity: 0.65;
 }
 
-input,
+input:not([type="checkbox"]):not([type="range"]),
 select {
-  width: 100%;
+  width: min(100%, var(--control-max-inline));
+  max-width: 100%;
   padding: 10px 12px;
   border: 1px solid rgba(31, 36, 49, 0.14);
   border-radius: 14px;
   background: #fff;
+}
+
+input[type="number"] {
+  width: min(100%, var(--number-control-inline));
+}
+
+select,
+input[type="checkbox"],
+input[type="range"] {
+  cursor: pointer;
+}
+
+button:hover:not(:disabled),
+.upload:hover,
+.tabButton:hover,
+.portraitTile:hover,
+input:not([type="checkbox"]):not([type="range"]):hover,
+select:hover,
+input[type="checkbox"]:hover,
+input[type="range"]:hover {
+  border-color: rgba(30, 90, 114, 0.26);
+  box-shadow: 0 0 0 3px rgba(30, 90, 114, 0.08);
+}
+
+button:focus-visible,
+.tabButton:focus-visible,
+.portraitTile:focus-visible,
+input:focus-visible,
+select:focus-visible,
+.upload:focus-within {
+  outline: none;
+  border-color: rgba(30, 90, 114, 0.4);
+  box-shadow: 0 0 0 4px rgba(30, 90, 114, 0.14);
 }
 
 .shell {
@@ -234,11 +280,26 @@ label {
 .toggle {
   grid-auto-flow: column;
   align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border: 1px solid transparent;
 }
 
 .toolbar .toggle {
   min-height: 100%;
   align-content: center;
+}
+
+.toggle:hover,
+.plannerToggleCell:hover {
+  border-color: rgba(30, 90, 114, 0.24);
+  box-shadow: inset 0 0 0 1px rgba(30, 90, 114, 0.12);
+}
+
+.toggle:focus-within,
+.plannerToggleCell:focus-within {
+  border-color: rgba(30, 90, 114, 0.36);
+  box-shadow: 0 0 0 3px rgba(30, 90, 114, 0.14);
 }
 
 .toolbarFieldProfile {
@@ -293,6 +354,7 @@ label {
   height: 18px;
   margin: 0;
   accent-color: var(--accent);
+  cursor: pointer;
 }
 
 .toolbarFieldOverlay .labelWithHelp {
@@ -434,7 +496,13 @@ button.secondary,
 }
 
 .hardAssignmentRow {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(2, minmax(18rem, 28rem)) auto;
+  justify-content: start;
+}
+
+.hardAssignmentRow .plannerCell {
+  width: min(100%, 28rem);
+  justify-self: start;
 }
 
 .plannerRoomIntro,
@@ -474,6 +542,24 @@ button.secondary,
 
 .plannerCellGridCompact {
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.plannerConfigRow {
+  grid-template-columns: repeat(auto-fit, minmax(12rem, max-content));
+  justify-content: start;
+}
+
+.plannerConfigRow .plannerCell {
+  width: min(100%, 12rem);
+  justify-self: start;
+}
+
+.plannerConfigRowWide {
+  grid-template-columns: minmax(18rem, 28rem);
+}
+
+.plannerConfigRowWide .plannerCell {
+  width: min(100%, 28rem);
 }
 
 .plannerSlotGrid {
@@ -522,6 +608,14 @@ button.secondary,
   font-size: 1rem;
 }
 
+.numericRow label > span,
+.plannerCell > span,
+.plannerStatCell > span {
+  color: #5c351b;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+}
+
 .plannerCellNote {
   color: #7c5a42;
   line-height: 1.35;
@@ -529,12 +623,16 @@ button.secondary,
 
 .plannerToggleCell {
   align-content: start;
+  cursor: pointer;
+  justify-items: start;
 }
 
 .plannerToggleCell input[type="checkbox"] {
   width: auto;
   justify-self: start;
   margin-top: 4px;
+  accent-color: var(--accent);
+  cursor: pointer;
 }
 
 .plannerStatCell {
@@ -643,6 +741,7 @@ button.secondary,
   background: rgba(255, 252, 247, 0.9);
   color: var(--ink-strong);
   text-align: left;
+  cursor: pointer;
 }
 
 .portraitTile.active {
@@ -652,7 +751,21 @@ button.secondary,
 }
 
 .portraitTile.unowned {
-  opacity: 0.86;
+  background: rgba(226, 219, 212, 0.98);
+  border-color: rgba(90, 82, 76, 0.24);
+}
+
+.portraitTile.unowned .avatar {
+  --portrait-rarity-color: #7f848a;
+  border-color: #676c73;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.22), transparent 42%),
+    linear-gradient(145deg, #8c9197, #52575d 78%);
+  box-shadow: 0 8px 18px rgba(31, 36, 49, 0.14);
+}
+
+.portraitTile.unowned .avatarImage {
+  filter: grayscale(1) saturate(0) brightness(0.76) contrast(0.92);
 }
 
 .portraitFrame {
@@ -714,17 +827,29 @@ button.secondary,
 .portraitStatus {
   left: 4px;
   bottom: 4px;
-  padding: 3px 7px;
+  gap: 4px;
+  padding: 4px 8px;
   border-radius: 999px;
   background: rgba(20, 23, 30, 0.78);
   color: #fff;
   font-size: 0.72rem;
+  font-weight: 700;
   line-height: 1;
 }
 
 .portraitStatus.locked {
-  min-width: 28px;
-  justify-content: center;
+  background: rgba(72, 68, 64, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  box-shadow: 0 6px 16px rgba(31, 36, 49, 0.28);
+}
+
+.portraitStatus strong {
+  font-size: 0.78rem;
+}
+
+.portraitStatusLabel {
+  letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
 .portraitSkills {

@@ -63,6 +63,11 @@ function requireHtmlElement<T extends Element>(element: T | null | undefined): H
   return element as unknown as HTMLElement;
 }
 
+function getPortraitTile(name: string): HTMLElement {
+  const label = screen.getAllByText(name).find((element) => element.closest(".portraitTile"));
+  return requireHtmlElement(label?.closest(".portraitTile"));
+}
+
 describe("App", () => {
   const getOptimizationProfileSelect = () => screen.getByText("Optimization profile").closest("label")!.querySelector("select") as HTMLSelectElement;
   const getSearchEffortSlider = () => screen.getByText("Search effort").closest("label")!.querySelector('input[type="range"]') as HTMLInputElement;
@@ -442,6 +447,28 @@ describe("App", () => {
       "Manufacturing Cabin 2",
       "Growth Chamber 1",
     ]);
+  });
+
+  it("shows a readable unowned badge on roster portraits", async () => {
+    render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    const portraitTile = getPortraitTile("Ardelia");
+    expect(within(portraitTile).getByText("Unowned")).toBeInTheDocument();
+    expect(portraitTile).not.toHaveTextContent("\\uD83D");
+  });
+
+  it("keeps the owned portrait badge as a visible level label", async () => {
+    seedDraft(["ardelia"]);
+    render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    const portraitTile = getPortraitTile("Ardelia");
+    expect(within(portraitTile).getByText("Lv")).toBeInTheDocument();
+    expect(within(portraitTile).getByText("1")).toBeInTheDocument();
+    expect(within(portraitTile).getByLabelText("Owned, level 1")).toBeInTheDocument();
   });
 
   it("orders result facilities to match the planner layout", async () => {

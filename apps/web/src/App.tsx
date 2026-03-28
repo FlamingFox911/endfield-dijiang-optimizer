@@ -1249,8 +1249,14 @@ function App() {
                     >
                       <div className="portraitFrame">
                         <OperatorPortrait catalog={catalog} operator={operator} className="portraitAvatar" />
-                        <span className={`portraitCorner portraitStatus ${owned?.owned ? "level" : "locked"}`}>
-                          {owned?.owned ? owned.level : "\uD83D\uDD12"}
+                        <span
+                          className={`portraitCorner portraitStatus ${owned?.owned ? "level" : "locked"}`}
+                          aria-label={owned?.owned ? `Owned, level ${owned.level}` : "Unowned"}
+                          title={owned?.owned ? `Owned, level ${owned.level}` : "Unowned"}
+                        >
+                          {owned?.owned
+                            ? <><span className="portraitStatusLabel">Lv</span><strong>{owned.level}</strong></>
+                            : <span className="portraitStatusLabel">Unowned</span>}
                         </span>
                         <span className="portraitCorner portraitSkills">
                           {operator.baseSkills.map((skill) => {
@@ -1474,7 +1480,7 @@ function App() {
                             </div>
                           </div>
                         </div>
-                        <div className="plannerCellGrid plannerCellGridCompact">
+                        <div className="plannerCellGrid plannerConfigRow">
                           <label className="plannerCell plannerToggleCell">
                             <span>Enabled</span>
                             <input
@@ -1545,7 +1551,7 @@ function App() {
                           </div>
                         </div>
                       </div>
-                      <div className="plannerCellGrid">
+                      <div className="plannerCellGrid plannerConfigRow">
                         <label className="plannerCell plannerToggleCell">
                           <span>Enabled</span>
                           <input
@@ -1578,6 +1584,8 @@ function App() {
                             }))}
                           />
                         </label>
+                      </div>
+                      <div className="plannerCellGrid plannerConfigRow plannerConfigRowWide">
                         <label className="plannerCell plannerCellWide">
                           <span>Recipe</span>
                           <select
@@ -1632,7 +1640,7 @@ function App() {
                           </div>
                         </div>
                       </div>
-                      <div className="plannerCellGrid">
+                      <div className="plannerCellGrid plannerConfigRow">
                         <label className="plannerCell plannerToggleCell">
                           <span>Enabled</span>
                           <input
