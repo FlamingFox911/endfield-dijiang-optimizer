@@ -66,6 +66,7 @@ function isLikelyJsonFile(file: File): boolean {
 }
 
 type AppTab = "roster" | "planner" | "results";
+type RosterSortMode = "default" | "alphabetical" | "level" | "skill";
 
 interface OptimizationRunState {
   runId: number;
@@ -159,6 +160,89 @@ function compareOperatorsByDefaultOrder(
   }
 
   return left.name.localeCompare(right.name);
+}
+
+const FACILITY_SORT_ORDER: Array<GameCatalog["operators"][number]["baseSkills"][number]["facilityKind"] | "none"> = [
+  "control_nexus",
+  "reception_room",
+  "manufacturing_cabin",
+  "growth_chamber",
+  "none",
+];
+
+function getFacilitySortValue(
+  facilityKind: GameCatalog["operators"][number]["baseSkills"][number]["facilityKind"] | undefined,
+): number {
+  const index = FACILITY_SORT_ORDER.indexOf(facilityKind ?? "none");
+  return index === -1 ? FACILITY_SORT_ORDER.length : index;
+}
+
+function getSkillLabelSortValue(label: string | undefined): number {
+  switch (label) {
+    case "gamma":
+      return 3;
+    case "beta":
+      return 2;
+    case "alpha":
+      return 1;
+    default:
+      return 0;
+  }
+}
+
+function getSkillStrengthValue(skill: GameCatalog["operators"][number]["baseSkills"][number]): number {
+  return skill.ranks.reduce((best, rank) => Math.max(best, getSkillLabelSortValue(rank.label)), 0);
+}
+
+function compareSkillRows(
+  left: GameCatalog["operators"][number]["baseSkills"][number],
+  right: GameCatalog["operators"][number]["baseSkills"][number],
+): number {
+  const facilityDelta = getFacilitySortValue(left.facilityKind) - getFacilitySortValue(right.facilityKind);
+  if (facilityDelta !== 0) {
+    return facilityDelta;
+  }
+
+  const strengthDelta = getSkillStrengthValue(right) - getSkillStrengthValue(left);
+  if (strengthDelta !== 0) {
+    return strengthDelta;
+  }
+
+  return left.name.localeCompare(right.name);
+}
+
+function compareOperatorsBySkillOrder(
+  left: GameCatalog["operators"][number],
+  right: GameCatalog["operators"][number],
+): number {
+  const leftSkills = [...left.baseSkills].sort(compareSkillRows);
+  const rightSkills = [...right.baseSkills].sort(compareSkillRows);
+
+  const skillCompareLength = Math.max(leftSkills.length, rightSkills.length, 1);
+  for (let index = 0; index < skillCompareLength; index += 1) {
+    const leftSkill = leftSkills[index];
+    const rightSkill = rightSkills[index];
+    const facilityDelta = getFacilitySortValue(leftSkill?.facilityKind) - getFacilitySortValue(rightSkill?.facilityKind);
+    if (facilityDelta !== 0) {
+      return facilityDelta;
+    }
+  }
+
+  if (leftSkills.length !== rightSkills.length) {
+    return rightSkills.length - leftSkills.length;
+  }
+
+  for (let index = 0; index < skillCompareLength; index += 1) {
+    const leftSkill = leftSkills[index];
+    const rightSkill = rightSkills[index];
+    const leftStrength = leftSkill ? getSkillStrengthValue(leftSkill) : -1;
+    const rightStrength = rightSkill ? getSkillStrengthValue(rightSkill) : -1;
+    if (leftStrength !== rightStrength) {
+      return rightStrength - leftStrength;
+    }
+  }
+
+  return compareOperatorsByDefaultOrder(left, right);
 }
 
 function getCatalogAssetUrl(catalog: GameCatalog, assetPath: string): string {
@@ -472,6 +556,7 @@ function App() {
   const [recommendations, setRecommendations] = useState<UpgradeRecommendationResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [rosterSort, setRosterSort] = useState<RosterSortMode>("default");
   const [messages, setMessages] = useState<string[]>([]);
   const [optimizationRun, setOptimizationRun] = useState<OptimizationRunState | null>(null);
   const [recommendationRun, setRecommendationRun] = useState<RecommendationRunState | null>(null);
@@ -573,7 +658,7 @@ function App() {
 
   const deferredSearch = useDeferredValue(search);
 
-  const sortedOperators = useMemo(
+  const defaultSortedOperators = useMemo(
     () => [...(catalog?.operators ?? [])].sort(compareOperatorsByDefaultOrder),
     [catalog],
   );
@@ -587,7 +672,7 @@ function App() {
   const facilitiesByKind = useMemo(() => new Map(catalog?.facilities.map((facility) => [facility.kind, facility]) ?? []), [catalog]);
 
   useEffect(() => {
-    if (sortedOperators.length === 0) {
+    if (defaultSortedOperators.length === 0) {
       setSelectedOperatorId(null);
       return;
     }
@@ -597,16 +682,32 @@ function App() {
         return current;
       }
 
-      return sortedOperators[0]?.id ?? null;
+      return defaultSortedOperators[0]?.id ?? null;
     });
-  }, [operatorsById, sortedOperators]);
+  }, [defaultSortedOperators, operatorsById]);
 
   const filteredOperators = useMemo(() => {
     const needle = deferredSearch.trim().toLowerCase();
-    return sortedOperators
+    const matchingOperators = defaultSortedOperators
       .filter((operator) => !needle || operator.name.toLowerCase().includes(needle) || operator.id.includes(needle))
       .map((operator) => ({ operator, owned: rosterById.get(operator.id) }));
-  }, [deferredSearch, rosterById, sortedOperators]);
+
+    return matchingOperators.sort((left, right) => {
+      switch (rosterSort) {
+        case "alphabetical":
+          return left.operator.name.localeCompare(right.operator.name) || compareOperatorsByDefaultOrder(left.operator, right.operator);
+        case "level": {
+          const levelDelta = (right.owned?.owned ? right.owned.level : 0) - (left.owned?.owned ? left.owned.level : 0);
+          return levelDelta || compareOperatorsByDefaultOrder(left.operator, right.operator);
+        }
+        case "skill":
+          return compareOperatorsBySkillOrder(left.operator, right.operator);
+        case "default":
+        default:
+          return compareOperatorsByDefaultOrder(left.operator, right.operator);
+      }
+    });
+  }, [defaultSortedOperators, deferredSearch, rosterById, rosterSort]);
 
   if (loading || !catalog || !scenario) {
     return <main className="shell"><p className="status">Loading bundled catalog...</p></main>;
@@ -642,7 +743,7 @@ function App() {
   const recommendationEntries = recommendations?.recommendations ?? [];
   const optimizationSearchWarning = result?.warnings.find((warning) => warning.startsWith("Optimization search stopped"));
   const secondaryResultWarnings = result?.warnings.filter((warning) => warning !== optimizationSearchWarning) ?? [];
-  const selectedOperator = selectedOperatorId ? operatorsById.get(selectedOperatorId) : sortedOperators[0];
+  const selectedOperator = selectedOperatorId ? operatorsById.get(selectedOperatorId) : defaultSortedOperators[0];
   const selectedOwnedState = selectedOperator ? rosterById.get(selectedOperator.id) : undefined;
   const completedResultsCount = (result ? 1 : 0) + (recommendations ? 1 : 0);
   const demandProfile = scenario.options.demandProfile ?? createDefaultDemandProfile();
@@ -1228,10 +1329,21 @@ function App() {
 
             <div className="rosterWorkspace">
               <div className="rosterBrowser">
-                <label className="pill grow">
-                  <span>Search roster</span>
-                  <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Ardelia" />
-                </label>
+                <div className="rosterToolbar">
+                  <label className="pill grow">
+                    <span>Search roster</span>
+                    <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Ardelia" />
+                  </label>
+                  <label className="pill rosterSortField">
+                    <span>Sort roster</span>
+                    <select value={rosterSort} onChange={(event) => setRosterSort(event.target.value as RosterSortMode)}>
+                      <option value="default">Default</option>
+                      <option value="alphabetical">Alphabetical</option>
+                      <option value="level">Level</option>
+                      <option value="skill">Skill</option>
+                    </select>
+                  </label>
+                </div>
 
                 <div className="rosterStats">
                   <article><span>Showing</span><strong>{filteredOperators.length}</strong></article>

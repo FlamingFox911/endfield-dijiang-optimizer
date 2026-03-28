@@ -14,6 +14,17 @@ export type ProductKind =
   | "vitrified_plant"
   | "rare_mineral";
 
+export type ClueKind =
+  | "clue_1"
+  | "clue_2"
+  | "clue_3"
+  | "clue_4"
+  | "clue_5"
+  | "clue_6"
+  | "clue_7";
+
+export type ModifierTarget = ProductKind | ClueKind | "all";
+
 export type EffectMetric =
   | "production_efficiency"
   | "growth_rate"
@@ -68,7 +79,7 @@ export interface MaterialCost {
 
 export interface EffectModifier {
   metric: EffectMetric;
-  appliesTo: ProductKind | "all";
+  appliesTo: ModifierTarget;
   value: number;
   unit: "percent";
   dataConfidence?: DataConfidence;

@@ -1,9 +1,11 @@
 import type {
   AssignmentExplanation,
   BaseSkillRankDefinition,
+  ClueKind,
   DataConfidence,
   FacilityKind,
   GameCatalog,
+  ModifierTarget,
   OptimizationResult,
   OptimizationScenario,
   OperatorDefinition,
@@ -331,9 +333,12 @@ function getMatchingBaseUnits(
   room: NormalizedRoom,
   horizonHours: number,
   warnings: string[],
-  appliesTo: ProductKind | "all",
+  appliesTo: ModifierTarget,
 ) {
   return room.recipes.reduce((sum, recipe) => {
+    if (appliesTo !== "all" && !isProductKind(appliesTo)) {
+      return sum;
+    }
     if (appliesTo !== "all" && recipe.productKind !== appliesTo) {
       return sum;
     }
@@ -346,14 +351,35 @@ function getMatchingBaseScoreUnits(
   recipeScoreWeightById: Map<string, number>,
   horizonHours: number,
   warnings: string[],
-  appliesTo: ProductKind | "all",
+  appliesTo: ModifierTarget,
 ) {
   return room.recipes.reduce((sum, recipe) => {
+    if (appliesTo !== "all" && !isProductKind(appliesTo)) {
+      return sum;
+    }
     if (appliesTo !== "all" && recipe.productKind !== appliesTo) {
       return sum;
     }
     return sum + getRecipeBaseScoreUnits(recipe, recipeScoreWeightById, horizonHours, warnings);
   }, 0);
+}
+
+function isProductKind(value: ModifierTarget): value is ProductKind {
+  return value === "operator_exp"
+    || value === "weapon_exp"
+    || value === "fungal"
+    || value === "vitrified_plant"
+    || value === "rare_mineral";
+}
+
+function isClueKind(value: ModifierTarget): value is ClueKind {
+  return value === "clue_1"
+    || value === "clue_2"
+    || value === "clue_3"
+    || value === "clue_4"
+    || value === "clue_5"
+    || value === "clue_6"
+    || value === "clue_7";
 }
 
 function getLongRunMoodWorkingUptime(
@@ -420,13 +446,12 @@ function evaluateRankModifiers(
       warnings,
       modifier.appliesTo,
     );
-    if (modifier.appliesTo !== "all" && matchingBaseUnits <= 0) {
-      continue;
-    }
-
     switch (modifier.metric) {
       case "production_efficiency":
       case "growth_rate":
+        if (modifier.appliesTo !== "all" && matchingBaseUnits <= 0) {
+          continue;
+        }
         directScore += matchingBaseScoreUnits * (modifier.value / 100);
         productionDirectScoreUnits += matchingBaseScoreUnits * (modifier.value / 100);
         productionDirectUnits += matchingBaseUnits * (modifier.value / 100);
@@ -465,7 +490,9 @@ function evaluateRankModifiers(
       case "clue_rate_up":
         supportScore += modifier.value * SUPPORT_WEIGHTS.receptionClueRateWeight * receptionWeight;
         reasons.push(
-          `clue targeting recorded (+${modifier.value}%) but treated as score-neutral; use hard assignments if you want a specific clue number.`,
+          isClueKind(modifier.appliesTo)
+            ? `clue ${modifier.appliesTo.split("_")[1]} targeting recorded (+${modifier.value}%) but treated as score-neutral; use hard assignments if you want that exact clue.`
+            : `clue targeting recorded (+${modifier.value}%) but treated as score-neutral; use hard assignments if you want a specific clue number.`,
         );
         break;
     }

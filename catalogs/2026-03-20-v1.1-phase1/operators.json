@@ -298,7 +298,7 @@
               "modifiers": [
                 {
                   "metric": "clue_rate_up",
-                  "appliesTo": "all",
+                  "appliesTo": "clue_5",
                   "value": 8,
                   "unit": "percent"
                 }
@@ -326,7 +326,7 @@
               "modifiers": [
                 {
                   "metric": "clue_rate_up",
-                  "appliesTo": "all",
+                  "appliesTo": "clue_5",
                   "value": 12,
                   "unit": "percent"
                 }
@@ -2091,10 +2091,9 @@
               "modifiers": [
                 {
                   "metric": "clue_rate_up",
-                  "appliesTo": "all",
+                  "appliesTo": "clue_7",
                   "value": 8,
-                  "unit": "percent",
-                  "dataConfidence": "provisional"
+                  "unit": "percent"
                 }
               ],
               "sourceRefs": [
@@ -2113,10 +2112,9 @@
               "modifiers": [
                 {
                   "metric": "clue_rate_up",
-                  "appliesTo": "all",
+                  "appliesTo": "clue_7",
                   "value": 12,
-                  "unit": "percent",
-                  "dataConfidence": "provisional"
+                  "unit": "percent"
                 }
               ],
               "sourceRefs": [
@@ -2522,10 +2520,9 @@
               "modifiers": [
                 {
                   "metric": "clue_rate_up",
-                  "appliesTo": "all",
+                  "appliesTo": "clue_3",
                   "value": 8,
-                  "unit": "percent",
-                  "dataConfidence": "provisional"
+                  "unit": "percent"
                 }
               ],
               "sourceRefs": [
@@ -2544,10 +2541,9 @@
               "modifiers": [
                 {
                   "metric": "clue_rate_up",
-                  "appliesTo": "all",
+                  "appliesTo": "clue_3",
                   "value": 12,
-                  "unit": "percent",
-                  "dataConfidence": "provisional"
+                  "unit": "percent"
                 }
               ],
               "sourceRefs": [
@@ -2667,10 +2663,9 @@
               "modifiers": [
                 {
                   "metric": "clue_rate_up",
-                  "appliesTo": "all",
+                  "appliesTo": "clue_1",
                   "value": 8,
-                  "unit": "percent",
-                  "dataConfidence": "provisional"
+                  "unit": "percent"
                 }
               ],
               "sourceRefs": [
@@ -2689,10 +2684,9 @@
               "modifiers": [
                 {
                   "metric": "clue_rate_up",
-                  "appliesTo": "all",
+                  "appliesTo": "clue_1",
                   "value": 12,
-                  "unit": "percent",
-                  "dataConfidence": "provisional"
+                  "unit": "percent"
                 }
               ],
               "sourceRefs": [
@@ -2812,10 +2806,9 @@
               "modifiers": [
                 {
                   "metric": "clue_rate_up",
-                  "appliesTo": "all",
+                  "appliesTo": "clue_6",
                   "value": 8,
-                  "unit": "percent",
-                  "dataConfidence": "provisional"
+                  "unit": "percent"
                 }
               ],
               "sourceRefs": [
@@ -2834,10 +2827,9 @@
               "modifiers": [
                 {
                   "metric": "clue_rate_up",
-                  "appliesTo": "all",
+                  "appliesTo": "clue_6",
                   "value": 12,
-                  "unit": "percent",
-                  "dataConfidence": "provisional"
+                  "unit": "percent"
                 }
               ],
               "sourceRefs": [
@@ -2957,10 +2949,9 @@
               "modifiers": [
                 {
                   "metric": "clue_rate_up",
-                  "appliesTo": "all",
+                  "appliesTo": "clue_2",
                   "value": 8,
-                  "unit": "percent",
-                  "dataConfidence": "provisional"
+                  "unit": "percent"
                 }
               ],
               "sourceRefs": [
@@ -2979,10 +2970,9 @@
               "modifiers": [
                 {
                   "metric": "clue_rate_up",
-                  "appliesTo": "all",
+                  "appliesTo": "clue_2",
                   "value": 12,
-                  "unit": "percent",
-                  "dataConfidence": "provisional"
+                  "unit": "percent"
                 }
               ],
               "sourceRefs": [
@@ -3245,10 +3235,9 @@
               "modifiers": [
                 {
                   "metric": "clue_rate_up",
-                  "appliesTo": "all",
+                  "appliesTo": "clue_4",
                   "value": 8,
-                  "unit": "percent",
-                  "dataConfidence": "provisional"
+                  "unit": "percent"
                 }
               ],
               "sourceRefs": [
@@ -3267,10 +3256,9 @@
               "modifiers": [
                 {
                   "metric": "clue_rate_up",
-                  "appliesTo": "all",
+                  "appliesTo": "clue_4",
                   "value": 12,
-                  "unit": "percent",
-                  "dataConfidence": "provisional"
+                  "unit": "percent"
                 }
               ],
               "sourceRefs": [

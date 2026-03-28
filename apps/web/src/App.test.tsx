@@ -73,6 +73,7 @@ describe("App", () => {
   const getSearchEffortSlider = () => screen.getByText("Search effort").closest("label")!.querySelector('input[type="range"]') as HTMLInputElement;
   const getDemandProfileSelect = () => screen.getByText("Demand profile").closest("label")!.querySelector("select") as HTMLSelectElement;
   const getPriorityRecipeSelect = () => screen.getByText("Priority recipe").closest("label")!.querySelector("select") as HTMLSelectElement;
+  const getRosterSortSelect = () => screen.getByText("Sort roster").closest("label")!.querySelector("select") as HTMLSelectElement;
   const getDemandSlider = (label: string) => screen
     .getAllByText(label)
     .find((element) => element.closest(".objectiveWeightField"))
@@ -469,6 +470,68 @@ describe("App", () => {
     expect(within(portraitTile).getByText("Lv")).toBeInTheDocument();
     expect(within(portraitTile).getByText("1")).toBeInTheDocument();
     expect(within(portraitTile).getByLabelText("Owned, level 1")).toBeInTheDocument();
+  });
+
+  it("sorts the roster alphabetically when requested", async () => {
+    const { container } = render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.selectOptions(getRosterSortSelect(), "alphabetical");
+
+    const operatorNames = Array.from(container.querySelectorAll(".portraitGrid .portraitLabel"))
+      .map((element) => element.textContent)
+      .filter(Boolean);
+    expect(operatorNames.slice(0, 5)).toEqual(["Akekuri", "Alesh", "Antal", "Arclight", "Ardelia"]);
+  });
+
+  it("sorts the roster by owned level with unowned operators treated as level 0", async () => {
+    seedDraft(["ardelia", "alesh", "xaihi"]);
+    localStorage.setItem(
+      "endfield-dijiang-optimizer:draft",
+      JSON.stringify({
+        ...JSON.parse(localStorage.getItem("endfield-dijiang-optimizer:draft") ?? "{}"),
+        roster: [
+          { operatorId: "ardelia", owned: true, level: 80, promotionTier: 0, baseSkillStates: [] },
+          { operatorId: "alesh", owned: true, level: 20, promotionTier: 0, baseSkillStates: [] },
+          { operatorId: "xaihi", owned: true, level: 5, promotionTier: 0, baseSkillStates: [] },
+        ],
+      }),
+    );
+    const { container } = render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.selectOptions(getRosterSortSelect(), "level");
+
+    const operatorNames = Array.from(container.querySelectorAll(".portraitGrid .portraitLabel"))
+      .map((element) => element.textContent)
+      .filter(Boolean);
+    expect(operatorNames.indexOf("Ardelia")).toBeLessThan(operatorNames.indexOf("Alesh"));
+    expect(operatorNames.indexOf("Alesh")).toBeLessThan(operatorNames.indexOf("Xaihi"));
+    expect(operatorNames.indexOf("Xaihi")).toBeLessThan(operatorNames.indexOf("Chen Qianyu"));
+  });
+
+  it("sorts the roster by facility-focused skill order", async () => {
+    const { container } = render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.selectOptions(getRosterSortSelect(), "skill");
+
+    const operatorNames = Array.from(container.querySelectorAll(".portraitGrid .portraitLabel"))
+      .map((element) => element.textContent)
+      .filter(Boolean);
+    expect(operatorNames.indexOf("Perlica")).toBeLessThan(operatorNames.indexOf("Ardelia"));
+    expect(operatorNames.indexOf("Ardelia")).toBeLessThan(operatorNames.indexOf("Chen Qianyu"));
+    expect(operatorNames.indexOf("Chen Qianyu")).toBeLessThan(operatorNames.indexOf("Yvonne"));
+  });
+
+  it("shows clue-targeted reception skills with their specific clue number", async () => {
+    render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.click(getPortraitTile("Lifeng"));
+
+    expect(screen.getByText(/Clue Rate Up \+8% \(Clue 3\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Clue Rate Up \+12% \(Clue 3\)/i)).toBeInTheDocument();
   });
 
   it("orders result facilities to match the planner layout", async () => {
