@@ -33,6 +33,7 @@ export const CURRENT_CATALOG_VERSION: CatalogVersion = "2026-03-20/v1.1-phase1";
 export const CURRENT_CATALOG_BUNDLE_ID = "2026-03-20-v1.1-phase1";
 export const CURRENT_SCENARIO_FORMAT_VERSION = 1 as const;
 export const EXAMPLE_SCENARIOS_DIR = "scenarios/examples" as const;
+export const MAX_OPERATOR_LEVEL = 90 as const;
 
 export const CATALOG_LIBRARY_POLICY = {
   distributionModel: "bundled_with_app",
@@ -81,6 +82,14 @@ const DEFAULT_SLOT_CAPS = {
   growth_chamber: { 1: 1, 2: 2, 3: 3 },
   reception_room: { 1: 1, 2: 2, 3: 3 },
 } as const;
+
+export function clampOperatorLevel(level: number): number {
+  if (!Number.isFinite(level)) {
+    return 1;
+  }
+
+  return Math.min(MAX_OPERATOR_LEVEL, Math.max(1, Math.trunc(level)));
+}
 
 const DEFAULT_GROWTH_SLOT_CAPS = { 1: 3, 2: 6, 3: 9 } as const;
 const OPTIMIZATION_PROFILES = ["fast", "balanced", "thorough", "exhaustive", "custom"] as const satisfies OptimizationProfile[];
@@ -2182,6 +2191,28 @@ function validateScenarioShape(scenario: OptimizationScenario): ValidationIssue[
 
   if (!Array.isArray(scenario.roster)) {
     issues.push(makeIssue("invalid_roster", "roster", "Scenario roster must be an array."));
+  }
+  else {
+    for (const [index, operator] of scenario.roster.entries()) {
+      const rosterPath = typeof operator?.operatorId === "string" ? `roster.${operator.operatorId}` : `roster.${index}`;
+      if (!operator || typeof operator !== "object") {
+        issues.push(makeIssue("invalid_roster_entry", rosterPath, "Each roster entry must be an object."));
+        continue;
+      }
+      if (typeof operator.level !== "number" || !Number.isFinite(operator.level)) {
+        issues.push(makeIssue("invalid_operator_level", `${rosterPath}.level`, "Scenario operator level must be a number."));
+        continue;
+      }
+      if (operator.level < 1 || operator.level > MAX_OPERATOR_LEVEL) {
+        issues.push(
+          makeIssue(
+            "invalid_operator_level",
+            `${rosterPath}.level`,
+            `Scenario operator level must be between 1 and ${MAX_OPERATOR_LEVEL}.`,
+          ),
+        );
+      }
+    }
   }
 
   if (!scenario.facilities || typeof scenario.facilities !== "object") {

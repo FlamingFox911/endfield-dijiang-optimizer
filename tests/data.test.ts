@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   CURRENT_SCENARIO_FORMAT_VERSION,
+  MAX_OPERATOR_LEVEL,
   createStarterScenario,
   estimateLevelingRequirement,
   estimateOperatorMaxBaseProgressionRequirement,
@@ -140,6 +141,26 @@ describe("data services", () => {
 
     expect(validation.ok).toBe(true);
     expect(validation.issues).toHaveLength(0);
+  });
+
+  it("rejects scenario roster levels above the supported operator cap", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+
+    scenario.roster[0]!.level = MAX_OPERATOR_LEVEL + 1;
+
+    const validation = validateScenarioAgainstCatalog(catalog, scenario);
+
+    expect(validation.ok).toBe(false);
+    expect(validation.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "invalid_operator_level",
+          path: `roster.${scenario.roster[0]!.operatorId}.level`,
+          message: `Scenario operator level must be between 1 and ${MAX_OPERATOR_LEVEL}.`,
+        }),
+      ]),
+    );
   });
 
   it("clamps imported custom optimization effort into the supported range", () => {

@@ -373,17 +373,51 @@ label {
   gap: 8px;
 }
 
+.helpPopover {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
 .helpBadge {
   display: inline-grid;
   place-items: center;
   width: 18px;
   height: 18px;
+  padding: 0;
+  border: 0;
   border-radius: 999px;
   background: rgba(30, 90, 114, 0.12);
   color: var(--accent);
   font-size: 0.75rem;
   font-weight: 700;
   cursor: help;
+}
+
+.helpBadge[role="button"] {
+  outline: none;
+}
+
+.helpPopoverPanel {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  gap: 8px;
+  width: min(18rem, 75vw);
+  padding: 12px 14px;
+  border: 1px solid rgba(31, 36, 49, 0.12);
+  border-radius: 14px;
+  background: rgba(31, 36, 49, 0.96);
+  box-shadow: 0 14px 32px rgba(31, 36, 49, 0.24);
+  color: #fff;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.helpPopoverLine {
+  display: block;
 }
 
 button.secondary,

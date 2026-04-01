@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useDeferredValue, useEffect, useId, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
 
 import type {
   DemandProfilePreset,
@@ -15,6 +15,8 @@ import {
   CURRENT_CATALOG_BUNDLE_ID,
   CURRENT_CATALOG_VERSION,
   DEMAND_PROFILE_PRESETS,
+  MAX_OPERATOR_LEVEL,
+  clampOperatorLevel,
   clampDemandWeight,
   createStarterScenario,
   createDefaultDemandProfile,
@@ -351,6 +353,55 @@ function SkillIconBadge(
         />
       )}
       {showOverlay && <span className="skillBadgeOverlay">{getSkillBadgeLabel(skill, rank)}</span>}
+    </span>
+  );
+}
+
+function HelpPopover(
+  {
+    label,
+    assistiveLabel,
+    content,
+  }: {
+    label: string;
+    assistiveLabel: string;
+    content: string;
+  },
+) {
+  const [open, setOpen] = useState(false);
+  const popoverId = useId();
+
+  const handleBlur = (event: FocusEvent<HTMLSpanElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      setOpen(false);
+    }
+  };
+
+  return (
+    <span
+      className="helpPopover"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocusCapture={() => setOpen(true)}
+      onBlurCapture={handleBlur}
+    >
+      <span
+        className="helpBadge"
+        role="button"
+        tabIndex={0}
+        aria-label={assistiveLabel}
+        aria-expanded={open}
+        aria-describedby={open ? popoverId : undefined}
+      >
+        {label}
+      </span>
+      {open && (
+        <span id={popoverId} role="tooltip" className="helpPopoverPanel">
+          {content.split("\n\n").map((paragraph) => (
+            <span key={paragraph} className="helpPopoverLine">{paragraph}</span>
+          ))}
+        </span>
+      )}
     </span>
   );
 }
@@ -1054,9 +1105,9 @@ function App() {
   };
 
   const tabOptions: Array<{ id: AppTab; label: string; detail: string }> = [
-    { id: "roster", label: "Roster", detail: `${ownedOperators.length} owned` },
-    { id: "planner", label: "Planner", detail: `${roomOptions.length} rooms` },
-    { id: "results", label: "Results", detail: completedResultsCount > 0 ? `${completedResultsCount} pane${completedResultsCount === 1 ? "" : "s"} ready` : "Waiting to run" },
+    { id: "roster", label: "Edit roster", detail: `${ownedOperators.length} owned` },
+    { id: "planner", label: "Plan base", detail: `${roomOptions.length} rooms` },
+    { id: "results", label: "View results", detail: completedResultsCount > 0 ? `${completedResultsCount} pane${completedResultsCount === 1 ? "" : "s"} ready` : "Waiting to run" },
   ];
 
   return (
@@ -1077,8 +1128,8 @@ function App() {
           <div className="heroMetaGrid">
             <div><span>Owned</span><strong>{ownedOperators.length}</strong></div>
             <div><span>Recipes</span><strong>{catalog.recipes.length}</strong></div>
-            <div><span>Sources</span><strong>{catalog.sources.length}</strong></div>
-            <div><span>Gaps</span><strong>{catalog.gaps.length}</strong></div>
+            <div><span>Catalog sources</span><strong>{catalog.sources.length}</strong></div>
+            <div><span>Open gaps</span><strong>{catalog.gaps.length}</strong></div>
           </div>
         </div>
       </header>
@@ -1093,7 +1144,7 @@ function App() {
             </select>
           </label>
           <label className="pill rangePill toolbarField toolbarFieldEffort">
-            <span>Search effort</span>
+            <span>Solver effort</span>
             <input
               type="range"
               min={1}
@@ -1107,14 +1158,11 @@ function App() {
           <label className="pill toolbarField toolbarFieldDemand">
             <span className="labelWithHelp">
               <span>Demand profile</span>
-              <span
-                className="helpBadge"
-                role="img"
-                aria-label={`Controls which long-run outputs the score model favors. Current mode: ${formatLabel(demandProfile.preset)}.`}
-                title={"Controls which long-run outputs the score model favors.\n\nBalanced keeps a general objective.\nOther presets favor a specific output family.\nCustom unlocks direct per-output weight sliders.\n\nThis changes score weighting only. Projected outputs remain raw units per hour."}
-              >
-                ?
-              </span>
+              <HelpPopover
+                label="?"
+                assistiveLabel={`Controls which long-run outputs the score model favors. Current mode: ${formatLabel(demandProfile.preset)}.`}
+                content={"Controls which long-run outputs the score model favors.\n\nBalanced keeps a general objective.\nOther presets favor a specific output family.\nCustom unlocks direct per-output weight sliders.\n\nThis changes score weighting only. Projected outputs remain raw units per hour."}
+              />
             </span>
             <select value={demandProfile.preset} onChange={(event) => setDemandPreset(event.target.value as DemandProfilePreset)}>
               {DEMAND_PROFILE_PRESETS.map((preset) => <option key={preset} value={preset}>{formatLabel(preset)}</option>)}
@@ -1124,14 +1172,11 @@ function App() {
           <label className="pill toolbarField toolbarFieldRanking">
             <span className="labelWithHelp">
               <span>Recommend Unlocks Ranking</span>
-              <span
-                className="helpBadge"
-                role="img"
-                aria-label={`Controls how Recommend unlocks sorts results. Balanced ranks by score gain first, then ROI, then estimated time. ROI ranks by payoff per effort. Fastest ranks by estimated unlock time first. Current mode: ${formatLabel(scenario.options.upgradeRankingMode ?? "balanced")}.`}
-                title={`Controls how Recommend unlocks sorts results.\n\nBalanced: highest score gain first, then ROI, then estimated time.\nROI: best payoff per effort.\nFastest: quickest estimated unlock first, then impact.`}
-              >
-                ?
-              </span>
+              <HelpPopover
+                label="?"
+                assistiveLabel={`Controls how Recommend unlocks sorts results. Balanced ranks by score gain first, then ROI, then estimated time. ROI ranks by payoff per effort. Fastest ranks by estimated unlock time first. Current mode: ${formatLabel(scenario.options.upgradeRankingMode ?? "balanced")}.`}
+                content={`Controls how Recommend unlocks sorts results.\n\nBalanced: highest score gain first, then ROI, then estimated time.\nROI: best payoff per effort.\nFastest: quickest estimated unlock first, then impact.`}
+              />
             </span>
             <select
               value={scenario.options.upgradeRankingMode ?? "balanced"}
@@ -1152,14 +1197,11 @@ function App() {
           <label className="pill compact toolbarField toolbarFieldPriorityRecipe">
             <span className="labelWithHelp">
               <span>Priority recipe</span>
-              <span
-                className="helpBadge"
-                role="img"
-                aria-label={`Boost one exact recipe when you care about a specific material. Current recipe: ${demandProfile.priorityRecipeId ? (catalog.recipes.find((recipe) => recipe.id === demandProfile.priorityRecipeId)?.name ?? demandProfile.priorityRecipeId) : "None"}.`}
-                title={"Boost one exact recipe when you care about a specific material.\n\nExamples: Kalkonyx, Bloodcap, Advanced Combat Record, or Arms INSP Set.\n\nThis changes score weighting only. It does not force a recipe plan or alter raw projected output rates."}
-              >
-                ?
-              </span>
+              <HelpPopover
+                label="?"
+                assistiveLabel={`Boost one exact recipe when you care about a specific material. Current recipe: ${demandProfile.priorityRecipeId ? (catalog.recipes.find((recipe) => recipe.id === demandProfile.priorityRecipeId)?.name ?? demandProfile.priorityRecipeId) : "None"}.`}
+                content={"Boost one exact recipe when you care about a specific material.\n\nExamples: Kalkonyx, Bloodcap, Advanced Combat Record, or Arms INSP Set.\n\nThis changes score weighting only. It does not force a recipe plan or alter raw projected output rates."}
+              />
             </span>
             <select
               value={demandProfile.priorityRecipeId ?? ""}
@@ -1188,14 +1230,11 @@ function App() {
             />
             <span className="labelWithHelp">
               <span>Max facilities overlay</span>
-              <span
-                className="helpBadge"
-                role="img"
-                aria-label="When enabled, optimization assumes a fully built base overlay: Control Nexus level 5, all manufacturing and growth rooms enabled at level 3, and a level 3 reception room added or enabled. This affects optimization and recommend unlocks inputs, but does not rewrite the planner form."
-                title={"When enabled, optimization assumes a fully built base overlay.\n\nControl Nexus is treated as level 5.\nAll manufacturing and growth rooms are treated as enabled at level 3.\nA level 3 reception room is added or enabled.\n\nThis affects Optimize and Recommend unlocks inputs, but does not rewrite the planner form."}
-              >
-                ?
-              </span>
+              <HelpPopover
+                label="?"
+                assistiveLabel="When enabled, optimization assumes a fully built base overlay: Control Nexus level 5, all manufacturing and growth rooms enabled at level 3, and a level 3 reception room added or enabled. This affects optimization and recommend unlocks inputs, but does not rewrite the planner form."
+                content={"When enabled, optimization assumes a fully built base overlay.\n\nControl Nexus is treated as level 5.\nAll manufacturing and growth rooms are treated as enabled at level 3.\nA level 3 reception room is added or enabled.\n\nThis affects Optimize and Recommend unlocks inputs, but does not rewrite the planner form."}
+              />
             </span>
           </label>
         </div>
@@ -1421,7 +1460,7 @@ function App() {
                 </div>
 
                 {!selectedOwnedState?.owned && (
-                  <p className="editorHint">Mark the operator as owned to set their level, promotion, and active Base Skills.</p>
+                  <p className="editorHint">You can preconfigure level, promotion, and Base Skills before marking this operator as owned. These values stay saved for planning, but the operator does not count as owned until you enable the toggle.</p>
                 )}
 
                 <div className="numericRow">
@@ -1430,11 +1469,11 @@ function App() {
                     <input
                       type="number"
                       min={1}
+                      max={MAX_OPERATOR_LEVEL}
                       value={selectedOwnedState?.level ?? 1}
-                      disabled={!selectedOwnedState?.owned}
                       onChange={(event) => updateScenario((current) => replaceRosterEntry(current, selectedOperator.id, (entry) => ({
                         ...entry,
-                        level: Number(event.target.value) || 1,
+                        level: clampOperatorLevel(Number(event.target.value)),
                       })))}
                     />
                   </label>
@@ -1442,7 +1481,6 @@ function App() {
                     <span>Promotion</span>
                     <select
                       value={selectedOwnedState?.promotionTier ?? 0}
-                      disabled={!selectedOwnedState?.owned}
                       onChange={(event) => updateScenario((current) => replaceRosterEntry(current, selectedOperator.id, (entry) => ({
                         ...entry,
                         promotionTier: Number(event.target.value) as 0 | 1 | 2 | 3 | 4,
@@ -1478,7 +1516,6 @@ function App() {
                           </div>
                           <select
                             value={state?.unlockedRank ?? 0}
-                            disabled={!selectedOwnedState?.owned}
                             onChange={(event) => updateScenario((current) => replaceRosterEntry(current, selectedOperator.id, (entry) => ({
                               ...entry,
                               baseSkillStates: entry.baseSkillStates.map((baseSkill) => baseSkill.skillId === skill.id
@@ -1523,10 +1560,6 @@ function App() {
                       <span className="miniStat">{getRoomSlotCap(catalog, "control_nexus", scenario.facilities.controlNexus.level, scenario.facilities.controlNexus.level)} slots</span>
                     </div>
                     <div className="plannerStatRow">
-                      <div className="plannerStatCell">
-                        <span>Current level</span>
-                        <strong>{scenario.facilities.controlNexus.level}</strong>
-                      </div>
                       <div className="plannerStatCell">
                         <span>Unlocks online</span>
                         <strong>{roomOptions.length - 1} rooms</strong>

@@ -70,7 +70,7 @@ function getPortraitTile(name: string): HTMLElement {
 
 describe("App", () => {
   const getOptimizationProfileSelect = () => screen.getByText("Optimization profile").closest("label")!.querySelector("select") as HTMLSelectElement;
-  const getSearchEffortSlider = () => screen.getByText("Search effort").closest("label")!.querySelector('input[type="range"]') as HTMLInputElement;
+  const getSearchEffortSlider = () => screen.getByText("Solver effort").closest("label")!.querySelector('input[type="range"]') as HTMLInputElement;
   const getDemandProfileSelect = () => screen.getByText("Demand profile").closest("label")!.querySelector("select") as HTMLSelectElement;
   const getPriorityRecipeSelect = () => screen.getByText("Priority recipe").closest("label")!.querySelector("select") as HTMLSelectElement;
   const getRosterSortSelect = () => screen.getByText("Sort roster").closest("label")!.querySelector("select") as HTMLSelectElement;
@@ -298,6 +298,39 @@ describe("App", () => {
     expect(requireHtmlElement(portrait.closest(".avatar"))).toHaveAttribute("data-rarity", "5");
   });
 
+  it("uses clearer workspace and catalog labels", async () => {
+    render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    expect(screen.getByRole("tab", { name: /Edit roster/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Plan base/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /View results/i })).toBeInTheDocument();
+    expect(screen.getByText("Catalog sources")).toBeInTheDocument();
+    expect(screen.getByText("Open gaps")).toBeInTheDocument();
+    expect(screen.getByText("Solver effort")).toBeInTheDocument();
+  });
+
+  it("shows help popovers immediately on hover and focus", async () => {
+    render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    const demandHelp = screen.getByRole("button", {
+      name: /Controls which long-run outputs the score model favors/i,
+    });
+
+    fireEvent.mouseEnter(demandHelp);
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Balanced keeps a general objective.");
+    fireEvent.mouseLeave(demandHelp);
+    await waitFor(() => {
+      expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    });
+
+    fireEvent.focus(demandHelp);
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Projected outputs remain raw units per hour.");
+  });
+
   it("renders Base Skill icons in the roster, operator editor, and recommendations", async () => {
     const { container } = render(<App />);
 
@@ -438,7 +471,7 @@ describe("App", () => {
     expect(operatorNames.indexOf("Ember")).toBeLessThan(operatorNames.indexOf("Gilberta"));
     expect(operatorNames.indexOf("Gilberta")).toBeLessThan(operatorNames.indexOf("Tangtang"));
 
-    await userEvent.click(screen.getByRole("tab", { name: /Planner/i }));
+    await userEvent.click(screen.getByRole("tab", { name: /Plan base/i }));
     const plannerPanel = requireHtmlElement(screen.getByText("Dijiang layout").closest(".plannerPanel"));
     const facilityHeadings = within(plannerPanel).getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent);
     expect(facilityHeadings.slice(0, 5)).toEqual([
@@ -532,6 +565,86 @@ describe("App", () => {
 
     expect(screen.getByText(/Clue Rate Up \+8% \(Clue 3\)/i)).toBeInTheDocument();
     expect(screen.getByText(/Clue Rate Up \+12% \(Clue 3\)/i)).toBeInTheDocument();
+  });
+
+  it("removes the redundant Control Nexus current level summary", async () => {
+    render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.click(screen.getByRole("tab", { name: /Plan base/i }));
+
+    const plannerPanel = requireHtmlElement(screen.getByText("Dijiang layout").closest(".plannerPanel"));
+    const controlNexusCard = requireHtmlElement(within(plannerPanel).getByText("Control Nexus").closest(".plannerRoomCard"));
+    expect(within(plannerPanel).queryByText("Current level")).not.toBeInTheDocument();
+    expect(within(controlNexusCard).getByRole("spinbutton", { name: "Level" })).toHaveValue(1);
+  });
+
+  it("allows preconfiguring unowned operators without counting them as owned", async () => {
+    const { container } = render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    const selectedOperatorName = requireHtmlElement(container.querySelector(".operatorName")).textContent ?? "";
+    const selectedOperator = operators.operators.find((entry) => entry.name === selectedOperatorName);
+    const levelInput = screen.getByRole("spinbutton", { name: "Level" });
+    const promotionSelect = screen.getByRole("combobox", { name: "Promotion" });
+    const firstSkillSelect = container.querySelector(".editorSkillGrid .skillCard select") as HTMLSelectElement;
+
+    expect(selectedOperator).toBeTruthy();
+    expect(screen.getByText(/does not count as owned until you enable the toggle/i)).toBeInTheDocument();
+    expect(levelInput).not.toBeDisabled();
+    expect(promotionSelect).not.toBeDisabled();
+    expect(firstSkillSelect).not.toBeDisabled();
+
+    fireEvent.change(levelInput, { target: { value: "37" } });
+    await userEvent.selectOptions(promotionSelect, "2");
+    await userEvent.selectOptions(firstSkillSelect, "1");
+    await userEvent.click(screen.getByRole("button", { name: "Optimize" }));
+
+    await waitFor(() => {
+      expect(workerInstances[0]!.postMessage).toHaveBeenCalledTimes(1);
+    });
+
+    const rosterEntry = workerInstances[0]!.postMessage.mock.calls[0]![0].scenario.roster.find((entry: { operatorId: string }) => entry.operatorId === selectedOperator!.id);
+    const statusCard = requireHtmlElement(screen.getByText("Status").closest("article"));
+    expect(within(statusCard).getByText("Unowned")).toBeInTheDocument();
+    expect(rosterEntry).toMatchObject({
+      operatorId: selectedOperator!.id,
+      owned: false,
+      level: 37,
+      promotionTier: 2,
+    });
+    expect(rosterEntry.baseSkillStates[0]).toMatchObject({
+      unlockedRank: 1,
+    });
+  });
+
+  it("caps operator level edits at 90 before sending optimization input", async () => {
+    const { container } = render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    const selectedOperatorName = requireHtmlElement(container.querySelector(".operatorName")).textContent ?? "";
+    const selectedOperator = operators.operators.find((entry) => entry.name === selectedOperatorName);
+    const levelInput = screen.getByRole("spinbutton", { name: "Level" });
+
+    expect(selectedOperator).toBeTruthy();
+    expect(levelInput).toHaveAttribute("max", "90");
+
+    fireEvent.change(levelInput, { target: { value: "999" } });
+    expect(levelInput).toHaveValue(90);
+
+    await userEvent.click(screen.getByRole("button", { name: "Optimize" }));
+
+    await waitFor(() => {
+      expect(workerInstances[0]!.postMessage).toHaveBeenCalledTimes(1);
+    });
+
+    const rosterEntry = workerInstances[0]!.postMessage.mock.calls[0]![0].scenario.roster.find((entry: { operatorId: string }) => entry.operatorId === selectedOperator!.id);
+    expect(rosterEntry).toMatchObject({
+      operatorId: selectedOperator!.id,
+      level: 90,
+    });
   });
 
   it("orders result facilities to match the planner layout", async () => {
@@ -987,7 +1100,7 @@ describe("App", () => {
     render(<App />);
 
     await screen.findByText("Endfield Dijiang Optimizer");
-    await userEvent.click(screen.getByRole("tab", { name: /Planner/i }));
+    await userEvent.click(screen.getByRole("tab", { name: /Plan base/i }));
 
     await waitFor(() => {
       expect(screen.getByText("Manufacturing Cabin 2")).toBeInTheDocument();
@@ -1001,7 +1114,7 @@ describe("App", () => {
     const { container } = render(<App />);
 
     await screen.findByText("Endfield Dijiang Optimizer");
-    await userEvent.click(screen.getByRole("tab", { name: /Planner/i }));
+    await userEvent.click(screen.getByRole("tab", { name: /Plan base/i }));
 
     const addButton = screen.getByRole("button", { name: "Add hard assignment" });
     await userEvent.click(addButton);
@@ -1045,7 +1158,7 @@ describe("App", () => {
     const { container } = render(<App />);
 
     await screen.findByText("Endfield Dijiang Optimizer");
-    await userEvent.click(screen.getByRole("tab", { name: /Planner/i }));
+    await userEvent.click(screen.getByRole("tab", { name: /Plan base/i }));
 
     const addButton = screen.getByRole("button", { name: "Add hard assignment" });
     await userEvent.click(addButton);
