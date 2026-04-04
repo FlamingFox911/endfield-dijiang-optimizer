@@ -102,6 +102,10 @@ function sanitizeScenarioForPersistence(scenario: OptimizationScenario): Optimiz
   };
 }
 
+function saveScenarioDraft(scenario: OptimizationScenario): void {
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(sanitizeScenarioForPersistence(scenario)));
+}
+
 function replaceRosterEntry(
   scenario: OptimizationScenario,
   operatorId: string,
@@ -863,8 +867,10 @@ function App() {
 
         const savedDraft = localStorage.getItem(DRAFT_KEY);
         if (!savedDraft) {
+          const starterScenario = createStarterScenario(nextCatalog);
           setCatalog(nextCatalog);
-          setScenario(createStarterScenario(nextCatalog));
+          setScenario(starterScenario);
+          saveScenarioDraft(starterScenario);
           return;
         }
 
@@ -872,6 +878,7 @@ function App() {
         const hydration = hydrateScenarioForCatalog(nextCatalog, migration.scenario);
         setCatalog(nextCatalog);
         setScenario(hydration.scenario);
+        saveScenarioDraft(hydration.scenario);
         setMessages([
           ...(migration.migrated ? [`Loaded local draft and migrated it from format ${migration.fromFormatVersion} to ${migration.toFormatVersion}.`] : []),
           ...summarizeHydration(hydration),
@@ -895,7 +902,7 @@ function App() {
 
   useEffect(() => {
     if (scenario) {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(sanitizeScenarioForPersistence(scenario)));
+      saveScenarioDraft(scenario);
     }
   }, [scenario]);
 

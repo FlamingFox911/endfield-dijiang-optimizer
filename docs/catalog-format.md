@@ -6,7 +6,7 @@ This document turns the architecture into concrete on-disk files.
 
 ```text
 catalogs/
-  2026-03-20-v1.1-phase1/
+  2026-03-29-v1.1-phase2/
     manifest.json
     progression.json
     operators.json

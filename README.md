@@ -36,7 +36,7 @@ This repository now contains the full shared runtime, a packaged CLI, a browser 
 - `docs/catalog-format.md`: concrete catalog bundle and scenario file formats.
 - `apps/cli/`: packaged `endfield-opt` CLI.
 - `apps/web/`: browser-first React UI.
-- `catalogs/2026-03-20-v1.1-phase1/`: the current bundled catalog snapshot.
+- `catalogs/2026-03-29-v1.1-phase2/`: the current bundled catalog snapshot.
 - `scenarios/examples/`: starter import/export examples for saved user scenarios.
 - `packages/domain/src/index.ts`: typed contracts for catalogs, scenarios, and results.
 - `packages/optimizer/src/index.ts`: solver and upgrade-advisor interfaces.
@@ -64,7 +64,7 @@ The repo now contains:
 
 - architecture and format docs
 - starter schemas and example scenarios
-- a versioned bundled catalog for the pinned `2026-03-20 / v1.1-phase1` snapshot
+- a versioned bundled catalog for the pinned `2026-03-29 / v1.1-phase2` snapshot
 - shared catalog and scenario validation/migration services
 - a branch-and-bound assignment solver with room score breakdowns
 - a long-run Mood-aware scoring model for production rooms and Control Nexus ship-wide support, with projected outputs aligned to those production-side gains
@@ -72,4 +72,4 @@ The repo now contains:
 - a packaged CLI and browser app using the same shared runtime
 - tests covering data services, optimizer behavior, CLI packaging, and the web app
 
-The current repo verify path should pass after normal install and build steps. The stricter catalog release gate remains intentionally blocked by one declared Growth Chamber demand-modeling gap in [`catalogs/2026-03-20-v1.1-phase1/gaps.json`](catalogs/2026-03-20-v1.1-phase1/gaps.json). The main remaining work is future-facing refinement: more golden scenarios, future catalog refreshes for new game snapshots, and better exactness if a full per-level EXP table becomes source-backed.
+The current repo verify path should pass after normal install and build steps. The stricter catalog release gate remains intentionally blocked by one declared Growth Chamber demand-modeling gap in [`catalogs/2026-03-29-v1.1-phase2/gaps.json`](catalogs/2026-03-29-v1.1-phase2/gaps.json). The main remaining work is future-facing refinement: more golden scenarios, future catalog refreshes for new game snapshots, and better exactness if a full per-level EXP table becomes source-backed.

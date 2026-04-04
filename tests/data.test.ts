@@ -46,7 +46,7 @@ describe("data services", () => {
 
   it("migrates legacy scenarios by filling the new format fields", () => {
     const migration = migrateScenario({
-      catalogVersion: "2026-03-20/v1.1-phase1",
+      catalogVersion: "2026-03-29/v1.1-phase2",
       roster: [],
       facilities: {
         controlNexus: { level: 1 },
@@ -85,7 +85,7 @@ describe("data services", () => {
   it("removes deprecated hard-assignment slot indexes during migration", () => {
     const migration = migrateScenario({
       scenarioFormatVersion: 1,
-      catalogVersion: "2026-03-20/v1.1-phase1",
+      catalogVersion: "2026-03-29/v1.1-phase2",
       roster: [],
       facilities: {
         controlNexus: { level: 1 },
@@ -112,7 +112,7 @@ describe("data services", () => {
   it("migrates deprecated includeReceptionRoom=false to a disabled reception room", () => {
     const migration = migrateScenario({
       scenarioFormatVersion: 1,
-      catalogVersion: "2026-03-20/v1.1-phase1",
+      catalogVersion: "2026-03-29/v1.1-phase2",
       roster: [],
       facilities: {
         controlNexus: { level: 3 },
@@ -166,7 +166,7 @@ describe("data services", () => {
   it("clamps imported custom optimization effort into the supported range", () => {
     const migration = migrateScenario({
       scenarioFormatVersion: 1,
-      catalogVersion: "2026-03-20/v1.1-phase1",
+      catalogVersion: "2026-03-29/v1.1-phase2",
       roster: [],
       facilities: {
         controlNexus: { level: 1 },
@@ -207,6 +207,27 @@ describe("data services", () => {
     expect(hydration.scenario.facilities.manufacturingCabins).toHaveLength(2);
     expect(hydration.scenario.facilities.growthChambers).toHaveLength(1);
     expect(hydration.scenario.facilities.receptionRoom?.id).toBe("reception-1");
+  });
+
+  it("rebases stale scenario catalog versions to the active catalog during hydration", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+
+    scenario.catalogVersion = "2026-03-20/v1.1-phase1";
+
+    const hydration = hydrateScenarioForCatalog(catalog, scenario);
+
+    expect(hydration.hydrated).toBe(true);
+    expect(hydration.scenario.catalogVersion).toBe(catalog.version);
+    expect(hydration.changes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: "catalogVersion",
+          message: `Updated scenario catalogVersion from '2026-03-20/v1.1-phase1' to '${catalog.version}'.`,
+        }),
+      ]),
+    );
+    expect(validateScenarioAgainstCatalog(catalog, hydration.scenario).ok).toBe(true);
   });
 
   it("expands shared progression defaults into runtime Base Skill costs and unlock hints", async () => {

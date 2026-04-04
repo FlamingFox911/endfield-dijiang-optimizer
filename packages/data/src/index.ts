@@ -29,8 +29,8 @@ import type {
   MigrationResult,
 } from "@endfield/domain";
 
-export const CURRENT_CATALOG_VERSION: CatalogVersion = "2026-03-20/v1.1-phase1";
-export const CURRENT_CATALOG_BUNDLE_ID = "2026-03-20-v1.1-phase1";
+export const CURRENT_CATALOG_VERSION: CatalogVersion = "2026-03-29/v1.1-phase2";
+export const CURRENT_CATALOG_BUNDLE_ID = "2026-03-29-v1.1-phase2";
 export const CURRENT_SCENARIO_FORMAT_VERSION = 1 as const;
 export const EXAMPLE_SCENARIOS_DIR = "scenarios/examples" as const;
 export const MAX_OPERATOR_LEVEL = 90 as const;
@@ -1382,6 +1382,14 @@ export function hydrateScenarioForCatalog(
   const rosterById = new Map(nextScenario.roster.map((entry) => [entry.operatorId, entry]));
   const catalogOperatorIds = new Set(catalog.operators.map((operator) => operator.id));
   const unknownOperators = nextScenario.roster.filter((entry) => !catalogOperatorIds.has(entry.operatorId));
+
+  if (nextScenario.catalogVersion !== catalog.version) {
+    changes.push({
+      path: "catalogVersion",
+      message: `Updated scenario catalogVersion from '${nextScenario.catalogVersion}' to '${catalog.version}'.`,
+    });
+    nextScenario.catalogVersion = catalog.version;
+  }
 
   nextScenario.roster = catalog.operators.map((operator) => {
     const existing = rosterById.get(operator.id);

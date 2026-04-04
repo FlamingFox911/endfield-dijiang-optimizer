@@ -40,7 +40,7 @@ describe("cli", () => {
 
     const packed = JSON.parse(output)[0];
     const paths = new Set((packed.files as Array<{ path: string }>).map((entry) => entry.path));
-    expect(paths.has("dist/catalogs/2026-03-20-v1.1-phase1/manifest.json")).toBe(true);
+    expect(paths.has("dist/catalogs/2026-03-29-v1.1-phase2/manifest.json")).toBe(true);
     expect(paths.has("dist/scenarios/examples/current-base.simple.json")).toBe(true);
     expect(paths.has("dist/endfield-opt.cjs")).toBe(true);
   });

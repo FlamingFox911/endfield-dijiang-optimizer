@@ -1,0 +1,469 @@
+{
+  "catalogVersion": "2026-03-29/v1.1-phase2",
+  "sources": [
+    {
+      "id": "game8-akekuri",
+      "label": "Game8 Akekuri page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/562341",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-alesh",
+      "label": "Game8 Alesh page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/562315",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-antal",
+      "label": "Game8 Antal page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/562340",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-arclight",
+      "label": "Game8 Arclight page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/523663",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-ardelia",
+      "label": "Game8 Ardelia page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/562199",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-avywenna",
+      "label": "Game8 Avywenna page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/523670",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-best-dijiang-setup",
+      "label": "Game8 best Dijiang setup",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/583161",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-catcher",
+      "label": "Game8 Catcher page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/562317",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-chen-qianyu",
+      "label": "Game8 Chen Qianyu page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/523674",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-control-nexus",
+      "label": "Game8 Control Nexus guide",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/575985",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-da-pan",
+      "label": "Game8 Da Pan page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/523672",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-ember",
+      "label": "Game8 Ember page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/523671",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-estella",
+      "label": "Game8 Estella page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/562210",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-fluorite",
+      "label": "Game8 Fluorite page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/562203",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-gilberta",
+      "label": "Game8 Gilberta page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/523668",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-growth-chamber",
+      "label": "Game8 Growth Chamber guide",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/577534",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-laevatain",
+      "label": "Game8 Laevatain page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/523665",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-last-rite",
+      "label": "Game8 Last Rite page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/562308",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-lifeng",
+      "label": "Game8 Lifeng page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/523667",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-maintenance-progress",
+      "label": "Game8 Maintenance Progress main mission guide",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/575874",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-manufacturing-cabin",
+      "label": "Game8 Manufacturing Cabin guide",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/577556",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-perlica",
+      "label": "Game8 Perlica page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/523675",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-pogranichnik",
+      "label": "Game8 Pogranichnik page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/562205",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-reception-room",
+      "label": "Game8 Reception Room guide",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/576633",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "endfieldtools-rossi",
+      "label": "EndfieldTools Rossi page",
+      "url": "https://endfieldtools.dev/characters/rossi/",
+      "retrievedOn": "2026-04-03",
+      "confidence": "community",
+      "notes": "Used to verify Rossi Base Skill rank suffixes from chr_0028_wulfa.json under EndfieldTools character data."
+    },
+    {
+      "id": "game8-snowshine",
+      "label": "Game8 Snowshine page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/523666",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-wulfgard",
+      "label": "Game8 Wulfgard page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/523673",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-xaihi",
+      "label": "Game8 Xaihi page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/523669",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "game8-yvonne",
+      "label": "Game8 Yvonne page",
+      "url": "https://game8.co/games/Arknights-Endfield/archives/523664",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "gamewith-dijiang-overview",
+      "label": "GameWith Dijiang overview",
+      "url": "https://gamewith.net/akendfield/72893",
+      "retrievedOn": "2026-03-20",
+      "confidence": "guide_site"
+    },
+    {
+      "id": "official-release-2026-01-20",
+      "label": "Official release notice",
+      "url": "https://endfield.gryphline.com/news/9574",
+      "retrievedOn": "2026-03-20",
+      "confidence": "official"
+    },
+    {
+      "id": "official-security-2026-03-12",
+      "label": "Official security warning for unofficial tools",
+      "url": "https://endfield.gryphline.com/en-us/news/7026",
+      "retrievedOn": "2026-03-20",
+      "confidence": "official"
+    },
+    {
+      "id": "official-wolf-pearl-2026-03-29",
+      "label": "Official Old Deep Water Dies, by Rising Tide It is Denied version update notes",
+      "url": "https://endfield.gryphline.com/news/8907",
+      "retrievedOn": "2026-04-03",
+      "confidence": "official",
+      "notes": "Used for Rossi release timing: [Wolf Pearl] Chartered Headhunting opened at 2026/03/29 12:00 server time."
+    },
+    {
+      "id": "user-control-nexus-upgrades-2026-03-21",
+      "label": "User Control Nexus upgrade screenshots",
+      "url": "local-user-supplied",
+      "retrievedOn": "2026-03-21",
+      "confidence": "manual_override",
+      "notes": "User-supplied in-game screenshots confirming Control Nexus unlocks, room counts, and facility level-cap progression."
+    },
+    {
+      "id": "user-growth-chamber-rebuild-2026-03-21",
+      "label": "User Growth Chamber rebuild findings",
+      "url": "local-user-supplied",
+      "retrievedOn": "2026-03-21",
+      "confidence": "manual_override",
+      "notes": "User-supplied in-game rebuild data confirming Growth Chamber unlock tiers, durations, and outputs."
+    },
+    {
+      "id": "user-manufacturing-cabin-screenshots-2026-03-21",
+      "label": "User Manufacturing Cabin screenshots",
+      "url": "local-user-supplied",
+      "retrievedOn": "2026-03-21",
+      "confidence": "manual_override",
+      "notes": "User-supplied in-game screenshots confirming Manufacturing Cabin recipe durations and MFG load values."
+    },
+    {
+      "id": "wiki-akekuri",
+      "label": "Endfield Talos Wiki Akekuri page",
+      "url": "https://endfield.wiki.gg/wiki/Akekuri",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-alesh",
+      "label": "Endfield Talos Wiki Alesh page",
+      "url": "https://endfield.wiki.gg/wiki/Alesh",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-antal",
+      "label": "Endfield Talos Wiki Antal page",
+      "url": "https://endfield.wiki.gg/wiki/Antal",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-arclight",
+      "label": "Endfield Talos Wiki Arclight page",
+      "url": "https://endfield.wiki.gg/wiki/Arclight",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-ardelia",
+      "label": "Endfield Talos Wiki Ardelia page",
+      "url": "https://endfield.wiki.gg/wiki/Ardelia",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-avywenna",
+      "label": "Endfield Talos Wiki Avywenna page",
+      "url": "https://endfield.wiki.gg/wiki/Avywenna",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-catcher",
+      "label": "Endfield Talos Wiki Catcher page",
+      "url": "https://endfield.wiki.gg/wiki/Catcher",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-chen-qianyu",
+      "label": "Endfield Talos Wiki Chen Qianyu page",
+      "url": "https://endfield.wiki.gg/wiki/Chen_Qianyu",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-da-pan",
+      "label": "Endfield Talos Wiki Da Pan page",
+      "url": "https://endfield.wiki.gg/wiki/Da_Pan",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-ember",
+      "label": "Endfield Talos Wiki Ember page",
+      "url": "https://endfield.wiki.gg/wiki/Ember",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-estella",
+      "label": "Endfield Talos Wiki Estella page",
+      "url": "https://endfield.wiki.gg/wiki/Estella",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-fluorite",
+      "label": "Endfield Talos Wiki Fluorite page",
+      "url": "https://endfield.wiki.gg/wiki/Fluorite",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-gilberta",
+      "label": "Endfield Talos Wiki Gilberta page",
+      "url": "https://endfield.wiki.gg/wiki/Gilberta",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-laevatain",
+      "label": "Endfield Talos Wiki Laevatain page",
+      "url": "https://endfield.wiki.gg/wiki/Laevatain",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-last-rite",
+      "label": "Endfield Talos Wiki Last Rite page",
+      "url": "https://endfield.wiki.gg/wiki/Last_Rite",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-lifeng",
+      "label": "Endfield Talos Wiki Lifeng page",
+      "url": "https://endfield.wiki.gg/wiki/Lifeng",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-omv-dijiang-facility",
+      "label": "Endfield Talos Wiki OMV Dijiang Facility page",
+      "url": "https://endfield.wiki.gg/wiki/OMV_Dijiang/Facility",
+      "retrievedOn": "2026-03-20",
+      "confidence": "community"
+    },
+    {
+      "id": "wiki-operator-overview",
+      "label": "Endfield Talos Wiki Operator overview page",
+      "url": "https://endfield.wiki.gg/wiki/Operator",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for shared Base Skill node costs, level milestones, EXP item values, and shared promotion requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-perlica",
+      "label": "Endfield Talos Wiki Perlica page",
+      "url": "https://endfield.wiki.gg/wiki/Perlica",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-pogranichnik",
+      "label": "Endfield Talos Wiki Pogranichnik page",
+      "url": "https://endfield.wiki.gg/wiki/Pogranichnik",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-rossi",
+      "label": "Endfield Talos Wiki Rossi page",
+      "url": "https://endfield.wiki.gg/wiki/Rossi",
+      "retrievedOn": "2026-04-03",
+      "confidence": "community",
+      "notes": "Used for Rossi Base Skill details and Promotion IV material requirements from the wiki page and raw source."
+    },
+    {
+      "id": "wiki-snowshine",
+      "label": "Endfield Talos Wiki Snowshine page",
+      "url": "https://endfield.wiki.gg/wiki/Snowshine",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-tangtang",
+      "label": "Endfield Talos Wiki Tangtang page",
+      "url": "https://endfield.wiki.gg/wiki/Tangtang",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-wulfgard",
+      "label": "Endfield Talos Wiki Wulfgard page",
+      "url": "https://endfield.wiki.gg/wiki/Wulfgard",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-xaihi",
+      "label": "Endfield Talos Wiki Xaihi page",
+      "url": "https://endfield.wiki.gg/wiki/Xaihi",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "wiki-yvonne",
+      "label": "Endfield Talos Wiki Yvonne page",
+      "url": "https://endfield.wiki.gg/wiki/Yvonne",
+      "retrievedOn": "2026-03-21",
+      "confidence": "community",
+      "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    }
+  ]
+}

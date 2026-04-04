@@ -1,0 +1,3662 @@
+{
+  "catalogVersion": "2026-03-29/v1.1-phase2",
+  "operators": [
+    {
+      "id": "chen-qianyu",
+      "name": "Chen Qianyu",
+      "rarity": 5,
+      "className": "Guard",
+      "images": [
+        {
+          "id": "operator-chen-qianyu-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/chen-qianyu.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/chen-qianyu.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "blade-critique",
+          "name": "Blade Critique",
+          "facilityKind": "manufacturing_cabin",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "weapon_exp",
+                  "value": 10,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-chen-qianyu",
+                  "label": "Endfield Talos Wiki Chen Qianyu page",
+                  "url": "https://endfield.wiki.gg/wiki/Chen_Qianyu",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "community"
+                },
+                {
+                  "id": "game8-chen-qianyu",
+                  "label": "Game8 Chen Qianyu page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523674",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "weapon_exp",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-chen-qianyu",
+                  "label": "Endfield Talos Wiki Chen Qianyu page",
+                  "url": "https://endfield.wiki.gg/wiki/Chen_Qianyu",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "community"
+                },
+                {
+                  "id": "game8-chen-qianyu",
+                  "label": "Game8 Chen Qianyu page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523674",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "wiki-chen-qianyu",
+              "label": "Endfield Talos Wiki Chen Qianyu page",
+              "url": "https://endfield.wiki.gg/wiki/Chen_Qianyu",
+              "retrievedOn": "2026-03-20",
+              "confidence": "community"
+            },
+            {
+              "id": "game8-chen-qianyu",
+              "label": "Game8 Chen Qianyu page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523674",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-chen-qianyu-blade-critique-icon"
+        },
+        {
+          "id": "jadeworking",
+          "name": "Jadeworking",
+          "facilityKind": "growth_chamber",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "growth_rate",
+                  "appliesTo": "rare_mineral",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-chen-qianyu",
+                  "label": "Endfield Talos Wiki Chen Qianyu page",
+                  "url": "https://endfield.wiki.gg/wiki/Chen_Qianyu",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "community"
+                },
+                {
+                  "id": "game8-chen-qianyu",
+                  "label": "Game8 Chen Qianyu page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523674",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "growth_rate",
+                  "appliesTo": "rare_mineral",
+                  "value": 30,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-chen-qianyu",
+                  "label": "Endfield Talos Wiki Chen Qianyu page",
+                  "url": "https://endfield.wiki.gg/wiki/Chen_Qianyu",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "community"
+                },
+                {
+                  "id": "game8-chen-qianyu",
+                  "label": "Game8 Chen Qianyu page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523674",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "wiki-chen-qianyu",
+              "label": "Endfield Talos Wiki Chen Qianyu page",
+              "url": "https://endfield.wiki.gg/wiki/Chen_Qianyu",
+              "retrievedOn": "2026-03-20",
+              "confidence": "community"
+            },
+            {
+              "id": "game8-chen-qianyu",
+              "label": "Game8 Chen Qianyu page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523674",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-chen-qianyu-jadeworking-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-chen-qianyu",
+          "label": "Endfield Talos Wiki Chen Qianyu page",
+          "url": "https://endfield.wiki.gg/wiki/Chen_Qianyu",
+          "retrievedOn": "2026-03-20",
+          "confidence": "community"
+        },
+        {
+          "id": "game8-chen-qianyu",
+          "label": "Game8 Chen Qianyu page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/523674",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "xaihi",
+      "name": "Xaihi",
+      "rarity": 5,
+      "className": "Supporter",
+      "images": [
+        {
+          "id": "operator-xaihi-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/xaihi.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/xaihi.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "standardized-scripting",
+          "name": "Standardized Scripting",
+          "facilityKind": "manufacturing_cabin",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "operator_exp",
+                  "value": 10,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-xaihi",
+                  "label": "Endfield Talos Wiki Xaihi page",
+                  "url": "https://endfield.wiki.gg/wiki/Xaihi",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "community"
+                },
+                {
+                  "id": "game8-xaihi",
+                  "label": "Game8 Xaihi page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523669",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "operator_exp",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-xaihi",
+                  "label": "Endfield Talos Wiki Xaihi page",
+                  "url": "https://endfield.wiki.gg/wiki/Xaihi",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "community"
+                },
+                {
+                  "id": "game8-xaihi",
+                  "label": "Game8 Xaihi page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523669",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "wiki-xaihi",
+              "label": "Endfield Talos Wiki Xaihi page",
+              "url": "https://endfield.wiki.gg/wiki/Xaihi",
+              "retrievedOn": "2026-03-20",
+              "confidence": "community"
+            },
+            {
+              "id": "game8-xaihi",
+              "label": "Game8 Xaihi page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523669",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-xaihi-standardized-scripting-icon"
+        },
+        {
+          "id": "murmuring-session",
+          "name": "Murmuring Session",
+          "facilityKind": "reception_room",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "clue_rate_up",
+                  "appliesTo": "clue_5",
+                  "value": 8,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-xaihi",
+                  "label": "Endfield Talos Wiki Xaihi page",
+                  "url": "https://endfield.wiki.gg/wiki/Xaihi",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "community"
+                },
+                {
+                  "id": "game8-xaihi",
+                  "label": "Game8 Xaihi page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523669",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "clue_rate_up",
+                  "appliesTo": "clue_5",
+                  "value": 12,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-xaihi",
+                  "label": "Endfield Talos Wiki Xaihi page",
+                  "url": "https://endfield.wiki.gg/wiki/Xaihi",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "community"
+                },
+                {
+                  "id": "game8-xaihi",
+                  "label": "Game8 Xaihi page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523669",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "wiki-xaihi",
+              "label": "Endfield Talos Wiki Xaihi page",
+              "url": "https://endfield.wiki.gg/wiki/Xaihi",
+              "retrievedOn": "2026-03-20",
+              "confidence": "community"
+            },
+            {
+              "id": "game8-xaihi",
+              "label": "Game8 Xaihi page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523669",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-xaihi-murmuring-session-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-xaihi",
+          "label": "Endfield Talos Wiki Xaihi page",
+          "url": "https://endfield.wiki.gg/wiki/Xaihi",
+          "retrievedOn": "2026-03-20",
+          "confidence": "community"
+        },
+        {
+          "id": "game8-xaihi",
+          "label": "Game8 Xaihi page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/523669",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "snowshine",
+      "name": "Snowshine",
+      "rarity": 5,
+      "className": "Defender",
+      "images": [
+        {
+          "id": "operator-snowshine-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/snowshine.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/snowshine.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "rescuers-perseverance",
+          "name": "Rescuer's Perseverance",
+          "facilityKind": "manufacturing_cabin",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 10,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-snowshine",
+                  "label": "Endfield Talos Wiki Snowshine page",
+                  "url": "https://endfield.wiki.gg/wiki/Snowshine",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "community"
+                },
+                {
+                  "id": "game8-snowshine",
+                  "label": "Game8 Snowshine page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523666",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 14,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-snowshine",
+                  "label": "Endfield Talos Wiki Snowshine page",
+                  "url": "https://endfield.wiki.gg/wiki/Snowshine",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "community"
+                },
+                {
+                  "id": "game8-snowshine",
+                  "label": "Game8 Snowshine page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523666",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "wiki-snowshine",
+              "label": "Endfield Talos Wiki Snowshine page",
+              "url": "https://endfield.wiki.gg/wiki/Snowshine",
+              "retrievedOn": "2026-03-20",
+              "confidence": "community"
+            },
+            {
+              "id": "game8-snowshine",
+              "label": "Game8 Snowshine page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523666",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-snowshine-rescuers-perseverance-icon"
+        },
+        {
+          "id": "happy-go-lucky",
+          "name": "Happy-Go-Lucky",
+          "facilityKind": "control_nexus",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 12,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-snowshine",
+                  "label": "Endfield Talos Wiki Snowshine page",
+                  "url": "https://endfield.wiki.gg/wiki/Snowshine",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "community"
+                },
+                {
+                  "id": "game8-snowshine",
+                  "label": "Game8 Snowshine page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523666",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 16,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-snowshine",
+                  "label": "Endfield Talos Wiki Snowshine page",
+                  "url": "https://endfield.wiki.gg/wiki/Snowshine",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "community"
+                },
+                {
+                  "id": "game8-snowshine",
+                  "label": "Game8 Snowshine page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523666",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "wiki-snowshine",
+              "label": "Endfield Talos Wiki Snowshine page",
+              "url": "https://endfield.wiki.gg/wiki/Snowshine",
+              "retrievedOn": "2026-03-20",
+              "confidence": "community"
+            },
+            {
+              "id": "game8-snowshine",
+              "label": "Game8 Snowshine page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523666",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-snowshine-happy-go-lucky-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-snowshine",
+          "label": "Endfield Talos Wiki Snowshine page",
+          "url": "https://endfield.wiki.gg/wiki/Snowshine",
+          "retrievedOn": "2026-03-20",
+          "confidence": "community"
+        },
+        {
+          "id": "game8-snowshine",
+          "label": "Game8 Snowshine page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/523666",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "da-pan",
+      "name": "Da Pan",
+      "rarity": 5,
+      "className": "Striker",
+      "images": [
+        {
+          "id": "operator-da-pan-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/da-pan.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/da-pan.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "chef-of-forage-and-game",
+          "name": "Chef of Forage and Game",
+          "facilityKind": "growth_chamber",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "growth_rate",
+                  "appliesTo": "fungal",
+                  "value": 10,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-da-pan",
+                  "label": "Game8 Da Pan page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523672",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "growth_rate",
+                  "appliesTo": "fungal",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-da-pan",
+                  "label": "Game8 Da Pan page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523672",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-da-pan",
+              "label": "Game8 Da Pan page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523672",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-da-pan-chef-of-forage-and-game-icon"
+        },
+        {
+          "id": "worldly-wisdom",
+          "name": "Worldly Wisdom",
+          "facilityKind": "control_nexus",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 12,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-da-pan",
+                  "label": "Game8 Da Pan page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523672",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 16,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-da-pan",
+                  "label": "Game8 Da Pan page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523672",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-da-pan",
+              "label": "Game8 Da Pan page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523672",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-da-pan-worldly-wisdom-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-da-pan",
+          "label": "Game8 Da Pan page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/523672",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "ardelia",
+      "name": "Ardelia",
+      "rarity": 6,
+      "className": "Supporter",
+      "images": [
+        {
+          "id": "operator-ardelia-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/ardelia.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/ardelia.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "tales-of-the-land",
+          "name": "Tales of the Land",
+          "facilityKind": "reception_room",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "clue_collection_efficiency",
+                  "appliesTo": "all",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-ardelia",
+                  "label": "Game8 Ardelia page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562199",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "clue_collection_efficiency",
+                  "appliesTo": "all",
+                  "value": 30,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-ardelia",
+                  "label": "Game8 Ardelia page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562199",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-ardelia",
+              "label": "Game8 Ardelia page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562199",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-ardelia-tales-of-the-land-icon"
+        },
+        {
+          "id": "mr-dollys-game",
+          "name": "Mr. Dolly's Game",
+          "facilityKind": "reception_room",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 14,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-ardelia",
+                  "label": "Game8 Ardelia page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562199",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 18,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-ardelia",
+                  "label": "Game8 Ardelia page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562199",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-ardelia",
+              "label": "Game8 Ardelia page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562199",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-ardelia-mr-dollys-game-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-ardelia",
+          "label": "Game8 Ardelia page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/562199",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "akekuri",
+      "name": "Akekuri",
+      "rarity": 4,
+      "className": "Vanguard",
+      "images": [
+        {
+          "id": "operator-akekuri-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/akekuri.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/akekuri.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "coffee-or-tea",
+          "name": "Coffee or Tea",
+          "facilityKind": "manufacturing_cabin",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 10,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-akekuri",
+                  "label": "Game8 Akekuri page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562341",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 14,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-akekuri",
+                  "label": "Game8 Akekuri page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562341",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-akekuri",
+              "label": "Game8 Akekuri page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562341",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-akekuri-coffee-or-tea-icon"
+        },
+        {
+          "id": "icebreaker",
+          "name": "Icebreaker",
+          "facilityKind": "reception_room",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 14,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-akekuri",
+                  "label": "Game8 Akekuri page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562341",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 18,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-akekuri",
+                  "label": "Game8 Akekuri page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562341",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-akekuri",
+              "label": "Game8 Akekuri page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562341",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-akekuri-icebreaker-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-akekuri",
+          "label": "Game8 Akekuri page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/562341",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "fluorite",
+      "name": "Fluorite",
+      "rarity": 4,
+      "className": "Caster",
+      "images": [
+        {
+          "id": "operator-fluorite-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/fluorite.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/fluorite.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "wildlands-trekker",
+          "name": "Wildlands Trekker",
+          "facilityKind": "growth_chamber",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "growth_rate",
+                  "appliesTo": "rare_mineral",
+                  "value": 10,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-fluorite",
+                  "label": "Game8 Fluorite page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562203",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "growth_rate",
+                  "appliesTo": "rare_mineral",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-fluorite",
+                  "label": "Game8 Fluorite page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562203",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-fluorite",
+              "label": "Game8 Fluorite page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562203",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-fluorite-wildlands-trekker-icon"
+        },
+        {
+          "id": "reader-of-emotions",
+          "name": "Reader of Emotions",
+          "facilityKind": "control_nexus",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 12,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-fluorite",
+                  "label": "Game8 Fluorite page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562203",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 16,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-fluorite",
+                  "label": "Game8 Fluorite page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562203",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-fluorite",
+              "label": "Game8 Fluorite page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562203",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-fluorite-reader-of-emotions-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-fluorite",
+          "label": "Game8 Fluorite page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/562203",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "estella",
+      "name": "Estella",
+      "rarity": 4,
+      "className": "Guard",
+      "images": [
+        {
+          "id": "operator-estella-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/estella.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/estella.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "fragmented-rest",
+          "name": "Fragmented Rest",
+          "facilityKind": "control_nexus",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 8,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-estella",
+                  "label": "Game8 Estella page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562210",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 12,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-estella",
+                  "label": "Game8 Estella page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562210",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-estella",
+              "label": "Game8 Estella page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562210",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-estella-fragmented-rest-icon"
+        },
+        {
+          "id": "frequency-monitoring",
+          "name": "Frequency Monitoring",
+          "facilityKind": "reception_room",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "clue_collection_efficiency",
+                  "appliesTo": "all",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-estella",
+                  "label": "Game8 Estella page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562210",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "clue_collection_efficiency",
+                  "appliesTo": "all",
+                  "value": 30,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-estella",
+                  "label": "Game8 Estella page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562210",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-estella",
+              "label": "Game8 Estella page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562210",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-estella-frequency-monitoring-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-estella",
+          "label": "Game8 Estella page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/562210",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "perlica",
+      "name": "Perlica",
+      "rarity": 5,
+      "className": "Caster",
+      "images": [
+        {
+          "id": "operator-perlica-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/perlica.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/perlica.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "supervisor",
+          "name": "Supervisor",
+          "facilityKind": "control_nexus",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 8,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-perlica",
+                  "label": "Game8 Perlica page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523675",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 12,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-perlica",
+                  "label": "Game8 Perlica page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523675",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-perlica",
+              "label": "Game8 Perlica page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523675",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-perlica-supervisor-icon"
+        },
+        {
+          "id": "protocol-redistribution",
+          "name": "Protocol Redistribution",
+          "facilityKind": "manufacturing_cabin",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "weapon_exp",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-perlica",
+                  "label": "Game8 Perlica page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523675",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "weapon_exp",
+                  "value": 30,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-perlica",
+                  "label": "Game8 Perlica page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523675",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-perlica",
+              "label": "Game8 Perlica page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523675",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-perlica-protocol-redistribution-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-perlica",
+          "label": "Game8 Perlica page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/523675",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "yvonne",
+      "name": "Yvonne",
+      "rarity": 6,
+      "className": "Striker",
+      "images": [
+        {
+          "id": "operator-yvonne-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/yvonne.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/yvonne.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "fungal-pigment-extraction",
+          "name": "Fungal Pigment Extraction",
+          "facilityKind": "growth_chamber",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "growth_rate",
+                  "appliesTo": "fungal",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-yvonne",
+                  "label": "Game8 Yvonne page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523664",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "growth_rate",
+                  "appliesTo": "fungal",
+                  "value": 30,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-yvonne",
+                  "label": "Game8 Yvonne page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523664",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-yvonne",
+              "label": "Game8 Yvonne page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523664",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-yvonne-fungal-pigment-extraction-icon"
+        },
+        {
+          "id": "fashionista",
+          "name": "Fashionista",
+          "facilityKind": "growth_chamber",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 14,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-yvonne",
+                  "label": "Game8 Yvonne page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523664",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 18,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-yvonne",
+                  "label": "Game8 Yvonne page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523664",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-yvonne",
+              "label": "Game8 Yvonne page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523664",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-yvonne-fashionista-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-yvonne",
+          "label": "Game8 Yvonne page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/523664",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "antal",
+      "name": "Antal",
+      "rarity": 4,
+      "className": "Supporter",
+      "images": [
+        {
+          "id": "operator-antal-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/antal.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/antal.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "experimental-arts-unit",
+          "name": "Experimental Arts Unit",
+          "facilityKind": "manufacturing_cabin",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "weapon_exp",
+                  "value": 10,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-antal",
+                  "label": "Game8 Antal page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562340",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "weapon_exp",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-antal",
+                  "label": "Game8 Antal page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562340",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-antal",
+              "label": "Game8 Antal page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562340",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-antal-experimental-arts-unit-icon"
+        },
+        {
+          "id": "pun-isher-studies",
+          "name": "Pun-isher Studies",
+          "facilityKind": "growth_chamber",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 14,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-antal",
+                  "label": "Game8 Antal page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562340",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 18,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-antal",
+                  "label": "Game8 Antal page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562340",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-antal",
+              "label": "Game8 Antal page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562340",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-antal-pun-isher-studies-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-antal",
+          "label": "Game8 Antal page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/562340",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "wulfgard",
+      "name": "Wulfgard",
+      "rarity": 5,
+      "className": "Caster",
+      "images": [
+        {
+          "id": "operator-wulfgard-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/wulfgard.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/wulfgard.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "pack-techniques",
+          "name": "Pack Techniques",
+          "facilityKind": "manufacturing_cabin",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "operator_exp",
+                  "value": 10,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-wulfgard",
+                  "label": "Game8 Wulfgard page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523673",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "operator_exp",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-wulfgard",
+                  "label": "Game8 Wulfgard page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523673",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-wulfgard",
+              "label": "Game8 Wulfgard page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523673",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-wulfgard-pack-techniques-icon"
+        },
+        {
+          "id": "knack-for-the-wildlands",
+          "name": "Knack for the Wildlands",
+          "facilityKind": "growth_chamber",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "growth_rate",
+                  "appliesTo": "rare_mineral",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-wulfgard",
+                  "label": "Game8 Wulfgard page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523673",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "growth_rate",
+                  "appliesTo": "rare_mineral",
+                  "value": 30,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-wulfgard",
+                  "label": "Game8 Wulfgard page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523673",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-wulfgard",
+              "label": "Game8 Wulfgard page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523673",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-wulfgard-knack-for-the-wildlands-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-wulfgard",
+          "label": "Game8 Wulfgard page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/523673",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "laevatain",
+      "name": "Laevatain",
+      "rarity": 6,
+      "className": "Striker",
+      "images": [
+        {
+          "id": "operator-laevatain-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/laevatain.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/laevatain.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "memory-crucible",
+          "name": "Memory Crucible",
+          "facilityKind": "manufacturing_cabin",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "operator_exp",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-laevatain",
+                  "label": "Game8 Laevatain page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523665",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "operator_exp",
+                  "value": 30,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-laevatain",
+                  "label": "Game8 Laevatain page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523665",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-laevatain",
+              "label": "Game8 Laevatain page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523665",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-laevatain-memory-crucible-icon"
+        },
+        {
+          "id": "undying-flames",
+          "name": "Undying Flames",
+          "facilityKind": "manufacturing_cabin",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 14,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-laevatain",
+                  "label": "Game8 Laevatain page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523665",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 18,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-laevatain",
+                  "label": "Game8 Laevatain page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523665",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-laevatain",
+              "label": "Game8 Laevatain page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523665",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-laevatain-undying-flames-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-laevatain",
+          "label": "Game8 Laevatain page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/523665",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "last-rite",
+      "name": "Last Rite",
+      "rarity": 6,
+      "className": "Striker",
+      "images": [
+        {
+          "id": "operator-last-rite-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/last-rite.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/last-rite.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "cemetery-gardening",
+          "name": "Cemetery Gardening",
+          "facilityKind": "growth_chamber",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "growth_rate",
+                  "appliesTo": "vitrified_plant",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-last-rite",
+                  "label": "Game8 Last Rite page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562308",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "growth_rate",
+                  "appliesTo": "vitrified_plant",
+                  "value": 30,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-last-rite",
+                  "label": "Game8 Last Rite page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562308",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-last-rite",
+              "label": "Game8 Last Rite page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562308",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-last-rite-cemetery-gardening-icon"
+        },
+        {
+          "id": "fame-of-the-royal-courts",
+          "name": "Fame of the Royal Courts",
+          "facilityKind": "reception_room",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "clue_rate_up",
+                  "appliesTo": "clue_7",
+                  "value": 8,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-last-rite",
+                  "label": "Game8 Last Rite page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562308",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "clue_rate_up",
+                  "appliesTo": "clue_7",
+                  "value": 12,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-last-rite",
+                  "label": "Game8 Last Rite page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562308",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-last-rite",
+              "label": "Game8 Last Rite page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562308",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-last-rite-fame-of-the-royal-courts-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-last-rite",
+          "label": "Game8 Last Rite page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/562308",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "pogranichnik",
+      "name": "Pogranichnik",
+      "rarity": 6,
+      "className": "Vanguard",
+      "images": [
+        {
+          "id": "operator-pogranichnik-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/pogranichnik.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/pogranichnik.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "hone-the-weapons",
+          "name": "Hone the Weapons",
+          "facilityKind": "manufacturing_cabin",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "weapon_exp",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-pogranichnik",
+                  "label": "Game8 Pogranichnik page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562205",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "weapon_exp",
+                  "value": 30,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-pogranichnik",
+                  "label": "Game8 Pogranichnik page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562205",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-pogranichnik",
+              "label": "Game8 Pogranichnik page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562205",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-pogranichnik-hone-the-weapons-icon"
+        },
+        {
+          "id": "morale-boost",
+          "name": "Morale Boost",
+          "facilityKind": "manufacturing_cabin",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 14,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-pogranichnik",
+                  "label": "Game8 Pogranichnik page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562205",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 18,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-pogranichnik",
+                  "label": "Game8 Pogranichnik page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562205",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-pogranichnik",
+              "label": "Game8 Pogranichnik page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562205",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-pogranichnik-morale-boost-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-pogranichnik",
+          "label": "Game8 Pogranichnik page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/562205",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "gilberta",
+      "name": "Gilberta",
+      "rarity": 6,
+      "className": "Supporter",
+      "images": [
+        {
+          "id": "operator-gilberta-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/gilberta.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/gilberta.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "messengerial-processing",
+          "name": "Messengerial Processing",
+          "facilityKind": "manufacturing_cabin",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 14,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-gilberta",
+                  "label": "Game8 Gilberta page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523668",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 18,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-gilberta",
+                  "label": "Game8 Gilberta page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523668",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-gilberta",
+              "label": "Game8 Gilberta page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523668",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-gilberta-messengerial-processing-icon"
+        },
+        {
+          "id": "messengerial-arms-mastery",
+          "name": "Messengerial Arms Mastery",
+          "facilityKind": "manufacturing_cabin",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "weapon_exp",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-gilberta",
+                  "label": "Game8 Gilberta page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523668",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "weapon_exp",
+                  "value": 30,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-gilberta",
+                  "label": "Game8 Gilberta page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523668",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-gilberta",
+              "label": "Game8 Gilberta page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523668",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-gilberta-messengerial-arms-mastery-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-gilberta",
+          "label": "Game8 Gilberta page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/523668",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "lifeng",
+      "name": "Lifeng",
+      "rarity": 6,
+      "className": "Guard",
+      "images": [
+        {
+          "id": "operator-lifeng-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/lifeng.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/lifeng.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "youthful-ambition",
+          "name": "Youthful Ambition",
+          "facilityKind": "control_nexus",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 12,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-lifeng",
+                  "label": "Game8 Lifeng page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523667",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 16,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-lifeng",
+                  "label": "Game8 Lifeng page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523667",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-lifeng",
+              "label": "Game8 Lifeng page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523667",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-lifeng-youthful-ambition-icon"
+        },
+        {
+          "id": "laddie-reliable",
+          "name": "Laddie Reliable",
+          "facilityKind": "reception_room",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "clue_rate_up",
+                  "appliesTo": "clue_3",
+                  "value": 8,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-lifeng",
+                  "label": "Game8 Lifeng page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523667",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "clue_rate_up",
+                  "appliesTo": "clue_3",
+                  "value": 12,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-lifeng",
+                  "label": "Game8 Lifeng page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523667",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-lifeng",
+              "label": "Game8 Lifeng page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523667",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-lifeng-laddie-reliable-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-lifeng",
+          "label": "Game8 Lifeng page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/523667",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "alesh",
+      "name": "Alesh",
+      "rarity": 5,
+      "className": "Vanguard",
+      "images": [
+        {
+          "id": "operator-alesh-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/alesh.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/alesh.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "casual-angling",
+          "name": "Casual Angling",
+          "facilityKind": "control_nexus",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 8,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-alesh",
+                  "label": "Game8 Alesh page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562315",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 12,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-alesh",
+                  "label": "Game8 Alesh page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562315",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-alesh",
+              "label": "Game8 Alesh page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562315",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-alesh-casual-angling-icon"
+        },
+        {
+          "id": "anglers-intel-network",
+          "name": "Anglers' Intel Network",
+          "facilityKind": "reception_room",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "clue_rate_up",
+                  "appliesTo": "clue_1",
+                  "value": 8,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-alesh",
+                  "label": "Game8 Alesh page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562315",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "clue_rate_up",
+                  "appliesTo": "clue_1",
+                  "value": 12,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-alesh",
+                  "label": "Game8 Alesh page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562315",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-alesh",
+              "label": "Game8 Alesh page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562315",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-alesh-anglers-intel-network-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-alesh",
+          "label": "Game8 Alesh page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/562315",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "arclight",
+      "name": "Arclight",
+      "rarity": 5,
+      "className": "Vanguard",
+      "images": [
+        {
+          "id": "operator-arclight-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/arclight.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/arclight.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "blade-of-the-wildlands",
+          "name": "Blade of the Wildlands",
+          "facilityKind": "manufacturing_cabin",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "weapon_exp",
+                  "value": 10,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-arclight",
+                  "label": "Game8 Arclight page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523663",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "weapon_exp",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-arclight",
+                  "label": "Game8 Arclight page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523663",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-arclight",
+              "label": "Game8 Arclight page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523663",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-arclight-blade-of-the-wildlands-icon"
+        },
+        {
+          "id": "hanna-traditions",
+          "name": "Hanna Traditions",
+          "facilityKind": "reception_room",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "clue_rate_up",
+                  "appliesTo": "clue_6",
+                  "value": 8,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-arclight",
+                  "label": "Game8 Arclight page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523663",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "clue_rate_up",
+                  "appliesTo": "clue_6",
+                  "value": 12,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-arclight",
+                  "label": "Game8 Arclight page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523663",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-arclight",
+              "label": "Game8 Arclight page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523663",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-arclight-hanna-traditions-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-arclight",
+          "label": "Game8 Arclight page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/523663",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "avywenna",
+      "name": "Avywenna",
+      "rarity": 5,
+      "className": "Striker",
+      "images": [
+        {
+          "id": "operator-avywenna-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/avywenna.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/avywenna.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "residence-advisor",
+          "name": "Residence Advisor",
+          "facilityKind": "control_nexus",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 8,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-avywenna",
+                  "label": "Game8 Avywenna page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523670",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 12,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-avywenna",
+                  "label": "Game8 Avywenna page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523670",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-avywenna",
+              "label": "Game8 Avywenna page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523670",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-avywenna-residence-advisor-icon"
+        },
+        {
+          "id": "messengers-secret",
+          "name": "Messenger's Secret",
+          "facilityKind": "reception_room",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "clue_rate_up",
+                  "appliesTo": "clue_2",
+                  "value": 8,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-avywenna",
+                  "label": "Game8 Avywenna page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523670",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "clue_rate_up",
+                  "appliesTo": "clue_2",
+                  "value": 12,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-avywenna",
+                  "label": "Game8 Avywenna page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523670",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-avywenna",
+              "label": "Game8 Avywenna page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523670",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-avywenna-messengers-secret-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-avywenna",
+          "label": "Game8 Avywenna page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/523670",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "catcher",
+      "name": "Catcher",
+      "rarity": 4,
+      "className": "Defender",
+      "images": [
+        {
+          "id": "operator-catcher-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/catcher.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/catcher.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "silent-caretaker",
+          "name": "Silent Caretaker",
+          "facilityKind": "control_nexus",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 8,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-catcher",
+                  "label": "Game8 Catcher page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562317",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_regen",
+                  "appliesTo": "all",
+                  "value": 12,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-catcher",
+                  "label": "Game8 Catcher page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562317",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-catcher",
+              "label": "Game8 Catcher page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562317",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-catcher-silent-caretaker-icon"
+        },
+        {
+          "id": "grounded-approach",
+          "name": "Grounded Approach",
+          "facilityKind": "growth_chamber",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 14,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-catcher",
+                  "label": "Game8 Catcher page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562317",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 18,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-catcher",
+                  "label": "Game8 Catcher page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/562317",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-catcher",
+              "label": "Game8 Catcher page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/562317",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-catcher-grounded-approach-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-catcher",
+          "label": "Game8 Catcher page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/562317",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "ember",
+      "name": "Ember",
+      "rarity": 6,
+      "className": "Defender",
+      "images": [
+        {
+          "id": "operator-ember-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/ember.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/ember.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "special-northern-training",
+          "name": "Special Northern Training",
+          "facilityKind": "manufacturing_cabin",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "operator_exp",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-ember",
+                  "label": "Game8 Ember page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523671",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "production_efficiency",
+                  "appliesTo": "operator_exp",
+                  "value": 30,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-ember",
+                  "label": "Game8 Ember page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523671",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-ember",
+              "label": "Game8 Ember page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523671",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-ember-special-northern-training-icon"
+        },
+        {
+          "id": "keepers-of-the-banner",
+          "name": "Keepers of the Banner",
+          "facilityKind": "reception_room",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "alpha",
+              "modifiers": [
+                {
+                  "metric": "clue_rate_up",
+                  "appliesTo": "clue_4",
+                  "value": 8,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-ember",
+                  "label": "Game8 Ember page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523671",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "clue_rate_up",
+                  "appliesTo": "clue_4",
+                  "value": 12,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "game8-ember",
+                  "label": "Game8 Ember page",
+                  "url": "https://game8.co/games/Arknights-Endfield/archives/523671",
+                  "retrievedOn": "2026-03-20",
+                  "confidence": "guide_site"
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "game8-ember",
+              "label": "Game8 Ember page",
+              "url": "https://game8.co/games/Arknights-Endfield/archives/523671",
+              "retrievedOn": "2026-03-20",
+              "confidence": "guide_site"
+            }
+          ],
+          "iconAssetId": "skill-ember-keepers-of-the-banner-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "game8-ember",
+          "label": "Game8 Ember page",
+          "url": "https://game8.co/games/Arknights-Endfield/archives/523671",
+          "retrievedOn": "2026-03-20",
+          "confidence": "guide_site"
+        }
+      ]
+    },
+    {
+      "id": "tangtang",
+      "name": "Tangtang",
+      "rarity": 6,
+      "className": "Caster",
+      "images": [
+        {
+          "id": "operator-tangtang-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/tangtang.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/tangtang.webp), retrieved 2026-03-22."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "supreme-chief",
+          "name": "Supreme Chief",
+          "facilityKind": "growth_chamber",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 14,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-tangtang",
+                  "label": "Endfield Talos Wiki Tangtang page",
+                  "url": "https://endfield.wiki.gg/wiki/Tangtang",
+                  "retrievedOn": "2026-03-21",
+                  "confidence": "community",
+                  "notes": "Base skill section supplied from page source because direct fetch was unavailable."
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 18,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-tangtang",
+                  "label": "Endfield Talos Wiki Tangtang page",
+                  "url": "https://endfield.wiki.gg/wiki/Tangtang",
+                  "retrievedOn": "2026-03-21",
+                  "confidence": "community",
+                  "notes": "Base skill section supplied from page source because direct fetch was unavailable."
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "wiki-tangtang",
+              "label": "Endfield Talos Wiki Tangtang page",
+              "url": "https://endfield.wiki.gg/wiki/Tangtang",
+              "retrievedOn": "2026-03-21",
+              "confidence": "community",
+              "notes": "Base skill section supplied from page source because direct fetch was unavailable."
+            }
+          ],
+          "iconAssetId": "skill-tangtang-supreme-chief-icon"
+        },
+        {
+          "id": "rivers-daughter",
+          "name": "River's Daughter",
+          "facilityKind": "growth_chamber",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "growth_rate",
+                  "appliesTo": "vitrified_plant",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-tangtang",
+                  "label": "Endfield Talos Wiki Tangtang page",
+                  "url": "https://endfield.wiki.gg/wiki/Tangtang",
+                  "retrievedOn": "2026-03-21",
+                  "confidence": "community",
+                  "notes": "Base skill section supplied from page source because direct fetch was unavailable."
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "growth_rate",
+                  "appliesTo": "vitrified_plant",
+                  "value": 30,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-tangtang",
+                  "label": "Endfield Talos Wiki Tangtang page",
+                  "url": "https://endfield.wiki.gg/wiki/Tangtang",
+                  "retrievedOn": "2026-03-21",
+                  "confidence": "community",
+                  "notes": "Base skill section supplied from page source because direct fetch was unavailable."
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "wiki-tangtang",
+              "label": "Endfield Talos Wiki Tangtang page",
+              "url": "https://endfield.wiki.gg/wiki/Tangtang",
+              "retrievedOn": "2026-03-21",
+              "confidence": "community",
+              "notes": "Base skill section supplied from page source because direct fetch was unavailable."
+            }
+          ],
+          "iconAssetId": "skill-tangtang-rivers-daughter-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-tangtang",
+          "label": "Endfield Talos Wiki Tangtang page",
+          "url": "https://endfield.wiki.gg/wiki/Tangtang",
+          "retrievedOn": "2026-03-21",
+          "confidence": "community",
+          "notes": "Base skill section supplied from page source because direct fetch was unavailable."
+        }
+      ]
+    },
+    {
+      "id": "rossi",
+      "name": "Rossi",
+      "rarity": 6,
+      "className": "Guard",
+      "images": [
+        {
+          "id": "operator-rossi-portrait",
+          "kind": "portrait",
+          "path": "assets/operators/rossi.webp",
+          "attribution": "Portrait from perlica.moe CDN (https://cdn.perlica.moe/images/operators/portraits/rossi.webp), retrieved 2026-04-03."
+        }
+      ],
+      "baseSkills": [
+        {
+          "id": "clan-etiquette",
+          "name": "Clan Etiquette",
+          "facilityKind": "reception_room",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 14,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-rossi",
+                  "label": "Endfield Talos Wiki Rossi page",
+                  "url": "https://endfield.wiki.gg/wiki/Rossi",
+                  "retrievedOn": "2026-04-03",
+                  "confidence": "community",
+                  "notes": "Used for Rossi Base Skill details and Promotion IV material requirements from the wiki page and raw source."
+                },
+                {
+                  "id": "endfieldtools-rossi",
+                  "label": "EndfieldTools Rossi page",
+                  "url": "https://endfieldtools.dev/characters/rossi/",
+                  "retrievedOn": "2026-04-03",
+                  "confidence": "community",
+                  "notes": "Used to verify Rossi Base Skill rank suffixes from the factory skill postfix fields in chr_0028_wulfa.json."
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "mood_drop_reduction",
+                  "appliesTo": "all",
+                  "value": 18,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-rossi",
+                  "label": "Endfield Talos Wiki Rossi page",
+                  "url": "https://endfield.wiki.gg/wiki/Rossi",
+                  "retrievedOn": "2026-04-03",
+                  "confidence": "community",
+                  "notes": "Used for Rossi Base Skill details and Promotion IV material requirements from the wiki page and raw source."
+                },
+                {
+                  "id": "endfieldtools-rossi",
+                  "label": "EndfieldTools Rossi page",
+                  "url": "https://endfieldtools.dev/characters/rossi/",
+                  "retrievedOn": "2026-04-03",
+                  "confidence": "community",
+                  "notes": "Used to verify Rossi Base Skill rank suffixes from the factory skill postfix fields in chr_0028_wulfa.json."
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "wiki-rossi",
+              "label": "Endfield Talos Wiki Rossi page",
+              "url": "https://endfield.wiki.gg/wiki/Rossi",
+              "retrievedOn": "2026-04-03",
+              "confidence": "community",
+              "notes": "Used for Rossi Base Skill details and Promotion IV material requirements from the wiki page and raw source."
+            },
+            {
+              "id": "endfieldtools-rossi",
+              "label": "EndfieldTools Rossi page",
+              "url": "https://endfieldtools.dev/characters/rossi/",
+              "retrievedOn": "2026-04-03",
+              "confidence": "community",
+              "notes": "Used to verify Rossi Base Skill rank suffixes from the factory skill postfix fields in chr_0028_wulfa.json."
+            }
+          ],
+          "iconAssetId": "skill-rossi-clan-etiquette-icon"
+        },
+        {
+          "id": "scent-of-the-hunt",
+          "name": "Scent of the Hunt",
+          "facilityKind": "reception_room",
+          "ranks": [
+            {
+              "rank": 1,
+              "label": "beta",
+              "modifiers": [
+                {
+                  "metric": "clue_collection_efficiency",
+                  "appliesTo": "all",
+                  "value": 20,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-rossi",
+                  "label": "Endfield Talos Wiki Rossi page",
+                  "url": "https://endfield.wiki.gg/wiki/Rossi",
+                  "retrievedOn": "2026-04-03",
+                  "confidence": "community",
+                  "notes": "Used for Rossi Base Skill details and Promotion IV material requirements from the wiki page and raw source."
+                },
+                {
+                  "id": "endfieldtools-rossi",
+                  "label": "EndfieldTools Rossi page",
+                  "url": "https://endfieldtools.dev/characters/rossi/",
+                  "retrievedOn": "2026-04-03",
+                  "confidence": "community",
+                  "notes": "Used to verify Rossi Base Skill rank suffixes from the factory skill postfix fields in chr_0028_wulfa.json."
+                }
+              ]
+            },
+            {
+              "rank": 2,
+              "label": "gamma",
+              "modifiers": [
+                {
+                  "metric": "clue_collection_efficiency",
+                  "appliesTo": "all",
+                  "value": 30,
+                  "unit": "percent"
+                }
+              ],
+              "sourceRefs": [
+                {
+                  "id": "wiki-rossi",
+                  "label": "Endfield Talos Wiki Rossi page",
+                  "url": "https://endfield.wiki.gg/wiki/Rossi",
+                  "retrievedOn": "2026-04-03",
+                  "confidence": "community",
+                  "notes": "Used for Rossi Base Skill details and Promotion IV material requirements from the wiki page and raw source."
+                },
+                {
+                  "id": "endfieldtools-rossi",
+                  "label": "EndfieldTools Rossi page",
+                  "url": "https://endfieldtools.dev/characters/rossi/",
+                  "retrievedOn": "2026-04-03",
+                  "confidence": "community",
+                  "notes": "Used to verify Rossi Base Skill rank suffixes from the factory skill postfix fields in chr_0028_wulfa.json."
+                }
+              ]
+            }
+          ],
+          "sourceRefs": [
+            {
+              "id": "wiki-rossi",
+              "label": "Endfield Talos Wiki Rossi page",
+              "url": "https://endfield.wiki.gg/wiki/Rossi",
+              "retrievedOn": "2026-04-03",
+              "confidence": "community",
+              "notes": "Used for Rossi Base Skill details and Promotion IV material requirements from the wiki page and raw source."
+            },
+            {
+              "id": "endfieldtools-rossi",
+              "label": "EndfieldTools Rossi page",
+              "url": "https://endfieldtools.dev/characters/rossi/",
+              "retrievedOn": "2026-04-03",
+              "confidence": "community",
+              "notes": "Used to verify Rossi Base Skill rank suffixes from the factory skill postfix fields in chr_0028_wulfa.json."
+            }
+          ],
+          "iconAssetId": "skill-rossi-scent-of-the-hunt-icon"
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "official-wolf-pearl-2026-03-29",
+          "label": "Official Old Deep Water Dies, by Rising Tide It is Denied version update notes",
+          "url": "https://endfield.gryphline.com/news/8907",
+          "retrievedOn": "2026-04-03",
+          "confidence": "official",
+          "notes": "Used for Rossi release timing: [Wolf Pearl] Chartered Headhunting opened at 2026/03/29 12:00 server time."
+        },
+        {
+          "id": "wiki-rossi",
+          "label": "Endfield Talos Wiki Rossi page",
+          "url": "https://endfield.wiki.gg/wiki/Rossi",
+          "retrievedOn": "2026-04-03",
+          "confidence": "community",
+          "notes": "Used for Rossi Base Skill details and Promotion IV material requirements from the wiki page and raw source."
+        },
+        {
+          "id": "endfieldtools-rossi",
+          "label": "EndfieldTools Rossi page",
+          "url": "https://endfieldtools.dev/characters/rossi/",
+          "retrievedOn": "2026-04-03",
+          "confidence": "community",
+          "notes": "Used to verify Rossi Base Skill rank suffixes from the factory skill postfix fields in chr_0028_wulfa.json."
+        }
+      ]
+    }
+  ]
+}
