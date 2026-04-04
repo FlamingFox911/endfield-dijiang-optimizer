@@ -70,13 +70,14 @@ function toItemId(name: string): string {
 
 function parseMaterialCost(part: string): MaterialCost {
   const match = part.trim().match(/^(.+?) x(\d+)$/);
-  if (!match) {
+  const [, itemName, quantityText] = match ?? [];
+  if (!itemName || !quantityText) {
     throw new Error(`Could not parse material segment '${part}'.`);
   }
 
   return {
-    itemId: toItemId(match[1].trim()),
-    quantity: Number(match[2]),
+    itemId: toItemId(itemName.trim()),
+    quantity: Number(quantityText),
   };
 }
 
@@ -94,11 +95,12 @@ async function fetchOperatorE4Line(operator: OperatorRecord): Promise<string> {
 
   const raw = await response.text();
   const match = raw.match(/^\|e4\s*=\s*(.+)$/m);
-  if (!match) {
+  const [, e4Line] = match ?? [];
+  if (!e4Line) {
     throw new Error(`Could not find '|e4 =' for ${operator.name}.`);
   }
 
-  return match[1].trim();
+  return e4Line.trim();
 }
 
 async function main() {
