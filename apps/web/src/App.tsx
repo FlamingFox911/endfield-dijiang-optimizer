@@ -1,8 +1,9 @@
-import { useDeferredValue, useEffect, useId, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
+import { useDeferredValue, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FocusEvent, type ReactNode } from "react";
 
 import type {
   DemandProfilePreset,
   GameCatalog,
+  MaterialCost,
   OptimizationProfile,
   OptimizationResult,
   OptimizationScenario,
@@ -56,6 +57,8 @@ const DEMAND_WEIGHT_ORDER: ProductKind[] = [
   "rare_mineral",
 ];
 const APP_BASE_PATH = import.meta.env.BASE_URL;
+const TOOLTIP_VIEWPORT_MARGIN_PX = 12;
+const TOOLTIP_TRIGGER_GAP_PX = 8;
 
 function resolveAppPath(pathname: string): string {
   return `${APP_BASE_PATH}${pathname.replace(/^\/+/, "")}`;
@@ -84,6 +87,7 @@ interface RecommendationRunState {
 
 type HardAssignment = OptimizationScenario["facilities"]["hardAssignments"][number];
 type RosterEntry = OptimizationScenario["roster"][number];
+type TooltipHorizontalAlign = "start" | "end";
 
 function sanitizeScenarioForPersistence(scenario: OptimizationScenario): OptimizationScenario {
   return {
@@ -110,8 +114,48 @@ function formatLabel(value: string): string {
   return value.split(/[_-]/).map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
 }
 
-function formatCosts(costs: Array<{ itemId: string; quantity: number }>): string {
-  return costs.length > 0 ? costs.map((cost) => `${cost.quantity}x ${cost.itemId}`).join(", ") : "No material cost recorded";
+function getViewportTooltipStyle(
+  triggerRect: DOMRect,
+  panelRect: DOMRect,
+  horizontalAlign: TooltipHorizontalAlign,
+): CSSProperties {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const roomAbove = triggerRect.top - TOOLTIP_TRIGGER_GAP_PX - TOOLTIP_VIEWPORT_MARGIN_PX;
+  const roomBelow = viewportHeight - triggerRect.bottom - TOOLTIP_TRIGGER_GAP_PX - TOOLTIP_VIEWPORT_MARGIN_PX;
+  const placeBelow = panelRect.height > roomAbove && roomBelow >= roomAbove;
+  const unclampedLeft = horizontalAlign === "end"
+    ? triggerRect.right - panelRect.width
+    : triggerRect.left;
+  const maxLeft = Math.max(TOOLTIP_VIEWPORT_MARGIN_PX, viewportWidth - TOOLTIP_VIEWPORT_MARGIN_PX - panelRect.width);
+  const left = Math.max(TOOLTIP_VIEWPORT_MARGIN_PX, Math.min(unclampedLeft, maxLeft));
+  const unclampedTop = placeBelow
+    ? triggerRect.bottom + TOOLTIP_TRIGGER_GAP_PX
+    : triggerRect.top - TOOLTIP_TRIGGER_GAP_PX - panelRect.height;
+  const maxTop = Math.max(TOOLTIP_VIEWPORT_MARGIN_PX, viewportHeight - TOOLTIP_VIEWPORT_MARGIN_PX - panelRect.height);
+  const top = Math.max(TOOLTIP_VIEWPORT_MARGIN_PX, Math.min(unclampedTop, maxTop));
+
+  return {
+    left: `${left}px`,
+    top: `${top}px`,
+    maxWidth: `min(18rem, ${Math.max(180, viewportWidth - (TOOLTIP_VIEWPORT_MARGIN_PX * 2))}px)`,
+  };
+}
+
+function formatItemLabel(itemId: string): string {
+  if (itemId === "t-creds") {
+    return "T-Creds";
+  }
+
+  return itemId.split(/[_-]/).map((part) => {
+    if (part === "insp") {
+      return "INSP";
+    }
+    if (/^[a-z]\d+$/.test(part) || /^\d+$/.test(part) || /^[a-z]*\d+[a-z]*$/.test(part)) {
+      return part.toUpperCase();
+    }
+    return part.charAt(0).toUpperCase() + part.slice(1);
+  }).join(" ");
 }
 
 function getRecommendationExtraNotes(
@@ -129,6 +173,9 @@ function getRecommendationExtraNotes(
       return false;
     }
     if (note.startsWith("Leveling materials:") || note.startsWith("Upper-bound leveling materials:")) {
+      return false;
+    }
+    if ((note.includes("Operator EXP and") || note.includes("upper-bound Operator EXP and")) && note.endsWith("for leveling.")) {
       return false;
     }
     if (note.startsWith("Includes promotion materials:")) {
@@ -270,6 +317,14 @@ function getBaseSkillIconUrl(
   return skill.icon ? getCatalogAssetUrl(catalog, skill.icon.path) : undefined;
 }
 
+function getMaterialIconUrl(
+  catalog: GameCatalog,
+  itemId: string,
+): string | undefined {
+  const asset = catalog.assets.find((entry) => entry.id === `material-${itemId}-icon`);
+  return asset ? getCatalogAssetUrl(catalog, asset.path) : undefined;
+}
+
 function getPromotionTierLabel(promotionTier: 0 | 1 | 2 | 3 | 4): string {
   return promotionTier === 0 ? "Base" : `Elite ${promotionTier}`;
 }
@@ -338,22 +393,26 @@ function SkillIconBadge(
   const [failed, setFailed] = useState(false);
 
   return (
-    <span
-      className={`skillBadge ${rank > 0 ? "unlocked" : "locked"} ${failed || !iconUrl ? "fallback" : "withIcon"} ${showOverlay ? "" : "plain"} ${className ?? ""}`.trim()}
-      title={getSkillBadgeTitle(skill, rank)}
-      aria-label={getSkillBadgeTitle(skill, rank)}
+    <HoverTooltip
+      label={getSkillBadgeTitle(skill, rank)}
+      className="skillTooltipWrap"
+      tooltip={getSkillBadgeTitle(skill, rank)}
     >
-      {iconUrl && !failed && (
-        <img
-          className="skillBadgeImage"
-          src={iconUrl}
-          alt={`${skill.name} icon`}
-          loading="lazy"
-          onError={() => setFailed(true)}
-        />
-      )}
-      {showOverlay && <span className="skillBadgeOverlay">{getSkillBadgeLabel(skill, rank)}</span>}
-    </span>
+      <span
+        className={`skillBadge ${rank > 0 ? "unlocked" : "locked"} ${failed || !iconUrl ? "fallback" : "withIcon"} ${showOverlay ? "" : "plain"} ${className ?? ""}`.trim()}
+      >
+        {iconUrl && !failed && (
+          <img
+            className="skillBadgeImage"
+            src={iconUrl}
+            alt={`${skill.name} icon`}
+            loading="lazy"
+            onError={() => setFailed(true)}
+          />
+        )}
+        {showOverlay && <span className="skillBadgeOverlay">{getSkillBadgeLabel(skill, rank)}</span>}
+      </span>
+    </HoverTooltip>
   );
 }
 
@@ -369,6 +428,9 @@ function HelpPopover(
   },
 ) {
   const [open, setOpen] = useState(false);
+  const [popoverStyle, setPopoverStyle] = useState<CSSProperties>({ visibility: "hidden" });
+  const triggerRef = useRef<HTMLSpanElement>(null);
+  const panelRef = useRef<HTMLSpanElement>(null);
   const popoverId = useId();
 
   const handleBlur = (event: FocusEvent<HTMLSpanElement>) => {
@@ -377,8 +439,33 @@ function HelpPopover(
     }
   };
 
+  useLayoutEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    const updatePopoverStyle = () => {
+      const triggerRect = triggerRef.current?.getBoundingClientRect();
+      const panelRect = panelRef.current?.getBoundingClientRect();
+      if (!triggerRect || !panelRect) {
+        return;
+      }
+      setPopoverStyle(getViewportTooltipStyle(triggerRect, panelRect, "end"));
+    };
+
+    updatePopoverStyle();
+    window.addEventListener("resize", updatePopoverStyle);
+    window.addEventListener("scroll", updatePopoverStyle, true);
+
+    return () => {
+      window.removeEventListener("resize", updatePopoverStyle);
+      window.removeEventListener("scroll", updatePopoverStyle, true);
+    };
+  }, [content, open]);
+
   return (
     <span
+      ref={triggerRef}
       className="helpPopover"
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
@@ -396,10 +483,92 @@ function HelpPopover(
         {label}
       </span>
       {open && (
-        <span id={popoverId} role="tooltip" className="helpPopoverPanel">
+        <span
+          id={popoverId}
+          ref={panelRef}
+          role="tooltip"
+          className="helpPopoverPanel"
+          style={popoverStyle}
+        >
           {content.split("\n\n").map((paragraph) => (
             <span key={paragraph} className="helpPopoverLine">{paragraph}</span>
           ))}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function HoverTooltip(
+  {
+    label,
+    className,
+    tooltip,
+    children,
+  }: {
+    label: string;
+    className?: string;
+    tooltip: string;
+    children: ReactNode;
+  },
+) {
+  const [open, setOpen] = useState(false);
+  const [tooltipStyle, setTooltipStyle] = useState<CSSProperties>({ visibility: "hidden" });
+  const triggerRef = useRef<HTMLSpanElement>(null);
+  const panelRef = useRef<HTMLSpanElement>(null);
+  const tooltipId = useId();
+
+  const handleBlur = (event: FocusEvent<HTMLSpanElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      setOpen(false);
+    }
+  };
+
+  useLayoutEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    const updateTooltipStyle = () => {
+      const triggerRect = triggerRef.current?.getBoundingClientRect();
+      const panelRect = panelRef.current?.getBoundingClientRect();
+      if (!triggerRect || !panelRect) {
+        return;
+      }
+      setTooltipStyle(getViewportTooltipStyle(triggerRect, panelRect, "start"));
+    };
+
+    updateTooltipStyle();
+    window.addEventListener("resize", updateTooltipStyle);
+    window.addEventListener("scroll", updateTooltipStyle, true);
+
+    return () => {
+      window.removeEventListener("resize", updateTooltipStyle);
+      window.removeEventListener("scroll", updateTooltipStyle, true);
+    };
+  }, [open, tooltip]);
+
+  return (
+    <span
+      ref={triggerRef}
+      className={`hoverTooltipWrap ${className ?? ""}`.trim()}
+      aria-label={label}
+      aria-describedby={open ? tooltipId : undefined}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocusCapture={() => setOpen(true)}
+      onBlurCapture={handleBlur}
+    >
+      {children}
+      {open && (
+        <span
+          id={tooltipId}
+          ref={panelRef}
+          role="tooltip"
+          className="hoverTooltipPanel"
+          style={tooltipStyle}
+        >
+          {tooltip}
         </span>
       )}
     </span>
@@ -434,6 +603,70 @@ function OperatorPortrait(
           )
         : <span>{getInitials(operator.name)}</span>}
     </div>
+  );
+}
+
+function MaterialIcon(
+  {
+    catalog,
+    itemId,
+  }: {
+    catalog: GameCatalog;
+    itemId: string;
+  },
+) {
+  const iconUrl = getMaterialIconUrl(catalog, itemId);
+  const itemLabel = formatItemLabel(itemId);
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <HoverTooltip
+      label={`${itemLabel} material icon`}
+      className="materialIconTooltipWrap"
+      tooltip={itemLabel}
+    >
+      <span className={`materialIconBadge ${failed || !iconUrl ? "fallback" : "withIcon"}`}>
+        {iconUrl && !failed
+          ? (
+              <img
+                className="materialIconImage"
+                src={iconUrl}
+                alt={`${itemLabel} icon`}
+                loading="lazy"
+                onError={() => setFailed(true)}
+              />
+            )
+          : <span className="materialIconFallbackText">{getInitials(itemLabel) || "?"}</span>}
+      </span>
+    </HoverTooltip>
+  );
+}
+
+function MaterialCostList(
+  {
+    catalog,
+    costs,
+  }: {
+    catalog: GameCatalog;
+    costs: MaterialCost[];
+  },
+) {
+  if (costs.length === 0) {
+    return <p className="materialCostEmpty">No material cost recorded</p>;
+  }
+
+  return (
+    <ul className="materialCostList">
+      {costs.map((cost) => (
+        <li className="materialCostItem" key={cost.itemId}>
+          <MaterialIcon catalog={catalog} itemId={cost.itemId} />
+          <span className="materialCostText">
+            <strong className="materialCostQuantity">{cost.quantity}x</strong>
+            <span className="materialCostName">{formatItemLabel(cost.itemId)}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -1126,10 +1359,40 @@ function App() {
         </div>
         <div className="heroPanel">
           <div className="heroMetaGrid">
-            <div><span>Owned</span><strong>{ownedOperators.length}</strong></div>
+            <div>
+              <span className="labelWithHelp">
+                <span>Owned operators</span>
+                <HelpPopover
+                  label="?"
+                  assistiveLabel={`${ownedOperators.length} operators are marked as owned and eligible for assignment recommendations.`}
+                  content={"Number of roster entries currently marked as owned.\n\nOnly owned operators are eligible for room assignments and unlock recommendations.\nUnowned operators can still have level, promotion, and Base Skill settings prefilled before you toggle them on."}
+                />
+              </span>
+              <strong>{ownedOperators.length}</strong>
+            </div>
             <div><span>Recipes</span><strong>{catalog.recipes.length}</strong></div>
-            <div><span>Catalog sources</span><strong>{catalog.sources.length}</strong></div>
-            <div><span>Open gaps</span><strong>{catalog.gaps.length}</strong></div>
+            <div>
+              <span className="labelWithHelp">
+                <span>Source refs</span>
+                <HelpPopover
+                  label="?"
+                  assistiveLabel={`This catalog snapshot bundles ${catalog.sources.length} maintainer-side source references.`}
+                  content={"Number of maintainer-side source references bundled with this catalog snapshot.\n\nThese citations document where catalog values came from.\nThe app does not use account login or live account scraping."}
+                />
+              </span>
+              <strong>{catalog.sources.length}</strong>
+            </div>
+            <div>
+              <span className="labelWithHelp">
+                <span>Known data gaps</span>
+                <HelpPopover
+                  label="?"
+                  assistiveLabel={`This catalog snapshot declares ${catalog.gaps.length} known data gaps that may reduce scoring exactness.`}
+                  content={"Number of known data gaps declared by this catalog snapshot.\n\nThese are intentionally tracked source gaps or unresolved details rather than silently hidden omissions.\nScoring stays conservative where exact demand or timing data is unavailable."}
+                />
+              </span>
+              <strong>{catalog.gaps.length}</strong>
+            </div>
           </div>
         </div>
       </header>
@@ -1144,7 +1407,14 @@ function App() {
             </select>
           </label>
           <label className="pill rangePill toolbarField toolbarFieldEffort">
-            <span>Solver effort</span>
+              <span className="labelWithHelp">
+                <span>Search depth</span>
+                <HelpPopover
+                  label="?"
+                  assistiveLabel={`Controls how much assignment search the solver performs before stopping. Current depth: ${clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)} out of ${MAX_OPTIMIZATION_EFFORT}.`}
+                  content={"Controls how much of the assignment search space the solver explores before stopping.\n\nHigher values usually improve solution quality, but take longer.\nThe selected optimization profile still sets the search strategy; this slider tunes effort within that profile."}
+                />
+              </span>
             <input
               type="range"
               min={1}
@@ -1386,7 +1656,7 @@ function App() {
 
                 <div className="rosterStats">
                   <article><span>Showing</span><strong>{filteredOperators.length}</strong></article>
-                  <article><span>Owned</span><strong>{ownedOperators.length}</strong></article>
+                  <article><span>Owned operators</span><strong>{ownedOperators.length}</strong></article>
                   <article><span>Selected</span><strong>{selectedOperator.name}</strong></article>
                 </div>
 
@@ -1400,15 +1670,17 @@ function App() {
                     >
                       <div className="portraitFrame">
                         <OperatorPortrait catalog={catalog} operator={operator} className="portraitAvatar" />
-                        <span
+                        <HoverTooltip
+                          label={owned?.owned ? `Owned operator, level ${owned.level}` : "Unowned operator"}
                           className={`portraitCorner portraitStatus ${owned?.owned ? "level" : "locked"}`}
-                          aria-label={owned?.owned ? `Owned, level ${owned.level}` : "Unowned"}
-                          title={owned?.owned ? `Owned, level ${owned.level}` : "Unowned"}
+                          tooltip={owned?.owned
+                            ? "Marked as owned. This operator can be assigned in optimization and considered for unlock recommendations."
+                            : "Not marked as owned. Saved level, promotion, and skill settings remain, but this operator is excluded from optimization until Owned is enabled."}
                         >
                           {owned?.owned
                             ? <><span className="portraitStatusLabel">Lv</span><strong>{owned.level}</strong></>
                             : <span className="portraitStatusLabel">Unowned</span>}
-                        </span>
+                        </HoverTooltip>
                         <span className="portraitCorner portraitSkills">
                           {operator.baseSkills.map((skill) => {
                             const skillRank = owned?.baseSkillStates.find((entry) => entry.skillId === skill.id)?.unlockedRank ?? 0;
@@ -1613,7 +1885,6 @@ function App() {
                             </div>
                             <span className="miniStat">{getRoomSlotCap(catalog, "reception_room", scenario.facilities.receptionRoom.level, scenario.facilities.controlNexus.level)} slots</span>
                           </div>
-                          <p className="roomMeta">{roomLocked ? "Locked until Control Nexus level 3" : "Available for clue assignments"}</p>
                           <div className="plannerStatRow">
                             <div className="plannerStatCell">
                               <span>Status</span>
@@ -1934,11 +2205,15 @@ function App() {
                             {roomOptions.map((room) => <option key={room.id} value={room.id}>{room.label}</option>)}
                           </select>
                         </label>
+                        <HoverTooltip
+                          label={`Remove hard assignment for ${currentOperatorName}`}
+                          className="hardAssignmentRemoveTooltip"
+                          tooltip={`Remove hard assignment for ${currentOperatorName}`}
+                        >
                         <button
                           type="button"
                           className="secondary hardAssignmentRemoveButton"
                           aria-label={`Remove hard assignment for ${currentOperatorName}`}
-                          title={`Remove hard assignment for ${currentOperatorName}`}
                           onClick={() => updateScenario((current) => ({
                             ...current,
                             facilities: {
@@ -1949,6 +2224,7 @@ function App() {
                         >
                           ×
                         </button>
+                        </HoverTooltip>
                       </div>
                     );
                   })}
@@ -2193,24 +2469,23 @@ function App() {
                           <strong>{formatEstimatedDays(recommendation.estimatedDaysToUnlock)}</strong>
                         </div>
                       </div>
-                      <div className="resultNotesGrid recommendationInfoGrid">
-                        <p className="resultLine resultNoteCell">
-                          Current Elite {recommendation.action.currentPromotionTier} Lv{recommendation.action.currentLevel} {"->"} target Elite {recommendation.action.requiredPromotionTier ?? recommendation.action.currentPromotionTier} Lv{recommendation.action.requiredLevel ?? recommendation.action.currentLevel}
-                        </p>
-                        {recommendation.action.unlockHint && <p className="resultLine resultNoteCell">{recommendation.action.unlockHint}</p>}
-                      </div>
+                      {recommendation.action.unlockHint && (
+                        <div className="resultNotesGrid recommendationInfoGrid">
+                          <p className="resultLine resultNoteCell">{recommendation.action.unlockHint}</p>
+                        </div>
+                      )}
                       <div className="resultDataGrid">
                         <div className="resultDataCell">
                           <span>Leveling</span>
-                          <strong>{formatCosts(recommendation.action.levelMaterialCosts)}</strong>
+                          <MaterialCostList catalog={catalog} costs={recommendation.action.levelMaterialCosts} />
                         </div>
                         <div className="resultDataCell">
                           <span>Promotion</span>
-                          <strong>{formatCosts(recommendation.action.promotionMaterialCosts)}</strong>
+                          <MaterialCostList catalog={catalog} costs={recommendation.action.promotionMaterialCosts} />
                         </div>
                         <div className="resultDataCell">
                           <span>Skill</span>
-                          <strong>{formatCosts(recommendation.action.skillMaterialCosts)}</strong>
+                          <MaterialCostList catalog={catalog} costs={recommendation.action.skillMaterialCosts} />
                         </div>
                       </div>
                       {extraNotes.length > 0 && (

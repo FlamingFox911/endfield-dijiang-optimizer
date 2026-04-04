@@ -26,6 +26,126 @@
       "attribution": "Facility icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Xaihi); source image https://endfield.wiki.gg/images/thumb/Reception_Room_icon.png/25px-Reception_Room_icon.png?672ffd; retrieved 2026-03-22."
     },
     {
+      "id": "material-advanced-cognitive-carrier-icon",
+      "kind": "icon",
+      "path": "assets/materials/advanced-cognitive-carrier.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Advanced_Cognitive_Carrier.png/22px-Advanced_Cognitive_Carrier.png?1605d6; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-advanced-combat-record-icon",
+      "kind": "icon",
+      "path": "assets/materials/advanced-combat-record.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Advanced_Combat_Record.png/22px-Advanced_Combat_Record.png?6c7501; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-bloodcap-icon",
+      "kind": "icon",
+      "path": "assets/materials/bloodcap.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Bloodcap.png/22px-Bloodcap.png?3ea77f; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-cosmagaric-icon",
+      "kind": "icon",
+      "path": "assets/materials/cosmagaric.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Cosmagaric.png/22px-Cosmagaric.png?59f89c; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-d96-steel-sample-4-icon",
+      "kind": "icon",
+      "path": "assets/materials/d96-steel-sample-4.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/D96_Steel_Sample_4.png/22px-D96_Steel_Sample_4.png?bfa364; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-elementary-cognitive-carrier-icon",
+      "kind": "icon",
+      "path": "assets/materials/elementary-cognitive-carrier.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Elementary_Cognitive_Carrier.png/22px-Elementary_Cognitive_Carrier.png?b92fba; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-elementary-combat-record-icon",
+      "kind": "icon",
+      "path": "assets/materials/elementary-combat-record.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Elementary_Combat_Record.png/22px-Elementary_Combat_Record.png?cfcb3f; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-intermediate-combat-record-icon",
+      "kind": "icon",
+      "path": "assets/materials/intermediate-combat-record.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Intermediate_Combat_Record.png/22px-Intermediate_Combat_Record.png?8d9c9e; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-metadiastima-photoemission-tube-icon",
+      "kind": "icon",
+      "path": "assets/materials/metadiastima-photoemission-tube.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Metadiastima_Photoemission_Tube.png/22px-Metadiastima_Photoemission_Tube.png?719adb; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-pink-bolete-icon",
+      "kind": "icon",
+      "path": "assets/materials/pink-bolete.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Pink_Bolete.png/22px-Pink_Bolete.png?f108ca; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-protodisk-icon",
+      "kind": "icon",
+      "path": "assets/materials/protodisk.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Protodisk.png/22px-Protodisk.png?915aff; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-protohedron-icon",
+      "kind": "icon",
+      "path": "assets/materials/protohedron.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Protohedron.png/22px-Protohedron.png?147e1d; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-protoprism-icon",
+      "kind": "icon",
+      "path": "assets/materials/protoprism.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Protoprism.png/22px-Protoprism.png?62eb2f; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-protoset-icon",
+      "kind": "icon",
+      "path": "assets/materials/protoset.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Protoset.png/21px-Protoset.png?3556a4; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-quadrant-fitting-fluid-icon",
+      "kind": "icon",
+      "path": "assets/materials/quadrant-fitting-fluid.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Quadrant_Fitting_Fluid.png/22px-Quadrant_Fitting_Fluid.png?21d4e9; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-red-bolete-icon",
+      "kind": "icon",
+      "path": "assets/materials/red-bolete.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Red_Bolete.png/22px-Red_Bolete.png?98b0df; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-ruby-bolete-icon",
+      "kind": "icon",
+      "path": "assets/materials/ruby-bolete.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Ruby_Bolete.png/22px-Ruby_Bolete.png?91d78a; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-t-creds-icon",
+      "kind": "icon",
+      "path": "assets/materials/t-creds.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/T-Creds.png/22px-T-Creds.png?eb72d2; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-tachyon-screening-lattice-icon",
+      "kind": "icon",
+      "path": "assets/materials/tachyon-screening-lattice.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Tachyon_Screening_Lattice.png/22px-Tachyon_Screening_Lattice.png?8da567; retrieved 2026-04-03."
+    },
+    {
+      "id": "material-triphasic-nanoflake-icon",
+      "kind": "icon",
+      "path": "assets/materials/triphasic-nanoflake.png",
+      "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Triphasic_Nanoflake.png/22px-Triphasic_Nanoflake.png?416228; retrieved 2026-04-03."
+    },
+    {
       "id": "operator-akekuri-portrait",
       "kind": "portrait",
       "path": "assets/operators/akekuri.webp",

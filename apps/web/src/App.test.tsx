@@ -70,7 +70,7 @@ function getPortraitTile(name: string): HTMLElement {
 
 describe("App", () => {
   const getOptimizationProfileSelect = () => screen.getByText("Optimization profile").closest("label")!.querySelector("select") as HTMLSelectElement;
-  const getSearchEffortSlider = () => screen.getByText("Solver effort").closest("label")!.querySelector('input[type="range"]') as HTMLInputElement;
+  const getSearchEffortSlider = () => screen.getByText("Search depth").closest("label")!.querySelector('input[type="range"]') as HTMLInputElement;
   const getDemandProfileSelect = () => screen.getByText("Demand profile").closest("label")!.querySelector("select") as HTMLSelectElement;
   const getPriorityRecipeSelect = () => screen.getByText("Priority recipe").closest("label")!.querySelector("select") as HTMLSelectElement;
   const getRosterSortSelect = () => screen.getByText("Sort roster").closest("label")!.querySelector("select") as HTMLSelectElement;
@@ -306,9 +306,10 @@ describe("App", () => {
     expect(screen.getByRole("tab", { name: /Edit roster/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /Plan base/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /View results/i })).toBeInTheDocument();
-    expect(screen.getByText("Catalog sources")).toBeInTheDocument();
-    expect(screen.getByText("Open gaps")).toBeInTheDocument();
-    expect(screen.getByText("Solver effort")).toBeInTheDocument();
+    expect(screen.getAllByText("Owned operators").length).toBeGreaterThan(0);
+    expect(screen.getByText("Source refs")).toBeInTheDocument();
+    expect(screen.getByText("Known data gaps")).toBeInTheDocument();
+    expect(screen.getByText("Search depth")).toBeInTheDocument();
   });
 
   it("shows help popovers immediately on hover and focus", async () => {
@@ -350,6 +351,14 @@ describe("App", () => {
 
     await waitFor(() => {
       expect(container.querySelectorAll(".portraitSkills .skillBadgeImage").length).toBeGreaterThan(0);
+    });
+    const rosterSkillBadge = container.querySelector(".portraitSkills .skillTooltipWrap");
+    expect(rosterSkillBadge).not.toHaveAttribute("title");
+    fireEvent.mouseEnter(requireHtmlElement(rosterSkillBadge));
+    expect(screen.getByRole("tooltip")).toHaveTextContent(rosterSkillBadge!.getAttribute("aria-label") ?? "");
+    fireEvent.mouseLeave(requireHtmlElement(rosterSkillBadge));
+    await waitFor(() => {
+      expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
     });
 
     await userEvent.click(screen.getByRole("button", { name: "Recommend unlocks" }));
@@ -451,11 +460,17 @@ describe("App", () => {
     });
 
     const recommendationCard = requireHtmlElement((await screen.findByText("Blade Critique")).closest(".resultCard"));
+    expect(within(recommendationCard).queryByText(/Current Elite 1 Lv40/)).not.toBeInTheDocument();
     expect(within(recommendationCard).queryByText("Operator: Chen Qianyu")).not.toBeInTheDocument();
     expect(within(recommendationCard).queryByText(/Leveling materials:/)).not.toBeInTheDocument();
     expect(within(recommendationCard).queryByText(/Includes promotion materials:/)).not.toBeInTheDocument();
     expect(within(recommendationCard).queryByText(/Includes Base Skill node materials:/)).not.toBeInTheDocument();
-    expect(within(recommendationCard).getByText("100 Operator EXP and 200 T-Creds for leveling.")).toBeInTheDocument();
+    expect(within(recommendationCard).getByAltText("Advanced Combat Record icon")).toBeInTheDocument();
+    expect(within(recommendationCard).getByText("3x")).toBeInTheDocument();
+    expect(within(recommendationCard).getByText("Advanced Combat Record")).toBeInTheDocument();
+    expect(within(recommendationCard).getByAltText("Protodisk icon")).toBeInTheDocument();
+    expect(within(recommendationCard).getByText("Protoprism")).toBeInTheDocument();
+    expect(within(recommendationCard).queryByText("100 Operator EXP and 200 T-Creds for leveling.")).not.toBeInTheDocument();
     expect(within(recommendationCard).getByText("Approximate effort score 12.0 derived from bundled promotion costs, Base Skill costs, and level gating.")).toBeInTheDocument();
   });
 
@@ -502,7 +517,15 @@ describe("App", () => {
     const portraitTile = getPortraitTile("Ardelia");
     expect(within(portraitTile).getByText("Lv")).toBeInTheDocument();
     expect(within(portraitTile).getByText("1")).toBeInTheDocument();
-    expect(within(portraitTile).getByLabelText("Owned, level 1")).toBeInTheDocument();
+    const ownedBadge = within(portraitTile).getByLabelText("Owned operator, level 1");
+    expect(ownedBadge).toBeInTheDocument();
+    expect(ownedBadge).not.toHaveAttribute("title");
+    fireEvent.mouseEnter(ownedBadge);
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Marked as owned.");
+    fireEvent.mouseLeave(ownedBadge);
+    await waitFor(() => {
+      expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    });
   });
 
   it("sorts the roster alphabetically when requested", async () => {
@@ -863,6 +886,7 @@ describe("App", () => {
 
     const recommendationCard = (await screen.findByText("Blade Critique")).closest(".resultCard") as HTMLElement;
     const badge = within(recommendationCard).getByLabelText(/Blade Critique:/);
+    const badgeIcon = requireHtmlElement(badge.querySelector(".skillBadge"));
     const badgeImage = within(recommendationCard).getByAltText("Blade Critique icon");
     const expectedOverlay = badge.getAttribute("aria-label")?.includes("GAMMA")
       ? "\u03b3"
@@ -874,7 +898,7 @@ describe("App", () => {
 
     await waitFor(() => {
       expect(within(recommendationCard).queryByAltText("Blade Critique icon")).not.toBeInTheDocument();
-      expect(badge).toHaveClass("fallback");
+      expect(badgeIcon).toHaveClass("fallback");
       expect(within(recommendationCard).getByText(expectedOverlay)).toBeInTheDocument();
     });
   });

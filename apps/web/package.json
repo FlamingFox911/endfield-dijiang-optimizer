@@ -11,6 +11,9 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
+  "devDependencies": {
+    "@types/node": "^22.19.17"
+  },
   "scripts": {
     "build": "npm run build --workspace @endfield/domain && npm run build --workspace @endfield/data && npm run build --workspace @endfield/optimizer && tsx ../../scripts/clean-dist.ts dist && tsx scripts/sync-static.ts && vite build",
     "dev": "npm run build --workspace @endfield/domain && npm run build --workspace @endfield/data && npm run build --workspace @endfield/optimizer && tsx scripts/sync-static.ts && vite",

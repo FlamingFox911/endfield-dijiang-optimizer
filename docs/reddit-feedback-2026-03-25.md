@@ -89,11 +89,6 @@ Maintainer reply references:
   Effort: `Medium`
   Sources: `oc7nggy`
 
-- `RF-014` The current Control Nexus level UI is redundant or confusing because `Current Level 5` and `Level` appear to communicate the same thing.
-  Type: `navigation_copy`
-  Effort: `Small`
-  Sources: `oc7nggy`
-
 - `RF-015` Accessibility and general UI clarity need improvement as a broader theme.
   Type: `visual_accessibility`
   Effort: `Large`
