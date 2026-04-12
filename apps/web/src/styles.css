@@ -877,26 +877,36 @@ button.secondary,
 
 .rosterToolbar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(12rem, 16rem);
+  grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(11rem, 1fr));
   gap: 12px;
   align-items: start;
 }
 
+.rosterSearchField {
+  min-width: 0;
+}
+
+.rosterFilterField,
 .rosterSortField {
-  justify-self: start;
   width: 100%;
+}
+
+.rosterGridScroller {
+  max-height: clamp(24rem, 62vh, 54rem);
+  overflow: auto;
+  padding: 2px 6px 8px 2px;
 }
 
 .portraitGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 10px;
 }
 
 .portraitTile {
   display: grid;
-  gap: 8px;
-  padding: 10px;
+  gap: 6px;
+  padding: 8px;
   border: 1px solid rgba(31, 36, 49, 0.08);
   border-radius: 22px;
   background: rgba(255, 252, 247, 0.9);
@@ -1139,11 +1149,13 @@ button.secondary,
 
 .portraitLabel {
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .portraitMeta {
   color: var(--ink-soft);
-  font-size: 0.86rem;
+  font-size: 0.8rem;
+  line-height: 1.25;
 }
 
 .editorToggle {
@@ -1155,6 +1167,17 @@ button.secondary,
   padding: 12px 14px;
   border-radius: 16px;
   background: rgba(30, 90, 114, 0.08);
+}
+
+.editorHintSubtle {
+  background: rgba(92, 53, 27, 0.06);
+}
+
+.rosterEmptyState {
+  margin: 0;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(247, 237, 223, 0.72);
 }
 
 .operatorChipList {
@@ -1342,6 +1365,12 @@ dl div {
     grid-template-columns: 1fr;
   }
 
+  .rosterGridScroller {
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+  }
+
   .heroStats,
   .heroMetaGrid,
   .rosterStats,
@@ -1382,6 +1411,6 @@ dl div {
 
 @media (max-width: 640px) {
   .portraitGrid {
-    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
   }
 }

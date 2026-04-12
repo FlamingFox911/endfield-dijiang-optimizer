@@ -72,6 +72,8 @@ function isLikelyJsonFile(file: File): boolean {
 
 type AppTab = "roster" | "planner" | "results";
 type RosterSortMode = "default" | "alphabetical" | "level" | "skill";
+type RosterOwnedFilter = "all" | "owned" | "unowned";
+type RosterFacilityFilter = "all" | GameCatalog["operators"][number]["baseSkills"][number]["facilityKind"];
 
 interface OptimizationRunState {
   runId: number;
@@ -845,6 +847,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [rosterSort, setRosterSort] = useState<RosterSortMode>("default");
+  const [rosterOwnedFilter, setRosterOwnedFilter] = useState<RosterOwnedFilter>("all");
+  const [rosterFacilityFilter, setRosterFacilityFilter] = useState<RosterFacilityFilter>("all");
   const [messages, setMessages] = useState<string[]>([]);
   const [optimizationRun, setOptimizationRun] = useState<OptimizationRunState | null>(null);
   const [recommendationRun, setRecommendationRun] = useState<RecommendationRunState | null>(null);
@@ -961,6 +965,10 @@ function App() {
     [catalog],
   );
   const facilitiesByKind = useMemo(() => new Map(catalog?.facilities.map((facility) => [facility.kind, facility]) ?? []), [catalog]);
+  const rosterFacilityOptions = useMemo(
+    () => catalog?.facilities.map((facility) => facility.kind) ?? [],
+    [catalog],
+  );
 
   useEffect(() => {
     if (defaultSortedOperators.length === 0) {
@@ -980,7 +988,16 @@ function App() {
   const filteredOperators = useMemo(() => {
     const needle = deferredSearch.trim().toLowerCase();
     const matchingOperators = defaultSortedOperators
-      .filter((operator) => !needle || operator.name.toLowerCase().includes(needle) || operator.id.includes(needle))
+      .filter((operator) => {
+        const owned = rosterById.get(operator.id);
+        const matchesSearch = !needle || operator.name.toLowerCase().includes(needle) || operator.id.includes(needle);
+        const matchesOwned = rosterOwnedFilter === "all"
+          || (rosterOwnedFilter === "owned" && owned?.owned)
+          || (rosterOwnedFilter === "unowned" && !owned?.owned);
+        const matchesFacility = rosterFacilityFilter === "all"
+          || operator.baseSkills.some((skill) => skill.facilityKind === rosterFacilityFilter);
+        return matchesSearch && matchesOwned && matchesFacility;
+      })
       .map((operator) => ({ operator, owned: rosterById.get(operator.id) }));
 
     return matchingOperators.sort((left, right) => {
@@ -998,7 +1015,7 @@ function App() {
           return compareOperatorsByDefaultOrder(left.operator, right.operator);
       }
     });
-  }, [defaultSortedOperators, deferredSearch, rosterById, rosterSort]);
+  }, [defaultSortedOperators, deferredSearch, rosterById, rosterSort, rosterOwnedFilter, rosterFacilityFilter]);
 
   if (loading || !catalog || !scenario) {
     return <main className="shell"><p className="status">Loading bundled catalog...</p></main>;
@@ -1006,6 +1023,7 @@ function App() {
 
   const validation = validateScenarioAgainstCatalog(catalog, scenario);
   const ownedOperators = scenario.roster.filter((entry) => entry.owned);
+  const filteredOwnedOperatorsCount = filteredOperators.filter(({ owned }) => owned?.owned).length;
   const unlockedManufacturingRoomCount = getUnlockedFacilityRoomCount("manufacturing_cabin", scenario.facilities.controlNexus.level);
   const unlockedGrowthRoomCount = getUnlockedFacilityRoomCount("growth_chamber", scenario.facilities.controlNexus.level);
   const unlockedReceptionRoomCount = getUnlockedFacilityRoomCount("reception_room", scenario.facilities.controlNexus.level);
@@ -1646,9 +1664,26 @@ function App() {
             <div className="rosterWorkspace">
               <div className="rosterBrowser">
                 <div className="rosterToolbar">
-                  <label className="pill grow">
+                  <label className="pill grow rosterSearchField">
                     <span>Search roster</span>
-                    <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Ardelia" />
+                    <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by operator name or id" />
+                  </label>
+                  <label className="pill rosterFilterField">
+                    <span>Owned state</span>
+                    <select value={rosterOwnedFilter} onChange={(event) => setRosterOwnedFilter(event.target.value as RosterOwnedFilter)}>
+                      <option value="all">All operators</option>
+                      <option value="owned">Owned only</option>
+                      <option value="unowned">Unowned only</option>
+                    </select>
+                  </label>
+                  <label className="pill rosterFilterField">
+                    <span>Facility focus</span>
+                    <select value={rosterFacilityFilter} onChange={(event) => setRosterFacilityFilter(event.target.value as RosterFacilityFilter)}>
+                      <option value="all">Any room</option>
+                      {rosterFacilityOptions.map((facilityKind) => (
+                        <option key={facilityKind} value={facilityKind}>{formatLabel(facilityKind)}</option>
+                      ))}
+                    </select>
                   </label>
                   <label className="pill rosterSortField">
                     <span>Sort roster</span>
@@ -1663,50 +1698,56 @@ function App() {
 
                 <div className="rosterStats">
                   <article><span>Showing</span><strong>{filteredOperators.length}</strong></article>
-                  <article><span>Owned operators</span><strong>{ownedOperators.length}</strong></article>
+                  {rosterOwnedFilter === "all" && <article><span>Matching owned</span><strong>{filteredOwnedOperatorsCount}</strong></article>}
                   <article><span>Selected</span><strong>{selectedOperator.name}</strong></article>
                 </div>
 
-                <div className="portraitGrid">
-                  {filteredOperators.map(({ operator, owned }) => (
-                    <button
-                      key={operator.id}
-                      type="button"
-                      className={`portraitTile ${selectedOperator.id === operator.id ? "active" : ""} ${owned?.owned ? "owned" : "unowned"}`}
-                      onClick={() => setSelectedOperatorId(operator.id)}
-                    >
-                      <div className="portraitFrame">
-                        <OperatorPortrait catalog={catalog} operator={operator} className="portraitAvatar" />
-                        <HoverTooltip
-                          label={owned?.owned ? `Owned operator, level ${owned.level}` : "Unowned operator"}
-                          className={`portraitCorner portraitStatus ${owned?.owned ? "level" : "locked"}`}
-                          tooltip={owned?.owned
-                            ? "Marked as owned. This operator can be assigned in optimization and considered for unlock recommendations."
-                            : "Not marked as owned. Saved level, promotion, and skill settings remain, but this operator is excluded from optimization until Owned is enabled."}
+                <div className="rosterGridScroller">
+                  {filteredOperators.length > 0 ? (
+                    <div className="portraitGrid">
+                      {filteredOperators.map(({ operator, owned }) => (
+                        <button
+                          key={operator.id}
+                          type="button"
+                          className={`portraitTile ${selectedOperator.id === operator.id ? "active" : ""} ${owned?.owned ? "owned" : "unowned"}`}
+                          onClick={() => setSelectedOperatorId(operator.id)}
                         >
-                          {owned?.owned
-                            ? <><span className="portraitStatusLabel">Lv</span><strong>{owned.level}</strong></>
-                            : <span className="portraitStatusLabel">Unowned</span>}
-                        </HoverTooltip>
-                        <span className="portraitCorner portraitSkills">
-                          {operator.baseSkills.map((skill) => {
-                            const skillRank = owned?.baseSkillStates.find((entry) => entry.skillId === skill.id)?.unlockedRank ?? 0;
-                            return (
-                              <SkillIconBadge
-                                key={`${operator.id}-${skill.id}`}
-                                catalog={catalog}
-                                skill={skill}
-                                rank={skillRank}
-                                hideWhenLocked
-                              />
-                            );
-                          })}
-                        </span>
-                      </div>
-                      <span className="portraitLabel">{operator.name}</span>
-                      <span className="portraitMeta">{operator.className} | {getPromotionTierLabel(owned?.promotionTier ?? 0)}</span>
-                    </button>
-                  ))}
+                          <div className="portraitFrame">
+                            <OperatorPortrait catalog={catalog} operator={operator} className="portraitAvatar" />
+                            <HoverTooltip
+                              label={owned?.owned ? `Owned operator, level ${owned.level}` : "Unowned operator"}
+                              className={`portraitCorner portraitStatus ${owned?.owned ? "level" : "locked"}`}
+                              tooltip={owned?.owned
+                                ? "Marked as owned. This operator can be assigned in optimization and considered for unlock recommendations."
+                                : "Not marked as owned. Saved level, promotion, and skill settings remain, but this operator is excluded from optimization until Owned is enabled."}
+                            >
+                              {owned?.owned
+                                ? <><span className="portraitStatusLabel">Lv</span><strong>{owned.level}</strong></>
+                                : <span className="portraitStatusLabel">Unowned</span>}
+                            </HoverTooltip>
+                            <span className="portraitCorner portraitSkills">
+                              {operator.baseSkills.map((skill) => {
+                                const skillRank = owned?.baseSkillStates.find((entry) => entry.skillId === skill.id)?.unlockedRank ?? 0;
+                                return (
+                                  <SkillIconBadge
+                                    key={`${operator.id}-${skill.id}`}
+                                    catalog={catalog}
+                                    skill={skill}
+                                    rank={skillRank}
+                                    hideWhenLocked
+                                  />
+                                );
+                              })}
+                            </span>
+                          </div>
+                          <span className="portraitLabel">{operator.name}</span>
+                          <span className="portraitMeta">{operator.className} | {getPromotionTierLabel(owned?.promotionTier ?? 0)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="status rosterEmptyState">No operators match the current search and filters.</p>
+                  )}
                 </div>
               </div>
 
@@ -1773,6 +1814,8 @@ function App() {
                     </select>
                   </label>
                 </div>
+
+                <p className="editorHint editorHintSubtle">Level and promotion are used to estimate what it takes to unlock the next Base Skill rank. Base Skill unlocks depend on meeting the prerequisite level, reaching the required Elite tier, and then unlocking the skill itself.</p>
 
                 <div className="skillGrid editorSkillGrid">
                   {selectedOperator.baseSkills.map((skill) => {

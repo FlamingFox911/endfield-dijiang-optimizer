@@ -68,12 +68,20 @@ function getPortraitTile(name: string): HTMLElement {
   return requireHtmlElement(label?.closest(".portraitTile"));
 }
 
+function getVisiblePortraitNames(container: HTMLElement): string[] {
+  return Array.from(container.querySelectorAll(".portraitGrid .portraitLabel"))
+    .map((element) => element.textContent)
+    .filter((name): name is string => Boolean(name));
+}
+
 describe("App", () => {
   const getOptimizationProfileSelect = () => screen.getByText("Optimization profile").closest("label")!.querySelector("select") as HTMLSelectElement;
   const getSearchEffortSlider = () => screen.getByText("Search depth").closest("label")!.querySelector('input[type="range"]') as HTMLInputElement;
   const getDemandProfileSelect = () => screen.getByText("Demand profile").closest("label")!.querySelector("select") as HTMLSelectElement;
   const getPriorityRecipeSelect = () => screen.getByText("Priority recipe").closest("label")!.querySelector("select") as HTMLSelectElement;
   const getRosterSortSelect = () => screen.getByText("Sort roster").closest("label")!.querySelector("select") as HTMLSelectElement;
+  const getRosterOwnedFilterSelect = () => screen.getByText("Owned state").closest("label")!.querySelector("select") as HTMLSelectElement;
+  const getRosterFacilityFilterSelect = () => screen.getByText("Facility focus").closest("label")!.querySelector("select") as HTMLSelectElement;
   const getDemandSlider = (label: string) => screen
     .getAllByText(label)
     .find((element) => element.closest(".objectiveWeightField"))
@@ -310,6 +318,42 @@ describe("App", () => {
     expect(screen.getByText("Source refs")).toBeInTheDocument();
     expect(screen.getByText("Known data gaps")).toBeInTheDocument();
     expect(screen.getByText("Search depth")).toBeInTheDocument();
+  });
+
+  it("filters the roster by owned state, facility focus, and search text", async () => {
+    seedDraft(["ardelia", "chen-qianyu"]);
+    const { container } = render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+    expect(screen.getByText("Matching owned")).toBeInTheDocument();
+
+    await userEvent.selectOptions(getRosterOwnedFilterSelect(), "owned");
+    await waitFor(() => {
+      expect(getVisiblePortraitNames(container)).toContain("Ardelia");
+      expect(getVisiblePortraitNames(container)).toContain("Chen Qianyu");
+      expect(getVisiblePortraitNames(container)).not.toContain("Avywenna");
+      expect(screen.queryByText("Matching owned")).not.toBeInTheDocument();
+    });
+
+    await userEvent.selectOptions(getRosterFacilityFilterSelect(), "reception_room");
+    await waitFor(() => {
+      expect(getVisiblePortraitNames(container)).toContain("Ardelia");
+      expect(getVisiblePortraitNames(container)).not.toContain("Chen Qianyu");
+    });
+
+    await userEvent.type(screen.getByRole("textbox", { name: "Search roster" }), "avy");
+    await waitFor(() => {
+      expect(screen.getByText("No operators match the current search and filters.")).toBeInTheDocument();
+    });
+  });
+
+  it("explains what operator level is used for in planning", async () => {
+    render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    expect(screen.getByText(/Level and promotion are used to estimate what it takes to unlock the next Base Skill rank/i)).toBeInTheDocument();
+    expect(screen.getByText(/Base Skill unlocks depend on meeting the prerequisite level, reaching the required Elite tier, and then unlocking the skill itself/i)).toBeInTheDocument();
   });
 
   it("shows help popovers immediately on hover and focus", async () => {

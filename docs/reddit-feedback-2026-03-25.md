@@ -79,11 +79,6 @@ Maintainer reply references:
   Effort: `Medium`
   Sources: `oc7nggy`
 
-- `RF-011` The character list should be more compact or scrollable so more operator information fits on a single screen.
-  Type: `responsive_layout`
-  Effort: `Medium`
-  Sources: `oc7nggy`
-
 - `RF-012` Mobile usability likely needs work. The current layout appears scroll-heavy and awkward on smaller screens.
   Type: `responsive_layout`
   Effort: `Medium`
@@ -102,11 +97,6 @@ Maintainer reply references:
   Sources: `oc7nggy`
   Notes: Maintainer explicitly called batch operations interesting and worth exploring.
 
-- `RF-017` Search and filtering for roster management are too limited. Users want operator-name search and facility or skill-category filters.
-  Type: `interaction_model`
-  Effort: `Medium`
-  Sources: `oc7nggy`
-
 - `RF-018` Tooltip behavior is too slow because it relies on default system timing rather than fast custom hover behavior.
   Type: `interaction_model`
   Effort: `Small`
@@ -118,12 +108,6 @@ Maintainer reply references:
   Effort: `Small`
   Sources: `oc7nggy`
   Notes: Maintainer suggested allowing interaction and showing warnings instead of hard blocking.
-
-- `RF-020` It is not clear whether character level is an important planning input. If it matters, the accepted range should be explicit; if not, the field may be unnecessary.
-  Type: `interaction_model`
-  Effort: `Medium`
-  Sources: `oc7nggy`
-  Notes: Maintainer said levels were intended to estimate EXP needed for the next base-skill unlock.
 
 - `RF-021` The roster card layout could reduce pointer travel by moving ownership and skill controls closer to portraits.
   Type: `interaction_model`
@@ -163,6 +147,6 @@ Maintainer reply references:
 ## Likely implementation batches
 
 - `Batch A`: setup acceleration and onboarding (`RF-001` to `RF-004`)
-- `Batch B`: navigation, labels, layout, and accessibility (`RF-005`, `RF-006`, `RF-009` to `RF-012`, `RF-014`, `RF-015`)
-- `Batch C`: roster controls, batch editing, search, and tooltip behavior (`RF-016` to `RF-021`)
+- `Batch B`: navigation, labels, layout, and accessibility (`RF-005`, `RF-006`, `RF-009`, `RF-010`, `RF-012`, `RF-014`, `RF-015`)
+- `Batch C`: roster controls, batch editing, tooltip behavior, and layout follow-up (`RF-016`, `RF-018`, `RF-019`, `RF-021`)
 - `Batch D`: optimizer weighting, room valuation, and recommendation trust (`RF-022` to `RF-026`)
