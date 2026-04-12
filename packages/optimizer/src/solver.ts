@@ -17,9 +17,11 @@ import type {
 
 import {
   createProjectedOutputs,
+  getFacilityLevelCapForControlNexus,
   getGrowthSlotCap,
   getMaxFacilityRoomCounts,
   getRoomSlotCap,
+  getUnlockedFacilityRoomCount,
   resolveDemandProfile,
 } from "@endfield/data";
 
@@ -215,6 +217,13 @@ export function normalizeScenario(
     ? applyMaxFacilitiesOverlay(scenario)
     : cloneJson(scenario);
   const recipesById = indexById(catalog.recipes);
+  const controlNexusLevel = normalizedScenario.facilities.controlNexus.level;
+  const unlockedManufacturingRooms = getUnlockedFacilityRoomCount("manufacturing_cabin", controlNexusLevel);
+  const unlockedGrowthRooms = getUnlockedFacilityRoomCount("growth_chamber", controlNexusLevel);
+  const unlockedReceptionRooms = getUnlockedFacilityRoomCount("reception_room", controlNexusLevel);
+  const manufacturingLevelCap = getFacilityLevelCapForControlNexus("manufacturing_cabin", controlNexusLevel);
+  const growthLevelCap = getFacilityLevelCapForControlNexus("growth_chamber", controlNexusLevel);
+  const receptionLevelCap = getFacilityLevelCapForControlNexus("reception_room", controlNexusLevel);
   const rooms: NormalizedRoom[] = [];
 
   const addRoom = (
@@ -232,38 +241,83 @@ export function normalizeScenario(
     if (slotCap <= 0) {
       warnings.push(`Room '${roomId}' resolved to slot cap 0 and will be skipped by assignment search.`);
     }
-    const recipes = fixedRecipeIds
+    const normalizedRecipeIds = fixedRecipeIds.filter((recipeId) => {
+      const recipe = recipesById.get(recipeId);
+      if (!recipe) {
+        return false;
+      }
+      if (recipe.roomLevel > level) {
+        warnings.push(
+          `Room '${roomId}' has recipe '${recipeId}' saved for room level ${recipe.roomLevel}, but current optimization uses room level ${level}; the recipe will be ignored for now.`,
+        );
+        return false;
+      }
+      return true;
+    });
+    const recipes = normalizedRecipeIds
       .map((recipeId) => recipesById.get(recipeId))
       .filter((recipe): recipe is RecipeDefinition => Boolean(recipe));
-    if ((roomKind === "manufacturing_cabin" || roomKind === "growth_chamber") && fixedRecipeIds.length === 0) {
+    if ((roomKind === "manufacturing_cabin" || roomKind === "growth_chamber") && normalizedRecipeIds.length === 0) {
       warnings.push(`Room '${roomId}' has no selected recipe and will contribute no production.`);
     }
-    if (roomKind === "growth_chamber" && fixedRecipeIds.length > getGrowthSlotCap(catalog, level)) {
+    if (roomKind === "growth_chamber" && normalizedRecipeIds.length > getGrowthSlotCap(catalog, level)) {
       warnings.push(`Growth chamber '${roomId}' has more selected materials than its level supports; extra selections may be invalid.`);
     }
-    rooms.push({ roomId, roomKind, level, slotCap, fixedRecipeIds, recipes });
+    rooms.push({ roomId, roomKind, level, slotCap, fixedRecipeIds: normalizedRecipeIds, recipes });
   };
 
   addRoom("control_nexus", "control_nexus", normalizedScenario.facilities.controlNexus.level);
 
-  for (const room of normalizedScenario.facilities.manufacturingCabins) {
-    if (room.enabled) {
-      addRoom(room.id, "manufacturing_cabin", room.level, room.fixedRecipeId ? [room.fixedRecipeId] : []);
+  for (const [roomIndex, room] of normalizedScenario.facilities.manufacturingCabins.entries()) {
+    if (!room.enabled) {
+      continue;
     }
+    if (roomIndex >= unlockedManufacturingRooms) {
+      warnings.push(`Manufacturing cabin '${room.id}' is saved as enabled, but stays inactive until Control Nexus level 3.`);
+      continue;
+    }
+    const effectiveLevel = Math.min(room.level, manufacturingLevelCap);
+    if (room.level > manufacturingLevelCap) {
+      warnings.push(
+        `Manufacturing cabin '${room.id}' is set to level ${room.level}, but Control Nexus level ${controlNexusLevel} only supports level ${manufacturingLevelCap}. Optimization uses level ${effectiveLevel} for now.`,
+      );
+    }
+    addRoom(room.id, "manufacturing_cabin", effectiveLevel, room.fixedRecipeId ? [room.fixedRecipeId] : []);
   }
 
-  for (const room of normalizedScenario.facilities.growthChambers) {
-    if (room.enabled) {
-      addRoom(room.id, "growth_chamber", room.level, room.fixedRecipeIds ?? []);
+  for (const [roomIndex, room] of normalizedScenario.facilities.growthChambers.entries()) {
+    if (!room.enabled) {
+      continue;
     }
+    if (roomIndex >= unlockedGrowthRooms) {
+      warnings.push(`Growth chamber '${room.id}' is saved as enabled, but stays inactive until Control Nexus level 2.`);
+      continue;
+    }
+    const effectiveLevel = Math.min(room.level, growthLevelCap);
+    if (room.level > growthLevelCap) {
+      warnings.push(
+        `Growth chamber '${room.id}' is set to level ${room.level}, but Control Nexus level ${controlNexusLevel} only supports level ${growthLevelCap}. Optimization uses level ${effectiveLevel} for now.`,
+      );
+    }
+    addRoom(room.id, "growth_chamber", effectiveLevel, room.fixedRecipeIds ?? []);
   }
 
   if (normalizedScenario.facilities.receptionRoom?.enabled) {
-    addRoom(
-      normalizedScenario.facilities.receptionRoom.id,
-      "reception_room",
-      normalizedScenario.facilities.receptionRoom.level,
-    );
+    if (unlockedReceptionRooms === 0) {
+      warnings.push("Reception room is saved as enabled, but stays inactive until Control Nexus level 3.");
+    } else {
+      const effectiveLevel = Math.min(normalizedScenario.facilities.receptionRoom.level, receptionLevelCap);
+      if (normalizedScenario.facilities.receptionRoom.level > receptionLevelCap) {
+        warnings.push(
+          `Reception room is set to level ${normalizedScenario.facilities.receptionRoom.level}, but Control Nexus level ${controlNexusLevel} only supports level ${receptionLevelCap}. Optimization uses level ${effectiveLevel} for now.`,
+        );
+      }
+      addRoom(
+        normalizedScenario.facilities.receptionRoom.id,
+        "reception_room",
+        effectiveLevel,
+      );
+    }
   }
 
   return {

@@ -103,12 +103,6 @@ Maintainer reply references:
   Sources: `oc7nggy`
   Notes: Maintainer already leaned toward custom on-hover tooltips.
 
-- `RF-019` Facility and skill controls are overly blocked during setup. Example: some checkboxes cannot be clicked until level is set, but the UI does not clearly explain why.
-  Type: `interaction_model`
-  Effort: `Small`
-  Sources: `oc7nggy`
-  Notes: Maintainer suggested allowing interaction and showing warnings instead of hard blocking.
-
 - `RF-021` The roster card layout could reduce pointer travel by moving ownership and skill controls closer to portraits.
   Type: `interaction_model`
   Effort: `Large`

@@ -1808,7 +1808,7 @@ export function validateScenarioAgainstCatalog(
   const recipeIds = new Set(catalog.recipes.map((recipe) => recipe.id));
   const recipesById = new Map(catalog.recipes.map((recipe) => [recipe.id, recipe]));
   const roomIds = new Set<string>(["control_nexus"]);
-  const roomSpecs = new Map<string, { roomKind: FacilityKind; level: number; slotCap: number }>();
+  const roomSpecs = new Map<string, { roomKind: FacilityKind; level: number; slotCap: number; active: boolean }>();
   const ownedOperatorIds = new Set<string>();
 
   roomSpecs.set("control_nexus", {
@@ -1820,6 +1820,7 @@ export function validateScenarioAgainstCatalog(
       scenario.facilities.controlNexus.level,
       scenario.facilities.controlNexus.level,
     ),
+    active: true,
   });
 
   if (scenario.scenarioFormatVersion !== CURRENT_SCENARIO_FORMAT_VERSION) {
@@ -1867,23 +1868,29 @@ export function validateScenarioAgainstCatalog(
   );
 
   for (const [roomIndex, room] of scenario.facilities.manufacturingCabins.entries()) {
+    const roomUnlocked = roomIndex < unlockedManufacturingRooms;
+    const effectiveLevel = roomUnlocked ? Math.min(room.level, manufacturingLevelCap) : 0;
     roomIds.add(room.id);
     roomSpecs.set(room.id, {
       roomKind: "manufacturing_cabin",
-      level: room.level,
-      slotCap: getRoomSlotCap(
-        catalog,
-        "manufacturing_cabin",
-        room.level,
-        scenario.facilities.controlNexus.level,
-      ),
+      level: effectiveLevel,
+      slotCap: roomUnlocked
+        ? getRoomSlotCap(
+          catalog,
+          "manufacturing_cabin",
+          effectiveLevel,
+          scenario.facilities.controlNexus.level,
+        )
+        : 0,
+      active: room.enabled && roomUnlocked,
     });
     if (roomIndex >= unlockedManufacturingRooms && room.enabled) {
       issues.push(
         makeIssue(
           "room_locked",
           `facilities.manufacturingCabins.${room.id}.enabled`,
-          `Manufacturing cabin '${room.id}' is locked until Control Nexus level 3.`,
+          `Manufacturing cabin '${room.id}' is saved as enabled, but stays inactive until Control Nexus level 3.`,
+          "warning",
         ),
       );
     }
@@ -1892,7 +1899,8 @@ export function validateScenarioAgainstCatalog(
         makeIssue(
           "room_level_locked",
           `facilities.manufacturingCabins.${room.id}.level`,
-          `Manufacturing cabin '${room.id}' cannot exceed level ${manufacturingLevelCap} at Control Nexus level ${scenario.facilities.controlNexus.level}.`,
+          `Manufacturing cabin '${room.id}' is set to level ${room.level}, but Control Nexus level ${scenario.facilities.controlNexus.level} only supports level ${manufacturingLevelCap}. Optimization uses level ${manufacturingLevelCap} for now.`,
+          "warning",
         ),
       );
     }
@@ -1922,6 +1930,17 @@ export function validateScenarioAgainstCatalog(
             "recipe_level_too_high",
             `facilities.manufacturingCabins.${room.id}.fixedRecipeId`,
             `Recipe '${room.fixedRecipeId}' requires room level ${recipe.roomLevel}, but '${room.id}' is level ${room.level}.`,
+            "warning",
+          ),
+        );
+      }
+      if (recipe && room.enabled && roomUnlocked && recipe.roomLevel > effectiveLevel) {
+        issues.push(
+          makeIssue(
+            "recipe_level_current_cap",
+            `facilities.manufacturingCabins.${room.id}.fixedRecipeId`,
+            `Recipe '${room.fixedRecipeId}' requires room level ${recipe.roomLevel}, but current optimization only uses level ${effectiveLevel} for '${room.id}' at Control Nexus level ${scenario.facilities.controlNexus.level}.`,
+            "warning",
           ),
         );
       }
@@ -1938,23 +1957,29 @@ export function validateScenarioAgainstCatalog(
   );
 
   for (const [roomIndex, room] of scenario.facilities.growthChambers.entries()) {
+    const roomUnlocked = roomIndex < unlockedGrowthRooms;
+    const effectiveLevel = roomUnlocked ? Math.min(room.level, growthLevelCap) : 0;
     roomIds.add(room.id);
     roomSpecs.set(room.id, {
       roomKind: "growth_chamber",
-      level: room.level,
-      slotCap: getRoomSlotCap(
-        catalog,
-        "growth_chamber",
-        room.level,
-        scenario.facilities.controlNexus.level,
-      ),
+      level: effectiveLevel,
+      slotCap: roomUnlocked
+        ? getRoomSlotCap(
+          catalog,
+          "growth_chamber",
+          effectiveLevel,
+          scenario.facilities.controlNexus.level,
+        )
+        : 0,
+      active: room.enabled && roomUnlocked,
     });
     if (roomIndex >= unlockedGrowthRooms && room.enabled) {
       issues.push(
         makeIssue(
           "room_locked",
           `facilities.growthChambers.${room.id}.enabled`,
-          `Growth chamber '${room.id}' is locked until Control Nexus level 2.`,
+          `Growth chamber '${room.id}' is saved as enabled, but stays inactive until Control Nexus level 2.`,
+          "warning",
         ),
       );
     }
@@ -1963,7 +1988,8 @@ export function validateScenarioAgainstCatalog(
         makeIssue(
           "room_level_locked",
           `facilities.growthChambers.${room.id}.level`,
-          `Growth chamber '${room.id}' cannot exceed level ${growthLevelCap} at Control Nexus level ${scenario.facilities.controlNexus.level}.`,
+          `Growth chamber '${room.id}' is set to level ${room.level}, but Control Nexus level ${scenario.facilities.controlNexus.level} only supports level ${growthLevelCap}. Optimization uses level ${growthLevelCap} for now.`,
+          "warning",
         ),
       );
     }
@@ -1974,6 +2000,18 @@ export function validateScenarioAgainstCatalog(
           "growth_slot_overflow",
           `facilities.growthChambers.${room.id}.fixedRecipeIds`,
           `Growth chamber '${room.id}' has ${(room.fixedRecipeIds?.length ?? 0)} selected growth materials, but level ${room.level} only supports ${growthSlotCap} growth slots.`,
+          "warning",
+        ),
+      );
+    }
+    const effectiveGrowthSlotCap = roomUnlocked ? getGrowthSlotCap(catalog, effectiveLevel) : 0;
+    if (room.enabled && roomUnlocked && (room.fixedRecipeIds?.length ?? 0) > effectiveGrowthSlotCap) {
+      issues.push(
+        makeIssue(
+          "growth_slot_current_cap",
+          `facilities.growthChambers.${room.id}.fixedRecipeIds`,
+          `Growth chamber '${room.id}' has ${(room.fixedRecipeIds?.length ?? 0)} selected growth materials, but current optimization only uses ${effectiveGrowthSlotCap} slot${effectiveGrowthSlotCap === 1 ? "" : "s"} at Control Nexus level ${scenario.facilities.controlNexus.level}.`,
+          "warning",
         ),
       );
     }
@@ -2004,6 +2042,17 @@ export function validateScenarioAgainstCatalog(
             "recipe_level_too_high",
             `facilities.growthChambers.${room.id}.fixedRecipeIds.${recipeIndex}`,
             `Recipe '${recipeId}' requires room level ${recipe.roomLevel}, but '${room.id}' is level ${room.level}.`,
+            "warning",
+          ),
+        );
+      }
+      if (recipe && room.enabled && roomUnlocked && recipe.roomLevel > effectiveLevel) {
+        issues.push(
+          makeIssue(
+            "recipe_level_current_cap",
+            `facilities.growthChambers.${room.id}.fixedRecipeIds.${recipeIndex}`,
+            `Recipe '${recipeId}' requires room level ${recipe.roomLevel}, but current optimization only uses level ${effectiveLevel} for '${room.id}' at Control Nexus level ${scenario.facilities.controlNexus.level}.`,
+            "warning",
           ),
         );
       }
@@ -2022,20 +2071,26 @@ export function validateScenarioAgainstCatalog(
     roomIds.add(scenario.facilities.receptionRoom.id);
     roomSpecs.set(scenario.facilities.receptionRoom.id, {
       roomKind: "reception_room",
-      level: scenario.facilities.receptionRoom.level,
-      slotCap: getRoomSlotCap(
-        catalog,
-        "reception_room",
-        scenario.facilities.receptionRoom.level,
-        scenario.facilities.controlNexus.level,
-      ),
+      level: unlockedReceptionRooms > 0
+        ? Math.min(scenario.facilities.receptionRoom.level, receptionLevelCap)
+        : 0,
+      slotCap: unlockedReceptionRooms > 0
+        ? getRoomSlotCap(
+          catalog,
+          "reception_room",
+          Math.min(scenario.facilities.receptionRoom.level, receptionLevelCap),
+          scenario.facilities.controlNexus.level,
+        )
+        : 0,
+      active: scenario.facilities.receptionRoom.enabled && unlockedReceptionRooms > 0,
     });
     if (unlockedReceptionRooms === 0 && scenario.facilities.receptionRoom.enabled) {
       issues.push(
         makeIssue(
           "room_locked",
           "facilities.receptionRoom.enabled",
-          "Reception room is locked until Control Nexus level 3.",
+          "Reception room is saved as enabled, but stays inactive until Control Nexus level 3.",
+          "warning",
         ),
       );
     }
@@ -2044,7 +2099,8 @@ export function validateScenarioAgainstCatalog(
         makeIssue(
           "room_level_locked",
           "facilities.receptionRoom.level",
-          `Reception room cannot exceed level ${receptionLevelCap} at Control Nexus level ${scenario.facilities.controlNexus.level}.`,
+          `Reception room is set to level ${scenario.facilities.receptionRoom.level}, but Control Nexus level ${scenario.facilities.controlNexus.level} only supports level ${receptionLevelCap}. Optimization uses level ${receptionLevelCap} for now.`,
+          "warning",
         ),
       );
     }
@@ -2059,6 +2115,7 @@ export function validateScenarioAgainstCatalog(
           "hard_assignment_not_owned",
           `facilities.hardAssignments.${assignment.operatorId}`,
           `Hard assignment references non-owned operator '${assignment.operatorId}'.`,
+          "warning",
         ),
       );
     }
@@ -2077,11 +2134,22 @@ export function validateScenarioAgainstCatalog(
           "hard_assignment_duplicate",
           `facilities.hardAssignments.${assignment.operatorId}`,
           `Operator '${assignment.operatorId}' is hard-assigned more than once.`,
+          "warning",
         ),
       );
     }
     const roomSpec = roomSpecs.get(assignment.roomId);
     if (roomSpec) {
+      if (!roomSpec.active) {
+        issues.push(
+          makeIssue(
+            "hard_assignment_inactive_room",
+            `facilities.hardAssignments.${assignment.operatorId}`,
+            `Hard assignment targets room '${assignment.roomId}', but that room is currently inactive and will be ignored by optimization.`,
+            "warning",
+          ),
+        );
+      }
       const currentCount = (roomAssignmentCounts.get(assignment.roomId) ?? 0) + 1;
       roomAssignmentCounts.set(assignment.roomId, currentCount);
       if (currentCount > roomSpec.slotCap) {
@@ -2090,6 +2158,7 @@ export function validateScenarioAgainstCatalog(
             "hard_assignment_room_overflow",
             `facilities.hardAssignments.${assignment.operatorId}`,
             `Hard assignments exceed slot capacity for room '${assignment.roomId}'.`,
+            "warning",
           ),
         );
       }

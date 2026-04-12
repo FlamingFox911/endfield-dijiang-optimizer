@@ -10,6 +10,7 @@ import type {
   ProductKind,
   SkillRank,
   UpgradeRecommendationResult,
+  ValidationIssue,
 } from "@endfield/domain";
 
 import {
@@ -70,6 +71,12 @@ function isLikelyJsonFile(file: File): boolean {
     || /\.json$/i.test(file.name);
 }
 
+function getFacilityMaxLevel(catalog: GameCatalog, facilityKind: GameCatalog["facilities"][number]["kind"]): number {
+  return catalog.facilities
+    .find((facility) => facility.kind === facilityKind)
+    ?.levels.reduce((maxLevel, level) => Math.max(maxLevel, level.level), 0) ?? 0;
+}
+
 type AppTab = "roster" | "planner" | "results";
 type RosterSortMode = "default" | "alphabetical" | "level" | "skill";
 type RosterOwnedFilter = "all" | "owned" | "unowned";
@@ -87,9 +94,81 @@ interface RecommendationRunState {
   progress: UpgradeRecommendationProgressSnapshot;
 }
 
+interface PendingRunConfirmation {
+  kind: "optimization" | "recommendations";
+  issues: ValidationIssue[];
+}
+
+interface ValidationIssueTarget {
+  elementId: string;
+  tab: AppTab;
+}
+
 type HardAssignment = OptimizationScenario["facilities"]["hardAssignments"][number];
 type RosterEntry = OptimizationScenario["roster"][number];
 type TooltipHorizontalAlign = "start" | "end";
+
+function getRoomControlTargetId(roomId: string, control: "enabled" | "level" | "recipe"): string {
+  return `validation-target-${roomId}-${control}`;
+}
+
+function getGrowthSlotTargetId(roomId: string, slotIndex: number): string {
+  return `validation-target-${roomId}-growth-slot-${slotIndex}`;
+}
+
+function getGrowthSlotsGroupTargetId(roomId: string): string {
+  return `validation-target-${roomId}-growth-slots`;
+}
+
+function getHardAssignmentTargetId(operatorId: string): string {
+  return `validation-target-hard-assignment-${operatorId}`;
+}
+
+function getValidationIssueTarget(issue: ValidationIssue): ValidationIssueTarget | null {
+  if (issue.path === "facilities.receptionRoom.enabled") {
+    return { elementId: getRoomControlTargetId("reception-1", "enabled"), tab: "planner" };
+  }
+  if (issue.path === "facilities.receptionRoom.level") {
+    return { elementId: getRoomControlTargetId("reception-1", "level"), tab: "planner" };
+  }
+
+  const manufacturingMatch = issue.path.match(/^facilities\.manufacturingCabins\.([^.]+)\.(enabled|level|fixedRecipeId)$/);
+  if (manufacturingMatch) {
+    const [, roomId, field] = manufacturingMatch;
+    return {
+      elementId: getRoomControlTargetId(roomId, field === "fixedRecipeId" ? "recipe" : field as "enabled" | "level"),
+      tab: "planner",
+    };
+  }
+
+  const growthFieldMatch = issue.path.match(/^facilities\.growthChambers\.([^.]+)\.(enabled|level)$/);
+  if (growthFieldMatch) {
+    const [, roomId, field] = growthFieldMatch;
+    return {
+      elementId: getRoomControlTargetId(roomId, field as "enabled" | "level"),
+      tab: "planner",
+    };
+  }
+
+  const growthRecipesMatch = issue.path.match(/^facilities\.growthChambers\.([^.]+)\.fixedRecipeIds(?:\.(\d+))?$/);
+  if (growthRecipesMatch) {
+    const [, roomId, slotIndex] = growthRecipesMatch;
+    return {
+      elementId: slotIndex != null ? getGrowthSlotTargetId(roomId, Number(slotIndex)) : getGrowthSlotsGroupTargetId(roomId),
+      tab: "planner",
+    };
+  }
+
+  const hardAssignmentMatch = issue.path.match(/^facilities\.hardAssignments\.([^.]+)$/);
+  if (hardAssignmentMatch) {
+    return {
+      elementId: getHardAssignmentTargetId(hardAssignmentMatch[1]!),
+      tab: "planner",
+    };
+  }
+
+  return null;
+}
 
 function sanitizeScenarioForPersistence(scenario: OptimizationScenario): OptimizationScenario {
   return {
@@ -850,15 +929,18 @@ function App() {
   const [rosterOwnedFilter, setRosterOwnedFilter] = useState<RosterOwnedFilter>("all");
   const [rosterFacilityFilter, setRosterFacilityFilter] = useState<RosterFacilityFilter>("all");
   const [messages, setMessages] = useState<string[]>([]);
+  const [pendingRunConfirmation, setPendingRunConfirmation] = useState<PendingRunConfirmation | null>(null);
   const [optimizationRun, setOptimizationRun] = useState<OptimizationRunState | null>(null);
   const [recommendationRun, setRecommendationRun] = useState<RecommendationRunState | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [flashedValidationTargetId, setFlashedValidationTargetId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<AppTab>("roster");
   const [selectedOperatorId, setSelectedOperatorId] = useState<string | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const activeRunIdRef = useRef<number | null>(null);
   const activeRunKindRef = useRef<"optimization" | "recommendations" | null>(null);
   const nextRunIdRef = useRef(1);
+  const flashedValidationTargetTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
       let cancelled = false;
@@ -915,6 +997,10 @@ function App() {
     workerRef.current = null;
     activeRunIdRef.current = null;
     activeRunKindRef.current = null;
+    if (flashedValidationTargetTimeoutRef.current != null) {
+      window.clearTimeout(flashedValidationTargetTimeoutRef.current);
+      flashedValidationTargetTimeoutRef.current = null;
+    }
   }, []);
 
   useEffect(() => {
@@ -1030,6 +1116,9 @@ function App() {
   const manufacturingLevelCap = getFacilityLevelCapForControlNexus("manufacturing_cabin", scenario.facilities.controlNexus.level);
   const growthLevelCap = getFacilityLevelCapForControlNexus("growth_chamber", scenario.facilities.controlNexus.level);
   const receptionLevelCap = getFacilityLevelCapForControlNexus("reception_room", scenario.facilities.controlNexus.level);
+  const manufacturingMaxLevel = getFacilityMaxLevel(catalog, "manufacturing_cabin");
+  const growthMaxLevel = getFacilityMaxLevel(catalog, "growth_chamber");
+  const receptionMaxLevel = getFacilityMaxLevel(catalog, "reception_room");
   const roomOptions = [
     { id: "control_nexus", label: "Control Nexus" },
     ...(scenario.facilities.receptionRoom ? [{ id: scenario.facilities.receptionRoom.id, label: "Reception Room" }] : []),
@@ -1056,6 +1145,201 @@ function App() {
   const selectedOwnedState = selectedOperator ? rosterById.get(selectedOperator.id) : undefined;
   const completedResultsCount = (result ? 1 : 0) + (recommendations ? 1 : 0);
   const demandProfile = scenario.options.demandProfile ?? createDefaultDemandProfile();
+  const validationErrors = validation.issues.filter((issue) => issue.severity === "error");
+  const validationWarnings = validation.issues.filter((issue) => issue.severity === "warning");
+  const hardAssignmentByOperatorId = new Map(scenario.facilities.hardAssignments.map((assignment) => [assignment.operatorId, assignment]));
+  const firstHardAssignmentIndexByOperatorId = new Map<string, number>();
+  scenario.facilities.hardAssignments.forEach((assignment, index) => {
+    if (!firstHardAssignmentIndexByOperatorId.has(assignment.operatorId)) {
+      firstHardAssignmentIndexByOperatorId.set(assignment.operatorId, index);
+    }
+  });
+  const validationWarningTargetIds = (() => {
+    const targetIds = new Set<string>();
+
+    for (const issue of validationWarnings) {
+      const target = getValidationIssueTarget(issue);
+      if (target) {
+        targetIds.add(target.elementId);
+      }
+      const growthRecipesMatch = issue.path.match(/^facilities\.growthChambers\.([^.]+)\.fixedRecipeIds$/);
+      if (growthRecipesMatch) {
+        const room = scenario.facilities.growthChambers.find((entry) => entry.id === growthRecipesMatch[1]);
+        room?.fixedRecipeIds?.forEach((_, slotIndex) => targetIds.add(getGrowthSlotTargetId(room.id, slotIndex)));
+      }
+      const hardAssignmentMatch = issue.path.match(/^facilities\.hardAssignments\.([^.]+)$/);
+      if (hardAssignmentMatch) {
+        targetIds.add(getHardAssignmentTargetId(hardAssignmentMatch[1]!));
+      }
+    }
+
+    return targetIds;
+  })();
+
+  const getValidationIssueLabel = (issue: ValidationIssue): string => {
+    const manufacturingMatch = issue.path.match(/^facilities\.manufacturingCabins\.([^.]+)\.(enabled|level|fixedRecipeId)$/);
+    if (manufacturingMatch) {
+      const roomId = manufacturingMatch[1]!;
+      const field = manufacturingMatch[2]!;
+      const roomLabel = roomLabelById.get(roomId) ?? "Manufacturing room";
+      const room = scenario.facilities.manufacturingCabins.find((entry) => entry.id === roomId);
+      if (field === "enabled") {
+        return `${roomLabel} is saved for later and will stay inactive until your Control Nexus unlocks it.`;
+      }
+      if (field === "level") {
+        return `${roomLabel} is set to level ${room?.level ?? "?"}, but your current base only supports level ${manufacturingLevelCap}. Optimize will use level ${manufacturingLevelCap} for now.`;
+      }
+      const recipe = room?.fixedRecipeId ? recipesById.get(room.fixedRecipeId) : undefined;
+      if (issue.code === "recipe_level_too_high") {
+        return `${recipe?.name ?? "This recipe"} needs room level ${recipe?.roomLevel ?? "?"}, but ${roomLabel} is only set to level ${room?.level ?? "?"}.`;
+      }
+      if (issue.code === "recipe_level_current_cap") {
+        return `${recipe?.name ?? "This recipe"} needs room level ${recipe?.roomLevel ?? "?"}, but Optimize can only use level ${manufacturingLevelCap} in ${roomLabel} right now.`;
+      }
+    }
+
+    const growthFieldMatch = issue.path.match(/^facilities\.growthChambers\.([^.]+)\.(enabled|level)$/);
+    if (growthFieldMatch) {
+      const roomId = growthFieldMatch[1]!;
+      const field = growthFieldMatch[2]!;
+      const roomLabel = roomLabelById.get(roomId) ?? "Growth Chamber";
+      const room = scenario.facilities.growthChambers.find((entry) => entry.id === roomId);
+      if (field === "enabled") {
+        return `${roomLabel} is saved for later and will stay inactive until your Control Nexus unlocks it.`;
+      }
+      if (field === "level") {
+        return `${roomLabel} is set to level ${room?.level ?? "?"}, but your current base only supports level ${growthLevelCap}. Optimize will use level ${growthLevelCap} for now.`;
+      }
+    }
+
+    const growthRecipesMatch = issue.path.match(/^facilities\.growthChambers\.([^.]+)\.fixedRecipeIds(?:\.(\d+))?$/);
+    if (growthRecipesMatch) {
+      const roomId = growthRecipesMatch[1]!;
+      const slotIndex = growthRecipesMatch[2] != null ? Number(growthRecipesMatch[2]) : null;
+      const roomLabel = roomLabelById.get(roomId) ?? "Growth Chamber";
+      const room = scenario.facilities.growthChambers.find((entry) => entry.id === roomId);
+      const recipeId = slotIndex != null ? room?.fixedRecipeIds?.[slotIndex] : undefined;
+      const recipe = recipeId ? recipesById.get(recipeId) : undefined;
+      if (issue.code === "growth_slot_overflow") {
+        return `${roomLabel} has more selected materials than this room level supports. Extra picks will be ignored until you remove them or raise the room level.`;
+      }
+      if (issue.code === "growth_slot_current_cap") {
+        return `${roomLabel} has more selected materials than your current base can use right now. Extra picks will be ignored for this run.`;
+      }
+      if (issue.code === "recipe_level_too_high") {
+        return `${recipe?.name ?? "This material"} needs room level ${recipe?.roomLevel ?? "?"}, but ${roomLabel} is only set to level ${room?.level ?? "?"}.`;
+      }
+      if (issue.code === "recipe_level_current_cap") {
+        return `${recipe?.name ?? "This material"} needs room level ${recipe?.roomLevel ?? "?"}, but Optimize can only use level ${growthLevelCap} in ${roomLabel} right now.`;
+      }
+    }
+
+    if (issue.path === "facilities.receptionRoom.enabled") {
+      return "Reception Room is saved for later and will stay inactive until your Control Nexus unlocks it.";
+    }
+    if (issue.path === "facilities.receptionRoom.level") {
+      return `Reception Room is set above your current base cap. Optimize will use level ${receptionLevelCap} for now.`;
+    }
+
+    const hardAssignmentMatch = issue.path.match(/^facilities\.hardAssignments\.([^.]+)$/);
+    if (hardAssignmentMatch) {
+      const operatorId = hardAssignmentMatch[1]!;
+      const assignment = hardAssignmentByOperatorId.get(operatorId);
+      const operatorName = operatorsById.get(operatorId)?.name ?? operatorId;
+      const roomLabel = assignment ? (roomLabelById.get(assignment.roomId) ?? assignment.roomId) : "that room";
+      if (issue.code === "hard_assignment_not_owned") {
+        return `${operatorName} is pinned, but not marked as owned. This pin will be ignored.`;
+      }
+      if (issue.code === "hard_assignment_duplicate") {
+        return `${operatorName} is pinned more than once. Only one pin can be used.`;
+      }
+      if (issue.code === "hard_assignment_room_overflow") {
+        return `${roomLabel} has more pinned operators than open slots. Extra pins will be ignored.`;
+      }
+      if (issue.code === "hard_assignment_inactive_room") {
+        return `${operatorName} is pinned to ${roomLabel}, but that room is currently inactive. This pin will be ignored.`;
+      }
+    }
+
+    return issue.message
+      .replace(/Manufacturing cabin/gi, "Manufacturing Cabin")
+      .replace(/Growth chamber/gi, "Growth Chamber")
+      .replace(/Reception room/gi, "Reception Room")
+      .replace(/Control Nexus/gi, "Control Nexus");
+  };
+
+  const focusValidationIssueTarget = (issue: ValidationIssue) => {
+    const target = getValidationIssueTarget(issue);
+    if (!target) {
+      return;
+    }
+
+    if (activeTab !== target.tab) {
+      setActiveTab(target.tab);
+    }
+
+    const scrollToTarget = (remainingAttempts: number) => {
+      const element = document.getElementById(target.elementId);
+      if (!element) {
+        if (remainingAttempts > 0) {
+          window.setTimeout(() => scrollToTarget(remainingAttempts - 1), 60);
+        }
+        return;
+      }
+
+      if (typeof (element as HTMLElement).scrollIntoView === "function") {
+        (element as HTMLElement).scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      }
+      if ("focus" in element) {
+        (element as HTMLElement).focus({ preventScroll: true });
+      }
+      if (flashedValidationTargetTimeoutRef.current != null) {
+        window.clearTimeout(flashedValidationTargetTimeoutRef.current);
+      }
+      setFlashedValidationTargetId(target.elementId);
+      flashedValidationTargetTimeoutRef.current = window.setTimeout(() => {
+        setFlashedValidationTargetId((current) => current === target.elementId ? null : current);
+        flashedValidationTargetTimeoutRef.current = null;
+      }, 1600);
+    };
+
+    scrollToTarget(8);
+  };
+
+  const renderValidationIssueList = (
+    issues: ValidationIssue[],
+    tone: "warning" | "error",
+    options: { dismissPendingRunConfirmation?: boolean } = {},
+  ) => (
+    <div className={`issueList issueList${tone === "warning" ? " issueListWarning" : " issueListError"}`}>
+      {issues.map((issue) => {
+        const target = getValidationIssueTarget(issue);
+        const label = getValidationIssueLabel(issue);
+        const key = `${issue.path}-${issue.code}-${issue.message}`;
+        return target ? (
+          <a
+            key={key}
+            href={`#${target.elementId}`}
+            className="issueLink"
+            onClick={(event) => {
+              event.preventDefault();
+              if (options.dismissPendingRunConfirmation) {
+                setPendingRunConfirmation(null);
+              }
+              focusValidationIssueTarget(issue);
+            }}
+          >
+            <span className="issueLinkText">{label}</span>
+            <span className="issueLinkMeta">Open field</span>
+          </a>
+        ) : (
+          <div key={key} className="issueLink issueLinkStatic">
+            <span className="issueLinkText">{label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
 
   const updateScenario = (updater: (current: OptimizationScenario) => OptimizationScenario) => {
     setScenario((current) => (current ? updater(current) : current));
@@ -1142,13 +1426,7 @@ function App() {
     activeRunKindRef.current = null;
   };
 
-  const runOptimization = () => {
-    const nextValidation = validateScenarioAgainstCatalog(catalog, scenario);
-    if (!nextValidation.ok) {
-      setMessages(nextValidation.issues.map((issue) => issue.message));
-      return;
-    }
-
+  const launchOptimization = () => {
     stopActiveWorker();
 
     const runId = nextRunIdRef.current;
@@ -1247,13 +1525,7 @@ function App() {
     setMessages([runKind === "recommendations" ? "Recommendations canceled." : "Optimization canceled."]);
   };
 
-  const runRecommendations = () => {
-    const nextValidation = validateScenarioAgainstCatalog(catalog, scenario);
-    if (!nextValidation.ok) {
-      setMessages(nextValidation.issues.map((issue) => issue.message));
-      return;
-    }
-
+  const launchRecommendations = () => {
     stopActiveWorker();
 
     const runId = nextRunIdRef.current;
@@ -1315,6 +1587,45 @@ function App() {
     };
 
     worker.postMessage({ type: "start-recommendations", runId, catalog, scenario });
+  };
+
+  const requestRun = (kind: PendingRunConfirmation["kind"]) => {
+    const nextValidation = validateScenarioAgainstCatalog(catalog, scenario);
+    const blockingIssues = nextValidation.issues.filter((issue) => issue.severity === "error");
+    const warningIssues = nextValidation.issues.filter((issue) => issue.severity === "warning");
+
+    if (blockingIssues.length > 0) {
+      setMessages([]);
+      setPendingRunConfirmation(null);
+      return;
+    }
+
+    if (warningIssues.length > 0) {
+      setPendingRunConfirmation({ kind, issues: warningIssues });
+      return;
+    }
+
+    if (kind === "optimization") {
+      launchOptimization();
+      return;
+    }
+
+    launchRecommendations();
+  };
+
+  const confirmPendingRun = () => {
+    if (!pendingRunConfirmation) {
+      return;
+    }
+
+    const { kind } = pendingRunConfirmation;
+    setPendingRunConfirmation(null);
+    if (kind === "optimization") {
+      launchOptimization();
+      return;
+    }
+
+    launchRecommendations();
   };
 
   const exportScenario = () => {
@@ -1534,8 +1845,8 @@ function App() {
           </label>
         </div>
         <div className="toolbarActions">
-          <button onClick={runOptimization} disabled={optimizationRun != null || recommendationRun != null}>Optimize</button>
-          <button className="secondary" onClick={runRecommendations} disabled={optimizationRun != null || recommendationRun != null}>Recommend unlocks</button>
+          <button onClick={() => requestRun("optimization")} disabled={optimizationRun != null || recommendationRun != null}>Optimize</button>
+          <button className="secondary" onClick={() => requestRun("recommendations")} disabled={optimizationRun != null || recommendationRun != null}>Recommend unlocks</button>
           <button className="secondary" onClick={exportScenario}>Export JSON</button>
           <label className="secondary upload">Import JSON<input type="file" accept="application/json" onChange={importScenario} /></label>
         </div>
@@ -1629,8 +1940,43 @@ function App() {
         </section>
       )}
 
+      {pendingRunConfirmation && (
+        <section className="modalBackdrop">
+          <div className="modalCard" role="dialog" aria-modal="true" aria-label="Proceed with warnings">
+            <div className="panelHeader">
+              <div>
+                <p className="eyebrow">Run check</p>
+                <h2>Proceed with warnings?</h2>
+              </div>
+              <span className="miniStat">{pendingRunConfirmation.issues.length} warning{pendingRunConfirmation.issues.length === 1 ? "" : "s"}</span>
+            </div>
+            <p className="status">
+              {pendingRunConfirmation.kind === "optimization"
+                ? "Optimization can continue, but some saved settings do not match the current base state."
+                : "Recommendations can continue, but some saved settings do not match the current base state."}
+            </p>
+            <div className="messageBar warning runConfirmationList">
+              {renderValidationIssueList(pendingRunConfirmation.issues, "warning", { dismissPendingRunConfirmation: true })}
+            </div>
+            <div className="toolbarActions">
+              <button type="button" onClick={confirmPendingRun}>Proceed</button>
+              <button type="button" className="secondary" onClick={() => setPendingRunConfirmation(null)}>Cancel</button>
+            </div>
+          </div>
+        </section>
+      )}
+
       {messages.length > 0 && <section className="messageBar">{messages.map((message) => <p key={message}>{message}</p>)}</section>}
-      {!validation.ok && <section className="messageBar warning">{validation.issues.map((issue) => <p key={`${issue.path}-${issue.message}`}>{issue.message}</p>)}</section>}
+      {validationWarnings.length > 0 && (
+        <section className="messageBar warning">
+          {renderValidationIssueList(validationWarnings, "warning")}
+        </section>
+      )}
+      {validationErrors.length > 0 && (
+        <section className="messageBar error">
+          {renderValidationIssueList(validationErrors, "error")}
+        </section>
+      )}
 
       <section className="tabShell">
         <div className="tabBar" role="tablist" aria-label="Workspace sections">
@@ -1935,10 +2281,17 @@ function App() {
                             </div>
                             <span className="miniStat">{getRoomSlotCap(catalog, "reception_room", scenario.facilities.receptionRoom.level, scenario.facilities.controlNexus.level)} slots</span>
                           </div>
-                          <div className="plannerStatRow">
-                            <div className="plannerStatCell">
-                              <span>Status</span>
-                              <strong>{roomLocked ? "Locked" : scenario.facilities.receptionRoom.enabled ? "Enabled" : "Disabled"}</strong>
+                        {roomLocked && (
+                          <p className="roomMeta">
+                            {scenario.facilities.receptionRoom.enabled
+                              ? "Saved as enabled for later. The room stays inactive until Control Nexus level 3."
+                              : "You can preconfigure this room now. It stays inactive until Control Nexus level 3."}
+                          </p>
+                        )}
+                        <div className="plannerStatRow">
+                          <div className="plannerStatCell">
+                            <span>Status</span>
+                            <strong>{roomLocked ? "Locked" : scenario.facilities.receptionRoom.enabled ? "Enabled" : "Disabled"}</strong>
                             </div>
                             <div className="plannerStatCell">
                               <span>Level cap</span>
@@ -1950,9 +2303,11 @@ function App() {
                           <label className="plannerCell plannerToggleCell">
                             <span>Enabled</span>
                             <input
+                              id={getRoomControlTargetId("reception-1", "enabled")}
                               type="checkbox"
                               checked={scenario.facilities.receptionRoom.enabled}
-                              disabled={roomLocked}
+                              className={validationWarningTargetIds.has(getRoomControlTargetId("reception-1", "enabled")) ? "validationTargetWarning" : ""}
+                              data-warning-target={flashedValidationTargetId === getRoomControlTargetId("reception-1", "enabled") ? "flash" : undefined}
                               onChange={(event) => updateScenario((current) => current.facilities.receptionRoom ? ({
                                 ...current,
                                 facilities: {
@@ -1968,11 +2323,13 @@ function App() {
                           <label className="plannerCell">
                             <span>Level</span>
                             <input
+                              id={getRoomControlTargetId("reception-1", "level")}
                               type="number"
                               min={1}
-                              max={Math.max(receptionLevelCap, 1)}
+                              max={Math.max(receptionMaxLevel, 1)}
                               value={scenario.facilities.receptionRoom.level}
-                              disabled={roomLocked}
+                              className={validationWarningTargetIds.has(getRoomControlTargetId("reception-1", "level")) ? "validationTargetWarning" : ""}
+                              data-warning-target={flashedValidationTargetId === getRoomControlTargetId("reception-1", "level") ? "flash" : undefined}
                               onChange={(event) => updateScenario((current) => current.facilities.receptionRoom ? ({
                                 ...current,
                                 facilities: {
@@ -2017,13 +2374,22 @@ function App() {
                           </div>
                         </div>
                       </div>
+                      {roomLocked && (
+                        <p className="roomMeta">
+                          {room.enabled
+                            ? "Saved as enabled for later. The room stays inactive until Control Nexus level 3."
+                            : "You can preconfigure this room now. It stays inactive until Control Nexus level 3."}
+                        </p>
+                      )}
                       <div className="plannerCellGrid plannerConfigRow">
                         <label className="plannerCell plannerToggleCell">
                           <span>Enabled</span>
                           <input
+                            id={getRoomControlTargetId(room.id, "enabled")}
                             type="checkbox"
                             checked={room.enabled}
-                            disabled={roomLocked}
+                            className={validationWarningTargetIds.has(getRoomControlTargetId(room.id, "enabled")) ? "validationTargetWarning" : ""}
+                            data-warning-target={flashedValidationTargetId === getRoomControlTargetId(room.id, "enabled") ? "flash" : undefined}
                             onChange={(event) => updateScenario((current) => ({
                               ...current,
                               facilities: {
@@ -2036,11 +2402,13 @@ function App() {
                         <label className="plannerCell">
                           <span>Level</span>
                           <input
+                            id={getRoomControlTargetId(room.id, "level")}
                             type="number"
                             min={1}
-                            max={manufacturingLevelCap}
+                            max={Math.max(manufacturingMaxLevel, 1)}
                             value={room.level}
-                            disabled={roomLocked}
+                            className={validationWarningTargetIds.has(getRoomControlTargetId(room.id, "level")) ? "validationTargetWarning" : ""}
+                            data-warning-target={flashedValidationTargetId === getRoomControlTargetId(room.id, "level") ? "flash" : undefined}
                             onChange={(event) => updateScenario((current) => ({
                               ...current,
                               facilities: {
@@ -2055,8 +2423,10 @@ function App() {
                         <label className="plannerCell plannerCellWide">
                           <span>Recipe</span>
                           <select
+                            id={getRoomControlTargetId(room.id, "recipe")}
                             value={room.fixedRecipeId ?? ""}
-                            disabled={roomLocked}
+                            className={validationWarningTargetIds.has(getRoomControlTargetId(room.id, "recipe")) ? "validationTargetWarning" : ""}
+                            data-warning-target={flashedValidationTargetId === getRoomControlTargetId(room.id, "recipe") ? "flash" : undefined}
                             onChange={(event) => updateScenario((current) => ({
                               ...current,
                               facilities: {
@@ -2066,9 +2436,9 @@ function App() {
                             }))}
                           >
                             <option value="">No recipe</option>
-                            {catalog.recipes.filter((entry) => entry.facilityKind === "manufacturing_cabin" && entry.roomLevel <= room.level).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
+                            {catalog.recipes.filter((entry) => entry.facilityKind === "manufacturing_cabin").map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
                           </select>
-                          <small className="plannerCellNote">{roomLocked ? "Locked until Control Nexus level 3" : recipe ? `${formatLabel(recipe.productKind)} | ${formatDurationMinutes(recipe.baseDurationMinutes)} | output ${recipe.outputAmount ?? "?"}` : "No recipe selected"}</small>
+                          <small className="plannerCellNote">{roomLocked ? "Saved for later. Optimization ignores this room until Control Nexus level 3." : recipe ? `${formatLabel(recipe.productKind)} | ${formatDurationMinutes(recipe.baseDurationMinutes)} | output ${recipe.outputAmount ?? "?"}` : "No recipe selected"}</small>
                         </label>
                       </div>
                     </div>
@@ -2090,7 +2460,13 @@ function App() {
                           </div>
                           <span className="miniStat">{getRoomSlotCap(catalog, "growth_chamber", room.level, scenario.facilities.controlNexus.level)} slots</span>
                         </div>
-                        {roomLocked && <p className="roomMeta">Locked until Control Nexus level 2</p>}
+                        {roomLocked && (
+                          <p className="roomMeta">
+                            {room.enabled
+                              ? "Saved as enabled for later. The room stays inactive until Control Nexus level 2."
+                              : "You can preconfigure this room now. It stays inactive until Control Nexus level 2."}
+                          </p>
+                        )}
                         <div className="plannerStatRow">
                           <div className="plannerStatCell">
                             <span>Status</span>
@@ -2110,9 +2486,11 @@ function App() {
                         <label className="plannerCell plannerToggleCell">
                           <span>Enabled</span>
                           <input
+                            id={getRoomControlTargetId(room.id, "enabled")}
                             type="checkbox"
                             checked={room.enabled}
-                            disabled={roomLocked}
+                            className={validationWarningTargetIds.has(getRoomControlTargetId(room.id, "enabled")) ? "validationTargetWarning" : ""}
+                            data-warning-target={flashedValidationTargetId === getRoomControlTargetId(room.id, "enabled") ? "flash" : undefined}
                             onChange={(event) => updateScenario((current) => ({
                               ...current,
                               facilities: {
@@ -2125,11 +2503,13 @@ function App() {
                         <label className="plannerCell">
                           <span>Level</span>
                           <input
+                            id={getRoomControlTargetId(room.id, "level")}
                             type="number"
                             min={1}
-                            max={Math.max(growthLevelCap, 1)}
+                            max={Math.max(growthMaxLevel, 1)}
                             value={room.level}
-                            disabled={roomLocked}
+                            className={validationWarningTargetIds.has(getRoomControlTargetId(room.id, "level")) ? "validationTargetWarning" : ""}
+                            data-warning-target={flashedValidationTargetId === getRoomControlTargetId(room.id, "level") ? "flash" : undefined}
                             onChange={(event) => updateScenario((current) => ({
                               ...current,
                               facilities: {
@@ -2140,7 +2520,12 @@ function App() {
                           />
                         </label>
                       </div>
-                      <div className="plannerSlotGrid">
+                      <div
+                        className={`plannerSlotGrid ${validationWarningTargetIds.has(getGrowthSlotsGroupTargetId(room.id)) ? "validationTargetWarningGroup" : ""}`}
+                        id={getGrowthSlotsGroupTargetId(room.id)}
+                        data-warning-target={flashedValidationTargetId === getGrowthSlotsGroupTargetId(room.id) ? "flash" : undefined}
+                        tabIndex={-1}
+                      >
                         {Array.from({ length: growthSlotCap }, (_, slotIndex) => {
                           const selectedRecipe = room.fixedRecipeIds?.[slotIndex]
                             ? recipesById.get(room.fixedRecipeIds[slotIndex]!)
@@ -2149,8 +2534,10 @@ function App() {
                             <label className="plannerCell" key={`${room.id}-growth-slot-${slotIndex}`}>
                               <span>Growth Slot {slotIndex + 1}</span>
                               <select
+                                id={getGrowthSlotTargetId(room.id, slotIndex)}
                                 value={room.fixedRecipeIds?.[slotIndex] ?? ""}
-                                disabled={roomLocked}
+                                className={validationWarningTargetIds.has(getGrowthSlotTargetId(room.id, slotIndex)) ? "validationTargetWarning" : ""}
+                                data-warning-target={flashedValidationTargetId === getGrowthSlotTargetId(room.id, slotIndex) ? "flash" : undefined}
                                 onChange={(event) => updateScenario((current) => ({
                                   ...current,
                                   facilities: {
@@ -2171,11 +2558,11 @@ function App() {
                                 }))}
                               >
                                 <option value="">Empty slot</option>
-                                {catalog.recipes.filter((entry) => entry.facilityKind === "growth_chamber" && entry.roomLevel <= room.level).map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
+                                {catalog.recipes.filter((entry) => entry.facilityKind === "growth_chamber").map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
                               </select>
                               <small className="plannerCellNote">
                                 {roomLocked
-                                  ? "Locked until Control Nexus level 2"
+                                  ? "Saved for later. Optimization ignores this room until Control Nexus level 2."
                                   : selectedRecipe
                                     ? `${formatLabel(selectedRecipe.productKind)} | ${formatDurationMinutes(selectedRecipe.baseDurationMinutes)} | output ${selectedRecipe.outputAmount ?? "?"}`
                                     : "Empty slot"}
@@ -2222,7 +2609,13 @@ function App() {
                     );
 
                     return (
-                      <div className="hardAssignmentRow" key={index}>
+                      <div
+                        className={`hardAssignmentRow ${validationWarningTargetIds.has(getHardAssignmentTargetId(assignment.operatorId)) ? "validationTargetWarningGroup" : ""}`}
+                        key={index}
+                        id={firstHardAssignmentIndexByOperatorId.get(assignment.operatorId) === index ? getHardAssignmentTargetId(assignment.operatorId) : undefined}
+                        data-warning-target={flashedValidationTargetId === getHardAssignmentTargetId(assignment.operatorId) ? "flash" : undefined}
+                        tabIndex={-1}
+                      >
                         <label className="plannerCell">
                           <span>Operator</span>
                           <select

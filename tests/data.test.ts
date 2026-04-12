@@ -163,6 +163,49 @@ describe("data services", () => {
     );
   });
 
+  it("treats future room setup warnings as non-blocking validation issues", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+
+    scenario.roster[0]!.owned = true;
+    scenario.facilities.manufacturingCabins[0]!.enabled = true;
+    scenario.facilities.manufacturingCabins[0]!.level = 3;
+    scenario.facilities.manufacturingCabins[0]!.fixedRecipeId = "advanced-cognitive-carrier";
+    scenario.facilities.manufacturingCabins[1]!.enabled = true;
+    scenario.facilities.hardAssignments.push({
+      operatorId: scenario.roster[0]!.operatorId,
+      roomId: "mfg-2",
+    });
+
+    const validation = validateScenarioAgainstCatalog(catalog, scenario);
+
+    expect(validation.ok).toBe(true);
+    expect(validation.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "room_level_locked",
+          path: "facilities.manufacturingCabins.mfg-1.level",
+          severity: "warning",
+        }),
+        expect.objectContaining({
+          code: "room_locked",
+          path: "facilities.manufacturingCabins.mfg-2.enabled",
+          severity: "warning",
+        }),
+        expect.objectContaining({
+          code: "recipe_level_current_cap",
+          path: "facilities.manufacturingCabins.mfg-1.fixedRecipeId",
+          severity: "warning",
+        }),
+        expect.objectContaining({
+          code: "hard_assignment_inactive_room",
+          path: `facilities.hardAssignments.${scenario.roster[0]!.operatorId}`,
+          severity: "warning",
+        }),
+      ]),
+    );
+  });
+
   it("clamps imported custom optimization effort into the supported range", () => {
     const migration = migrateScenario({
       scenarioFormatVersion: 1,
@@ -389,7 +432,7 @@ describe("data services", () => {
     expect(validation.issues.some((issue) => issue.code === "hard_assignment_room_overflow")).toBe(true);
   });
 
-  it("rejects facilities that are still locked behind Control Nexus progression", async () => {
+  it("warns when facilities are enabled before Control Nexus progression unlocks them", async () => {
     const catalog = await loadDefaultCatalog();
     const scenario = createStarterScenario(catalog);
 
@@ -399,10 +442,23 @@ describe("data services", () => {
 
     const validation = validateScenarioAgainstCatalog(catalog, scenario);
 
-    expect(validation.ok).toBe(false);
-    expect(validation.issues.some((issue) => issue.path === "facilities.manufacturingCabins.mfg-2.enabled")).toBe(true);
-    expect(validation.issues.some((issue) => issue.path === "facilities.growthChambers.growth-1.enabled")).toBe(true);
-    expect(validation.issues.some((issue) => issue.path === "facilities.receptionRoom.enabled")).toBe(true);
+    expect(validation.ok).toBe(true);
+    expect(validation.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: "facilities.manufacturingCabins.mfg-2.enabled",
+          severity: "warning",
+        }),
+        expect.objectContaining({
+          path: "facilities.growthChambers.growth-1.enabled",
+          severity: "warning",
+        }),
+        expect.objectContaining({
+          path: "facilities.receptionRoom.enabled",
+          severity: "warning",
+        }),
+      ]),
+    );
   });
 
   it("uses the verified Manufacturing Cabin recipe unlock tiers", async () => {

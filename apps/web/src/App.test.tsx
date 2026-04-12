@@ -646,6 +646,46 @@ describe("App", () => {
     expect(within(controlNexusCard).getByRole("spinbutton", { name: "Level" })).toHaveValue(1);
   });
 
+  it("lets locked future rooms be preconfigured without blocking optimization", async () => {
+    render(<App />);
+
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.click(screen.getByRole("tab", { name: /Plan base/i }));
+
+    const plannerPanel = requireHtmlElement(screen.getByText("Dijiang layout").closest(".plannerPanel"));
+    const manufacturingCard = requireHtmlElement(within(plannerPanel).getByText("Manufacturing Cabin 2").closest(".plannerRoomCard"));
+    const enabledToggle = within(manufacturingCard).getByRole("checkbox", { name: "Enabled" });
+    const levelInput = within(manufacturingCard).getByRole("spinbutton", { name: "Level" });
+    const recipeSelect = within(manufacturingCard).getAllByRole("combobox")[0] as HTMLSelectElement;
+
+    expect(enabledToggle).not.toBeDisabled();
+    expect(levelInput).not.toBeDisabled();
+    expect(recipeSelect).not.toBeDisabled();
+    expect(levelInput).toHaveAttribute("max", "3");
+    expect(within(recipeSelect).getByRole("option", { name: "Advanced Cognitive Carrier" })).toBeInTheDocument();
+
+    await userEvent.click(enabledToggle);
+    fireEvent.change(levelInput, { target: { value: "3" } });
+    await userEvent.selectOptions(within(manufacturingCard).getAllByRole("combobox")[0] as HTMLSelectElement, "advanced-cognitive-carrier");
+
+    const warningLink = screen.getByText(/Manufacturing Cabin 2 is saved for later and will stay inactive until your Control Nexus unlocks it/i);
+    expect(enabledToggle).toHaveClass("validationTargetWarning");
+
+    await userEvent.click(warningLink);
+
+    await waitFor(() => {
+      expect(enabledToggle).toHaveAttribute("data-warning-target", "flash");
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "Optimize" }));
+    expect(screen.getByRole("dialog", { name: "Proceed with warnings" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Proceed" }));
+
+    await waitFor(() => {
+      expect(workerInstances[0]!.postMessage).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it("allows preconfiguring unowned operators without counting them as owned", async () => {
     const { container } = render(<App />);
 

@@ -37,7 +37,7 @@ describe("optimizer runtime", () => {
     expect(snowshine).toBeDefined();
 
     snowshine!.owned = true;
-    scenario.facilities.controlNexus.level = 3;
+    scenario.facilities.controlNexus.level = 4;
     scenario.facilities.hardAssignments = [];
     scenario.facilities.manufacturingCabins[0]!.enabled = true;
     scenario.facilities.manufacturingCabins[0]!.level = 3;
@@ -83,6 +83,36 @@ describe("optimizer runtime", () => {
     expect(manufacturingPlan!.scoreBreakdown.directProductionScore).toBeCloseTo(expectedScoreUnits, 6);
     expect(manufacturingPlan!.projectedOutputs.weapon_exp).toBeCloseTo(baseUnits * 1.4, 6);
     expect(result.projectedRecipeOutputs["arms-inspector"]).toBeCloseTo(baseUnits * 1.4, 6);
+  });
+
+  it("ignores locked future rooms and clamps active room level for current optimization", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+
+    scenario.facilities.controlNexus.level = 1;
+    scenario.facilities.manufacturingCabins[0]!.enabled = true;
+    scenario.facilities.manufacturingCabins[0]!.level = 3;
+    scenario.facilities.manufacturingCabins[0]!.fixedRecipeId = "advanced-cognitive-carrier";
+    scenario.facilities.manufacturingCabins[1]!.enabled = true;
+    scenario.facilities.manufacturingCabins[1]!.level = 3;
+    scenario.facilities.manufacturingCabins[1]!.fixedRecipeId = "advanced-combat-record";
+
+    const normalized = normalizeScenario(catalog, scenario);
+    const activeManufacturingRoom = normalized.rooms.find((room) => room.roomId === "mfg-1");
+
+    expect(activeManufacturingRoom).toMatchObject({
+      roomId: "mfg-1",
+      level: 1,
+      fixedRecipeIds: [],
+    });
+    expect(normalized.rooms.find((room) => room.roomId === "mfg-2")).toBeUndefined();
+    expect(normalized.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("Manufacturing cabin 'mfg-1' is set to level 3"),
+        expect.stringContaining("Room 'mfg-1' has recipe 'advanced-cognitive-carrier' saved for room level 3"),
+        expect.stringContaining("Manufacturing cabin 'mfg-2' is saved as enabled, but stays inactive until Control Nexus level 3."),
+      ]),
+    );
   });
 
   it("applies custom demand weights to long-run production scoring without changing raw outputs", async () => {
@@ -291,7 +321,7 @@ describe("optimizer runtime", () => {
       unlockedRank: state.skillId === "hone-the-weapons" || state.skillId === "morale-boost" ? 1 : 0,
     }));
 
-    scenario.facilities.controlNexus.level = 3;
+    scenario.facilities.controlNexus.level = 4;
     scenario.facilities.hardAssignments = [];
     scenario.facilities.manufacturingCabins[0]!.enabled = true;
     scenario.facilities.manufacturingCabins[0]!.level = 3;
@@ -342,7 +372,7 @@ describe("optimizer runtime", () => {
       unlockedRank: state.skillId === "hone-the-weapons" ? 1 : 0,
     }));
 
-    scenario.facilities.controlNexus.level = 3;
+    scenario.facilities.controlNexus.level = 4;
     scenario.facilities.hardAssignments = [
       { operatorId: "snowshine", roomId: "control_nexus" },
       { operatorId: "pogranichnik", roomId: "mfg-1" },

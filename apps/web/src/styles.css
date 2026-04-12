@@ -485,6 +485,105 @@ button.secondary,
   background: rgba(202, 99, 46, 0.16);
 }
 
+.messageBar.error {
+  background: rgba(169, 47, 47, 0.18);
+}
+
+.messageBar.warning,
+.messageBar.error {
+  max-height: min(14rem, 35vh);
+  overflow: auto;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.runConfirmationList {
+  max-height: min(18rem, 45vh);
+  overflow: auto;
+  margin-top: 8px;
+}
+
+.runConfirmationList + .toolbarActions {
+  margin-top: 16px;
+}
+
+.issueList {
+  display: grid;
+  gap: 8px;
+}
+
+.issueLink {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid rgba(31, 36, 49, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 250, 242, 0.72);
+  color: inherit;
+  text-decoration: none;
+}
+
+.issueLink:hover,
+.issueLink:focus-visible {
+  border-color: rgba(30, 90, 114, 0.3);
+  box-shadow: 0 0 0 3px rgba(30, 90, 114, 0.1);
+}
+
+.issueLinkStatic {
+  cursor: default;
+}
+
+.issueLinkText,
+.issueLinkMeta {
+  margin: 0;
+}
+
+.issueLinkText {
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.issueLinkMeta {
+  font-size: 0.76rem;
+  color: var(--ink-soft);
+}
+
+.validationTargetWarning {
+  border-color: rgba(202, 99, 46, 0.52);
+  box-shadow: 0 0 0 4px rgba(202, 99, 46, 0.16);
+}
+
+.validationTargetWarningGroup {
+  border-radius: 18px;
+  box-shadow: 0 0 0 4px rgba(202, 99, 46, 0.14);
+}
+
+[data-warning-target="flash"] {
+  animation: warningTargetFlash 1.45s ease;
+}
+
+@keyframes warningTargetFlash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(202, 99, 46, 0);
+    transform: translateX(0);
+  }
+
+  20% {
+    box-shadow: 0 0 0 6px rgba(202, 99, 46, 0.28);
+    transform: translateX(2px);
+  }
+
+  55% {
+    box-shadow: 0 0 0 10px rgba(202, 99, 46, 0.14);
+    transform: translateX(-1px);
+  }
+
+  100% {
+    box-shadow: inherit;
+    transform: translateX(0);
+  }
+}
+
 .tabShell {
   display: grid;
   gap: 16px;
