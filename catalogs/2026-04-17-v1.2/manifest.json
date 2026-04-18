@@ -1,0 +1,32 @@
+{
+  "catalogId": "2026-04-17-v1.2",
+  "catalogVersion": "2026-04-17/v1.2",
+  "gameVersion": "1.2",
+  "snapshotDate": "2026-04-17",
+  "appCompatibility": {
+    "minVersion": "0.1.0",
+    "notes": "v1 catalog updates are delivered through new app downloads."
+  },
+  "files": {
+    "progression": "progression.json",
+    "operators": "operators.json",
+    "facilities": "facilities.json",
+    "recipes": "recipes.json",
+    "sources": "sources.json",
+    "gaps": "gaps.json",
+    "assets": "assets.json"
+  },
+  "counts": {
+    "operators": 25,
+    "facilities": 4,
+    "recipes": 23,
+    "sources": 66,
+    "gaps": 0,
+    "assets": 101
+  },
+  "notes": [
+    "This bundle covers the full released assignable operator roster for the 2026-04-17 v1.2 snapshot; Endministrator remains intentionally excluded. Zhuang Fangyi is included from [Thunder of Renewal], which became available after the [At the Wake of Spring] version release.",
+    "Exact in-game Greek-letter Base Skill labels are recorded from in-game screenshots and guide pages; clue-target Reception Room skills are preserved for manual hard-assignment use but treated as score-neutral in optimization.",
+    "Shared Base Skill node costs, shared promotion tiers, and operator-specific Promotion IV material overrides are sourced from the Operator overview page and per-operator raw wiki pages."
+  ]
+}

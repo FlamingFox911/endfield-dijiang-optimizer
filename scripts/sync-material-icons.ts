@@ -7,7 +7,7 @@ import { chromium } from "playwright";
 import type { AssetsDocument, CatalogManifest, ImageAsset } from "@endfield/domain";
 
 const REPO_ROOT = process.cwd();
-const BUNDLE_DIR = path.join(REPO_ROOT, "catalogs", "2026-03-29-v1.1-phase2");
+const BUNDLE_DIR = path.join(REPO_ROOT, "catalogs", "2026-04-17-v1.2");
 const PROGRESSION_PATH = path.join(BUNDLE_DIR, "progression.json");
 const ASSETS_PATH = path.join(BUNDLE_DIR, "assets.json");
 const MANIFEST_PATH = path.join(BUNDLE_DIR, "manifest.json");

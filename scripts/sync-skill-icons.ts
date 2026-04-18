@@ -14,14 +14,14 @@ import type {
 } from "@endfield/domain";
 
 const REPO_ROOT = process.cwd();
-const BUNDLE_DIR = path.join(REPO_ROOT, "catalogs", "2026-03-29-v1.1-phase2");
+const BUNDLE_DIR = path.join(REPO_ROOT, "catalogs", "2026-04-17-v1.2");
 const OPERATORS_PATH = path.join(BUNDLE_DIR, "operators.json");
 const ASSETS_PATH = path.join(BUNDLE_DIR, "assets.json");
 const MANIFEST_PATH = path.join(BUNDLE_DIR, "manifest.json");
 const BASE_SKILL_ASSET_DIR = path.join(BUNDLE_DIR, "assets", "base-skills");
 const FACILITY_ASSET_DIR = path.join(BUNDLE_DIR, "assets", "facilities");
 const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36";
-const TODAY = "2026-04-03";
+const TODAY = process.env.CATALOG_RETRIEVED_ON ?? new Date().toISOString().slice(0, 10);
 const RETRY_ATTEMPTS = 3;
 const PLACEHOLDER_FACILITY_ICON_ID = "placeholder-facility-icon";
 const GENERATED_ASSET_ID_PATTERNS = [

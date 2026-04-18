@@ -46,7 +46,7 @@ describe("data services", () => {
 
   it("migrates legacy scenarios by filling the new format fields", () => {
     const migration = migrateScenario({
-      catalogVersion: "2026-03-29/v1.1-phase2",
+      catalogVersion: "2026-04-17/v1.2",
       roster: [],
       facilities: {
         controlNexus: { level: 1 },
@@ -85,7 +85,7 @@ describe("data services", () => {
   it("removes deprecated hard-assignment slot indexes during migration", () => {
     const migration = migrateScenario({
       scenarioFormatVersion: 1,
-      catalogVersion: "2026-03-29/v1.1-phase2",
+      catalogVersion: "2026-04-17/v1.2",
       roster: [],
       facilities: {
         controlNexus: { level: 1 },
@@ -112,7 +112,7 @@ describe("data services", () => {
   it("migrates deprecated includeReceptionRoom=false to a disabled reception room", () => {
     const migration = migrateScenario({
       scenarioFormatVersion: 1,
-      catalogVersion: "2026-03-29/v1.1-phase2",
+      catalogVersion: "2026-04-17/v1.2",
       roster: [],
       facilities: {
         controlNexus: { level: 3 },
@@ -209,7 +209,7 @@ describe("data services", () => {
   it("clamps imported custom optimization effort into the supported range", () => {
     const migration = migrateScenario({
       scenarioFormatVersion: 1,
-      catalogVersion: "2026-03-29/v1.1-phase2",
+      catalogVersion: "2026-04-17/v1.2",
       roster: [],
       facilities: {
         controlNexus: { level: 1 },

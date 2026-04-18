@@ -1,0 +1,985 @@
+{
+  "catalogVersion": "2026-04-17/v1.2",
+  "baseSkillRanks": [
+    {
+      "skillSlot": 1,
+      "rank": 1,
+      "promotionTier": 1,
+      "requiredLevel": 20,
+      "materialCosts": [
+        {
+          "itemId": "protoprism",
+          "quantity": 6
+        },
+        {
+          "itemId": "t-creds",
+          "quantity": 1600
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-03-21",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs, level milestones, EXP item values, and shared promotion requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "skillSlot": 1,
+      "rank": 2,
+      "promotionTier": 3,
+      "requiredLevel": 60,
+      "materialCosts": [
+        {
+          "itemId": "protohedron",
+          "quantity": 12
+        },
+        {
+          "itemId": "t-creds",
+          "quantity": 8000
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-03-21",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs, level milestones, EXP item values, and shared promotion requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "skillSlot": 2,
+      "rank": 1,
+      "promotionTier": 2,
+      "requiredLevel": 40,
+      "materialCosts": [
+        {
+          "itemId": "protoprism",
+          "quantity": 12
+        },
+        {
+          "itemId": "t-creds",
+          "quantity": 3000
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-03-21",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs, level milestones, EXP item values, and shared promotion requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "skillSlot": 2,
+      "rank": 2,
+      "promotionTier": 4,
+      "requiredLevel": 80,
+      "materialCosts": [
+        {
+          "itemId": "protohedron",
+          "quantity": 20
+        },
+        {
+          "itemId": "t-creds",
+          "quantity": 20000
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-03-21",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs, level milestones, EXP item values, and shared promotion requirements from raw wiki page source."
+        }
+      ]
+    }
+  ],
+  "promotionTiers": [
+    {
+      "promotionTier": 1,
+      "requiredLevel": 20,
+      "materialCosts": [
+        {
+          "itemId": "protodisk",
+          "quantity": 8
+        },
+        {
+          "itemId": "pink-bolete",
+          "quantity": 3
+        },
+        {
+          "itemId": "t-creds",
+          "quantity": 1600
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs and shared promotion requirements from wiki text."
+        }
+      ]
+    },
+    {
+      "promotionTier": 2,
+      "requiredLevel": 40,
+      "materialCosts": [
+        {
+          "itemId": "protodisk",
+          "quantity": 25
+        },
+        {
+          "itemId": "red-bolete",
+          "quantity": 5
+        },
+        {
+          "itemId": "t-creds",
+          "quantity": 6500
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs and shared promotion requirements from wiki text."
+        }
+      ]
+    },
+    {
+      "promotionTier": 3,
+      "requiredLevel": 60,
+      "materialCosts": [
+        {
+          "itemId": "protoset",
+          "quantity": 24
+        },
+        {
+          "itemId": "ruby-bolete",
+          "quantity": 5
+        },
+        {
+          "itemId": "t-creds",
+          "quantity": 18000
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs and shared promotion requirements from wiki text."
+        }
+      ]
+    },
+    {
+      "promotionTier": 4,
+      "requiredLevel": 80,
+      "materialCosts": [
+        {
+          "itemId": "protoset",
+          "quantity": 36
+        },
+        {
+          "itemId": "t-creds",
+          "quantity": 100000
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs and shared promotion requirements from wiki text."
+        }
+      ]
+    }
+  ],
+  "promotionOverrides": [
+    {
+      "operatorId": "chen-qianyu",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "quadrant-fitting-fluid",
+          "quantity": 20
+        },
+        {
+          "itemId": "cosmagaric",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-chen-qianyu",
+          "label": "Endfield Talos Wiki Chen Qianyu page",
+          "url": "https://endfield.wiki.gg/wiki/Chen_Qianyu",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "xaihi",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "d96-steel-sample-4",
+          "quantity": 20
+        },
+        {
+          "itemId": "bloodcap",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-xaihi",
+          "label": "Endfield Talos Wiki Xaihi page",
+          "url": "https://endfield.wiki.gg/wiki/Xaihi",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "snowshine",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "quadrant-fitting-fluid",
+          "quantity": 20
+        },
+        {
+          "itemId": "bloodcap",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-snowshine",
+          "label": "Endfield Talos Wiki Snowshine page",
+          "url": "https://endfield.wiki.gg/wiki/Snowshine",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "da-pan",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "triphasic-nanoflake",
+          "quantity": 20
+        },
+        {
+          "itemId": "bloodcap",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-da-pan",
+          "label": "Endfield Talos Wiki Da Pan page",
+          "url": "https://endfield.wiki.gg/wiki/Da_Pan",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "ardelia",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "quadrant-fitting-fluid",
+          "quantity": 20
+        },
+        {
+          "itemId": "cosmagaric",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-ardelia",
+          "label": "Endfield Talos Wiki Ardelia page",
+          "url": "https://endfield.wiki.gg/wiki/Ardelia",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "akekuri",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "d96-steel-sample-4",
+          "quantity": 20
+        },
+        {
+          "itemId": "cosmagaric",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-akekuri",
+          "label": "Endfield Talos Wiki Akekuri page",
+          "url": "https://endfield.wiki.gg/wiki/Akekuri",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "fluorite",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "triphasic-nanoflake",
+          "quantity": 20
+        },
+        {
+          "itemId": "cosmagaric",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-fluorite",
+          "label": "Endfield Talos Wiki Fluorite page",
+          "url": "https://endfield.wiki.gg/wiki/Fluorite",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "estella",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "quadrant-fitting-fluid",
+          "quantity": 20
+        },
+        {
+          "itemId": "cosmagaric",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-estella",
+          "label": "Endfield Talos Wiki Estella page",
+          "url": "https://endfield.wiki.gg/wiki/Estella",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "perlica",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "tachyon-screening-lattice",
+          "quantity": 20
+        },
+        {
+          "itemId": "bloodcap",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-perlica",
+          "label": "Endfield Talos Wiki Perlica page",
+          "url": "https://endfield.wiki.gg/wiki/Perlica",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "yvonne",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "tachyon-screening-lattice",
+          "quantity": 20
+        },
+        {
+          "itemId": "bloodcap",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-yvonne",
+          "label": "Endfield Talos Wiki Yvonne page",
+          "url": "https://endfield.wiki.gg/wiki/Yvonne",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "antal",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "metadiastima-photoemission-tube",
+          "quantity": 20
+        },
+        {
+          "itemId": "cosmagaric",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-antal",
+          "label": "Endfield Talos Wiki Antal page",
+          "url": "https://endfield.wiki.gg/wiki/Antal",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "wulfgard",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "triphasic-nanoflake",
+          "quantity": 20
+        },
+        {
+          "itemId": "cosmagaric",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-wulfgard",
+          "label": "Endfield Talos Wiki Wulfgard page",
+          "url": "https://endfield.wiki.gg/wiki/Wulfgard",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "laevatain",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "d96-steel-sample-4",
+          "quantity": 20
+        },
+        {
+          "itemId": "cosmagaric",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-laevatain",
+          "label": "Endfield Talos Wiki Laevatain page",
+          "url": "https://endfield.wiki.gg/wiki/Laevatain",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "last-rite",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "triphasic-nanoflake",
+          "quantity": 20
+        },
+        {
+          "itemId": "bloodcap",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-last-rite",
+          "label": "Endfield Talos Wiki Last Rite page",
+          "url": "https://endfield.wiki.gg/wiki/Last_Rite",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "pogranichnik",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "metadiastima-photoemission-tube",
+          "quantity": 20
+        },
+        {
+          "itemId": "cosmagaric",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-pogranichnik",
+          "label": "Endfield Talos Wiki Pogranichnik page",
+          "url": "https://endfield.wiki.gg/wiki/Pogranichnik",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "gilberta",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "tachyon-screening-lattice",
+          "quantity": 20
+        },
+        {
+          "itemId": "bloodcap",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-gilberta",
+          "label": "Endfield Talos Wiki Gilberta page",
+          "url": "https://endfield.wiki.gg/wiki/Gilberta",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "lifeng",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "metadiastima-photoemission-tube",
+          "quantity": 20
+        },
+        {
+          "itemId": "bloodcap",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-lifeng",
+          "label": "Endfield Talos Wiki Lifeng page",
+          "url": "https://endfield.wiki.gg/wiki/Lifeng",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "alesh",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "metadiastima-photoemission-tube",
+          "quantity": 20
+        },
+        {
+          "itemId": "bloodcap",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-alesh",
+          "label": "Endfield Talos Wiki Alesh page",
+          "url": "https://endfield.wiki.gg/wiki/Alesh",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "arclight",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "metadiastima-photoemission-tube",
+          "quantity": 20
+        },
+        {
+          "itemId": "cosmagaric",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-arclight",
+          "label": "Endfield Talos Wiki Arclight page",
+          "url": "https://endfield.wiki.gg/wiki/Arclight",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "avywenna",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "tachyon-screening-lattice",
+          "quantity": 20
+        },
+        {
+          "itemId": "bloodcap",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-avywenna",
+          "label": "Endfield Talos Wiki Avywenna page",
+          "url": "https://endfield.wiki.gg/wiki/Avywenna",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "catcher",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "tachyon-screening-lattice",
+          "quantity": 20
+        },
+        {
+          "itemId": "bloodcap",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-catcher",
+          "label": "Endfield Talos Wiki Catcher page",
+          "url": "https://endfield.wiki.gg/wiki/Catcher",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "ember",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "d96-steel-sample-4",
+          "quantity": 20
+        },
+        {
+          "itemId": "cosmagaric",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-ember",
+          "label": "Endfield Talos Wiki Ember page",
+          "url": "https://endfield.wiki.gg/wiki/Ember",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "tangtang",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "metadiastima-photoemission-tube",
+          "quantity": 20
+        },
+        {
+          "itemId": "bloodcap",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-tangtang",
+          "label": "Endfield Talos Wiki Tangtang page",
+          "url": "https://endfield.wiki.gg/wiki/Tangtang",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "rossi",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "quadrant-fitting-fluid",
+          "quantity": 20
+        },
+        {
+          "itemId": "cosmagaric",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-rossi",
+          "label": "Endfield Talos Wiki Rossi page",
+          "url": "https://endfield.wiki.gg/wiki/Rossi",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "operatorId": "zhuang-fangyi",
+      "promotionTier": 4,
+      "additionalMaterialCosts": [
+        {
+          "itemId": "triphasic-nanoflake",
+          "quantity": 20
+        },
+        {
+          "itemId": "cosmagaric",
+          "quantity": 8
+        }
+      ],
+      "sourceRefs": [
+        {
+          "id": "wiki-zhuang-fangyi",
+          "label": "Endfield Talos Wiki Zhuang Fangyi page",
+          "url": "https://endfield.wiki.gg/wiki/Zhuang_Fangyi",
+          "retrievedOn": "2026-04-18",
+          "confidence": "community",
+          "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+        }
+      ]
+    }
+  ],
+  "levelMilestones": [
+    {
+      "level": 20,
+      "cumulativeExp": 22860,
+      "cumulativeTCreds": 820,
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-03-21",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs, level milestones, EXP item values, and shared promotion requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "level": 40,
+      "cumulativeExp": 271400,
+      "cumulativeTCreds": 13360,
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-03-21",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs, level milestones, EXP item values, and shared promotion requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "level": 60,
+      "cumulativeExp": 747110,
+      "cumulativeTCreds": 37260,
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-03-21",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs, level milestones, EXP item values, and shared promotion requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "level": 80,
+      "cumulativeExp": 1212340,
+      "cumulativeTCreds": 146440,
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-03-21",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs, level milestones, EXP item values, and shared promotion requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "level": 90,
+      "cumulativeExp": 1792290,
+      "cumulativeTCreds": 385420,
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-03-21",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs, level milestones, EXP item values, and shared promotion requirements from raw wiki page source."
+        }
+      ]
+    }
+  ],
+  "expItems": [
+    {
+      "itemId": "elementary-combat-record",
+      "name": "Elementary Combat Record",
+      "expValue": 200,
+      "minLevel": 1,
+      "maxLevel": 60,
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-03-21",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs, level milestones, EXP item values, and shared promotion requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "itemId": "intermediate-combat-record",
+      "name": "Intermediate Combat Record",
+      "expValue": 1000,
+      "minLevel": 1,
+      "maxLevel": 60,
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-03-21",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs, level milestones, EXP item values, and shared promotion requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "itemId": "advanced-combat-record",
+      "name": "Advanced Combat Record",
+      "expValue": 10000,
+      "minLevel": 1,
+      "maxLevel": 60,
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-03-21",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs, level milestones, EXP item values, and shared promotion requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "itemId": "elementary-cognitive-carrier",
+      "name": "Elementary Cognitive Carrier",
+      "expValue": 1000,
+      "minLevel": 61,
+      "maxLevel": 90,
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-03-21",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs, level milestones, EXP item values, and shared promotion requirements from raw wiki page source."
+        }
+      ]
+    },
+    {
+      "itemId": "advanced-cognitive-carrier",
+      "name": "Advanced Cognitive Carrier",
+      "expValue": 10000,
+      "minLevel": 61,
+      "maxLevel": 90,
+      "sourceRefs": [
+        {
+          "id": "wiki-operator-overview",
+          "label": "Endfield Talos Wiki Operator overview page",
+          "url": "https://endfield.wiki.gg/wiki/Operator",
+          "retrievedOn": "2026-03-21",
+          "confidence": "community",
+          "notes": "Used for shared Base Skill node costs, level milestones, EXP item values, and shared promotion requirements from raw wiki page source."
+        }
+      ]
+    }
+  ]
+}

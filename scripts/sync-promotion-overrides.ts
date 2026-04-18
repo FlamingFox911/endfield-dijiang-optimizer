@@ -2,9 +2,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 const REPO_ROOT = process.cwd();
-const BUNDLE_DIR = path.join(REPO_ROOT, "catalogs", "2026-03-29-v1.1-phase2");
+const BUNDLE_DIR = path.join(REPO_ROOT, "catalogs", "2026-04-17-v1.2");
 const USER_AGENT = "endfield-dijiang-optimizer-catalog-maintainer/0.1 (Codex workspace)";
-const TODAY = "2026-04-03";
+const TODAY = process.env.CATALOG_RETRIEVED_ON ?? new Date().toISOString().slice(0, 10);
 
 type MaterialCost = {
   itemId: string;
@@ -251,7 +251,7 @@ async function main() {
     gaps: 0,
   };
   manifestDoc.notes = [
-    "This bundle covers the full released assignable operator roster for the 2026-03-29 Phase 2 snapshot; Endministrator remains intentionally excluded. Rossi is included from [Wolf Pearl] Chartered Headhunting, which opened at 2026/03/29 12:00 server time.",
+    "This bundle covers the full released assignable operator roster for the 2026-04-17 v1.2 snapshot; Endministrator remains intentionally excluded. Zhuang Fangyi is included from [Thunder of Renewal], which became available after the [At the Wake of Spring] version release.",
     "Exact in-game Greek-letter Base Skill labels are recorded from in-game screenshots and guide pages; clue-target Reception Room skills are preserved for manual hard-assignment use but treated as score-neutral in optimization.",
     "Shared Base Skill node costs, shared promotion tiers, and operator-specific Promotion IV material overrides are sourced from the Operator overview page and per-operator raw wiki pages.",
   ];

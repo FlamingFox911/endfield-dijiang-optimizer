@@ -41,7 +41,7 @@ Current repo status:
 
 ```json
 {
-  "catalogVersion": "2026-03-29/v1.1-phase2",
+  "catalogVersion": "2026-04-17/v1.2",
   "roster": [
     {
       "operatorId": "chen-qianyu",

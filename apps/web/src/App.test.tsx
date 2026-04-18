@@ -2,14 +2,14 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import manifest from "../../../catalogs/2026-03-29-v1.1-phase2/manifest.json";
-import progression from "../../../catalogs/2026-03-29-v1.1-phase2/progression.json";
-import operators from "../../../catalogs/2026-03-29-v1.1-phase2/operators.json";
-import facilities from "../../../catalogs/2026-03-29-v1.1-phase2/facilities.json";
-import recipes from "../../../catalogs/2026-03-29-v1.1-phase2/recipes.json";
-import sources from "../../../catalogs/2026-03-29-v1.1-phase2/sources.json";
-import gaps from "../../../catalogs/2026-03-29-v1.1-phase2/gaps.json";
-import assets from "../../../catalogs/2026-03-29-v1.1-phase2/assets.json";
+import manifest from "../../../catalogs/2026-04-17-v1.2/manifest.json";
+import progression from "../../../catalogs/2026-04-17-v1.2/progression.json";
+import operators from "../../../catalogs/2026-04-17-v1.2/operators.json";
+import facilities from "../../../catalogs/2026-04-17-v1.2/facilities.json";
+import recipes from "../../../catalogs/2026-04-17-v1.2/recipes.json";
+import sources from "../../../catalogs/2026-04-17-v1.2/sources.json";
+import gaps from "../../../catalogs/2026-04-17-v1.2/gaps.json";
+import assets from "../../../catalogs/2026-04-17-v1.2/assets.json";
 
 import { App } from "./App";
 import type { OptimizerWorkerResponse } from "./optimizer-worker-types";
@@ -48,14 +48,14 @@ vi.mock("./optimizer.worker.client", () => ({
 }));
 
 const responses = new Map<string, unknown>([
-  ["/catalogs/2026-03-29-v1.1-phase2/manifest.json", manifest],
-  ["/catalogs/2026-03-29-v1.1-phase2/progression.json", progression],
-  ["/catalogs/2026-03-29-v1.1-phase2/operators.json", operators],
-  ["/catalogs/2026-03-29-v1.1-phase2/facilities.json", facilities],
-  ["/catalogs/2026-03-29-v1.1-phase2/recipes.json", recipes],
-  ["/catalogs/2026-03-29-v1.1-phase2/sources.json", sources],
-  ["/catalogs/2026-03-29-v1.1-phase2/gaps.json", gaps],
-  ["/catalogs/2026-03-29-v1.1-phase2/assets.json", assets],
+  ["/catalogs/2026-04-17-v1.2/manifest.json", manifest],
+  ["/catalogs/2026-04-17-v1.2/progression.json", progression],
+  ["/catalogs/2026-04-17-v1.2/operators.json", operators],
+  ["/catalogs/2026-04-17-v1.2/facilities.json", facilities],
+  ["/catalogs/2026-04-17-v1.2/recipes.json", recipes],
+  ["/catalogs/2026-04-17-v1.2/sources.json", sources],
+  ["/catalogs/2026-04-17-v1.2/gaps.json", gaps],
+  ["/catalogs/2026-04-17-v1.2/assets.json", assets],
 ]);
 
 function requireHtmlElement<T extends Element>(element: T | null | undefined): HTMLElement {
@@ -92,7 +92,7 @@ describe("App", () => {
       "endfield-dijiang-optimizer:draft",
       JSON.stringify({
         scenarioFormatVersion: 1,
-        catalogVersion: "2026-03-29/v1.1-phase2",
+        catalogVersion: "2026-04-17/v1.2",
         roster: ownedOperatorIds.map((operatorId) => ({
           operatorId,
           owned: true,
@@ -128,7 +128,8 @@ describe("App", () => {
       "fetch",
       vi.fn(async (input: string | URL) => {
         const key = String(input);
-        const body = responses.get(key);
+        const body = responses.get(key)
+          ?? Array.from(responses.entries()).find(([path]) => key.endsWith(path))?.[1];
         if (!body) {
           return new Response("not found", { status: 404 });
         }
@@ -154,7 +155,7 @@ describe("App", () => {
         type: "optimization-completed",
         runId: 1,
         result: {
-          catalogVersion: "2026-03-29/v1.1-phase2",
+          catalogVersion: "2026-04-17/v1.2",
           totalScore: 42,
           projectedRecipeOutputs: {},
           projectedOutputs: {
@@ -222,7 +223,7 @@ describe("App", () => {
         type: "optimization-completed",
         runId: 1,
         result: {
-          catalogVersion: "2026-03-29/v1.1-phase2",
+          catalogVersion: "2026-04-17/v1.2",
           totalScore: 3,
           projectedRecipeOutputs: {},
           projectedOutputs: {
@@ -301,7 +302,7 @@ describe("App", () => {
 
     expect(portrait).toHaveAttribute(
       "src",
-      "/catalogs/2026-03-29-v1.1-phase2/assets/operators/chen-qianyu.webp",
+      "/catalogs/2026-04-17-v1.2/assets/operators/chen-qianyu.webp",
     );
     expect(requireHtmlElement(portrait.closest(".avatar"))).toHaveAttribute("data-rarity", "5");
   });
@@ -412,7 +413,7 @@ describe("App", () => {
         type: "recommendations-completed",
         runId: 1,
         result: {
-          catalogVersion: "2026-03-29/v1.1-phase2",
+          catalogVersion: "2026-04-17/v1.2",
           baselineScore: 1,
           rankingMode: "balanced",
           recommendations: [
@@ -461,7 +462,7 @@ describe("App", () => {
         type: "recommendations-completed",
         runId: 1,
         result: {
-          catalogVersion: "2026-03-29/v1.1-phase2",
+          catalogVersion: "2026-04-17/v1.2",
           baselineScore: 1,
           rankingMode: "balanced",
           recommendations: [
@@ -766,7 +767,7 @@ describe("App", () => {
         type: "optimization-completed",
         runId: 1,
         result: {
-          catalogVersion: "2026-03-29/v1.1-phase2",
+          catalogVersion: "2026-04-17/v1.2",
           totalScore: 10,
           projectedRecipeOutputs: {},
           projectedOutputs: {
@@ -883,7 +884,7 @@ describe("App", () => {
         type: "recommendations-completed",
         runId: 1,
         result: {
-          catalogVersion: "2026-03-29/v1.1-phase2",
+          catalogVersion: "2026-04-17/v1.2",
           baselineScore: 1,
           rankingMode: "balanced",
           recommendations: [
@@ -935,7 +936,7 @@ describe("App", () => {
         type: "recommendations-completed",
         runId: 1,
         result: {
-          catalogVersion: "2026-03-29/v1.1-phase2",
+          catalogVersion: "2026-04-17/v1.2",
           baselineScore: 1,
           rankingMode: "balanced",
           recommendations: [
@@ -1026,7 +1027,7 @@ describe("App", () => {
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     const importedScenario = {
       scenarioFormatVersion: 1,
-      catalogVersion: "2026-03-29/v1.1-phase2",
+      catalogVersion: "2026-04-17/v1.2",
       roster: [],
       facilities: {
         controlNexus: { level: 3 },
@@ -1113,7 +1114,7 @@ describe("App", () => {
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     const importedScenario = {
       scenarioFormatVersion: 1,
-      catalogVersion: "2026-03-29/v1.1-phase2",
+      catalogVersion: "2026-04-17/v1.2",
       roster: [],
       facilities: {
         controlNexus: { level: 3 },
@@ -1188,7 +1189,7 @@ describe("App", () => {
       "endfield-dijiang-optimizer:draft",
       JSON.stringify({
         scenarioFormatVersion: 1,
-        catalogVersion: "2026-03-29/v1.1-phase2",
+        catalogVersion: "2026-04-17/v1.2",
         roster: [],
         facilities: {
           controlNexus: { level: 5 },
@@ -1243,7 +1244,7 @@ describe("App", () => {
 
     await waitFor(() => {
       const savedDraft = JSON.parse(localStorage.getItem("endfield-dijiang-optimizer:draft") ?? "{}");
-      expect(savedDraft.catalogVersion).toBe("2026-03-29/v1.1-phase2");
+      expect(savedDraft.catalogVersion).toBe("2026-04-17/v1.2");
       expect(savedDraft.roster).toHaveLength(operators.operators.length);
     });
   });
@@ -1330,7 +1331,7 @@ describe("App", () => {
         type: "optimization-completed",
         runId: 1,
         result: {
-          catalogVersion: "2026-03-29/v1.1-phase2",
+          catalogVersion: "2026-04-17/v1.2",
           totalScore: 77,
           projectedRecipeOutputs: {},
           projectedOutputs: {

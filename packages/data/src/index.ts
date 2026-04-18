@@ -29,8 +29,8 @@ import type {
   MigrationResult,
 } from "@endfield/domain";
 
-export const CURRENT_CATALOG_VERSION: CatalogVersion = "2026-03-29/v1.1-phase2";
-export const CURRENT_CATALOG_BUNDLE_ID = "2026-03-29-v1.1-phase2";
+export const CURRENT_CATALOG_VERSION: CatalogVersion = "2026-04-17/v1.2";
+export const CURRENT_CATALOG_BUNDLE_ID = "2026-04-17-v1.2";
 export const CURRENT_SCENARIO_FORMAT_VERSION = 1 as const;
 export const EXAMPLE_SCENARIOS_DIR = "scenarios/examples" as const;
 export const MAX_OPERATOR_LEVEL = 90 as const;
