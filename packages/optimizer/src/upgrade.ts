@@ -58,7 +58,7 @@ function formatMaterialCosts(materialCosts: MaterialCost[]): string {
     .join(", ");
 }
 
-function getNextUpgradeActions(
+function getUpgradeActions(
   catalog: GameCatalog,
   scenario: OptimizationScenario,
 ): UpgradeAction[] {
@@ -78,62 +78,68 @@ function getNextUpgradeActions(
     for (let skillIndex = 0; skillIndex < operatorDef.baseSkills.length; skillIndex += 1) {
       const skill = operatorDef.baseSkills[skillIndex]!;
       const unlockedRank = getUnlockedRank(ownedOperator, skill.id);
-      const nextRank = [...skill.ranks]
+      const futureRanks = [...skill.ranks]
         .sort((left, right) => left.rank - right.rank)
-        .find((rankDef) => rankDef.rank > unlockedRank);
+        .filter((rankDef) => rankDef.rank > unlockedRank);
 
-      if (!nextRank) {
+      if (futureRanks.length === 0) {
         continue;
       }
 
-      const skillRequirement = getBaseSkillRankRequirement(
-        catalog,
-        (skillIndex + 1) as 1 | 2,
-        nextRank.rank as 1 | 2,
-      );
-      const requiredPromotionTier = skillRequirement?.promotionTier;
-      const requiredLevel = skillRequirement?.requiredLevel;
-      const levelsToGain = Math.max((requiredLevel ?? ownedOperator.level) - ownedOperator.level, 0);
-      const levelingRequirement = requiredLevel == null
-        ? undefined
-        : estimateLevelingRequirement(catalog, ownedOperator.level, requiredLevel);
-      const promotionMaterialCosts = requiredPromotionTier == null
-        ? []
-        : mergeMaterialCosts(
-          ...Array.from(
-            {
-              length: Math.max(requiredPromotionTier - ownedOperator.promotionTier, 0),
-            },
-            (_, offset) =>
-              getPromotionTierRequirement(
-                catalog,
-                ownedOperator.operatorId,
-                (ownedOperator.promotionTier + offset + 1) as 1 | 2 | 3 | 4,
-              )?.materialCosts ?? [],
-          ),
+      for (const targetRank of futureRanks) {
+        const skillRequirement = getBaseSkillRankRequirement(
+          catalog,
+          (skillIndex + 1) as 1 | 2,
+          targetRank.rank as 1 | 2,
         );
-      const skillMaterialCosts = nextRank.materialCosts ?? [];
-      const levelMaterialCosts = levelingRequirement?.levelMaterialCosts ?? [];
-      const materialCosts = mergeMaterialCosts(levelMaterialCosts, promotionMaterialCosts, skillMaterialCosts);
+        const requiredPromotionTier = skillRequirement?.promotionTier;
+        const requiredLevel = skillRequirement?.requiredLevel;
+        const levelsToGain = Math.max((requiredLevel ?? ownedOperator.level) - ownedOperator.level, 0);
+        const levelingRequirement = requiredLevel == null
+          ? undefined
+          : estimateLevelingRequirement(catalog, ownedOperator.level, requiredLevel);
+        const promotionMaterialCosts = requiredPromotionTier == null
+          ? []
+          : mergeMaterialCosts(
+            ...Array.from(
+              {
+                length: Math.max(requiredPromotionTier - ownedOperator.promotionTier, 0),
+              },
+              (_, offset) =>
+                getPromotionTierRequirement(
+                  catalog,
+                  ownedOperator.operatorId,
+                  (ownedOperator.promotionTier + offset + 1) as 1 | 2 | 3 | 4,
+                )?.materialCosts ?? [],
+            ),
+          );
+        const skillMaterialCosts = mergeMaterialCosts(
+          ...futureRanks
+            .filter((rankDef) => rankDef.rank <= targetRank.rank)
+            .map((rankDef) => rankDef.materialCosts ?? []),
+        );
+        const levelMaterialCosts = levelingRequirement?.levelMaterialCosts ?? [];
+        const materialCosts = mergeMaterialCosts(levelMaterialCosts, promotionMaterialCosts, skillMaterialCosts);
 
-      actions.push({
-        operatorId: ownedOperator.operatorId,
-        skillId: skill.id,
-        targetRank: nextRank.rank,
-        currentLevel: ownedOperator.level,
-        currentPromotionTier: ownedOperator.promotionTier,
-        requiredLevel,
-        requiredPromotionTier,
-        levelsToGain,
-        levelExpCost: levelingRequirement?.levelExpCost ?? 0,
-        levelTCredCost: levelingRequirement?.levelTCredCost ?? 0,
-        levelMaterialCosts,
-        levelCostIsUpperBound: levelingRequirement?.levelCostIsUpperBound ?? false,
-        promotionMaterialCosts,
-        skillMaterialCosts,
-        materialCosts,
-        unlockHint: nextRank.unlockHint,
-      });
+        actions.push({
+          operatorId: ownedOperator.operatorId,
+          skillId: skill.id,
+          targetRank: targetRank.rank,
+          currentLevel: ownedOperator.level,
+          currentPromotionTier: ownedOperator.promotionTier,
+          requiredLevel,
+          requiredPromotionTier,
+          levelsToGain,
+          levelExpCost: levelingRequirement?.levelExpCost ?? 0,
+          levelTCredCost: levelingRequirement?.levelTCredCost ?? 0,
+          levelMaterialCosts,
+          levelCostIsUpperBound: levelingRequirement?.levelCostIsUpperBound ?? false,
+          promotionMaterialCosts,
+          skillMaterialCosts,
+          materialCosts,
+          unlockHint: targetRank.unlockHint,
+        });
+      }
     }
   }
 
@@ -246,7 +252,7 @@ export function recommendUpgrades(
   maybeCancel();
   const baseline = options?.baselineResult ?? baselineResult ?? solveScenario(catalog, scenario, { shouldCancel });
   const operatorDefs = new Map(catalog.operators.map((operator) => [operator.id, operator]));
-  const actions = getNextUpgradeActions(catalog, scenario);
+  const actions = getUpgradeActions(catalog, scenario);
   let completedCandidates = 0;
   let bestScoreDelta = Number.NEGATIVE_INFINITY;
 

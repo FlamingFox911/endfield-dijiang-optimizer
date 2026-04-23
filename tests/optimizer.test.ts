@@ -451,7 +451,8 @@ describe("optimizer runtime", () => {
     const recommendation = result.recommendations.find(
       (entry) =>
         entry.action.operatorId === "tangtang" &&
-        entry.action.skillId === tangtangDef!.baseSkills[1]!.id,
+        entry.action.skillId === tangtangDef!.baseSkills[1]!.id &&
+        entry.action.targetRank === 1,
     );
 
     expect(recommendation).toBeDefined();
@@ -476,6 +477,54 @@ describe("optimizer runtime", () => {
     expect(recommendation!.action.skillMaterialCosts).toEqual([
       { itemId: "protoprism", quantity: 12 },
       { itemId: "t-creds", quantity: 3000 },
+    ]);
+  });
+
+  it("includes cumulative prerequisite costs for future-rank upgrade recommendations", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    const tangtang = scenario.roster.find((operator) => operator.operatorId === "tangtang");
+    const tangtangDef = catalog.operators.find((operator) => operator.id === "tangtang");
+
+    expect(tangtang).toBeDefined();
+    expect(tangtangDef).toBeDefined();
+
+    tangtang!.owned = true;
+    tangtang!.level = 1;
+    tangtang!.promotionTier = 0;
+
+    const skillId = tangtangDef!.baseSkills[1]!.id;
+    const result = recommendUpgrades(catalog, scenario);
+    const skillRecommendations = result.recommendations.filter(
+      (entry) =>
+        entry.action.operatorId === "tangtang" &&
+        entry.action.skillId === skillId,
+    );
+    const gammaRecommendation = skillRecommendations.find((entry) => entry.action.targetRank === 2);
+
+    expect(skillRecommendations.map((entry) => entry.action.targetRank)).toEqual(
+      expect.arrayContaining([1, 2]),
+    );
+    expect(gammaRecommendation).toBeDefined();
+    expect(gammaRecommendation!.action.requiredPromotionTier).toBe(4);
+    expect(gammaRecommendation!.action.requiredLevel).toBe(80);
+    expect(gammaRecommendation!.action.levelsToGain).toBe(79);
+    expect(gammaRecommendation!.action.levelExpCost).toBe(1212340);
+    expect(gammaRecommendation!.action.levelTCredCost).toBe(146440);
+    expect(gammaRecommendation!.action.skillMaterialCosts).toEqual([
+      { itemId: "protoprism", quantity: 12 },
+      { itemId: "t-creds", quantity: 23000 },
+      { itemId: "protohedron", quantity: 20 },
+    ]);
+    expect(gammaRecommendation!.action.promotionMaterialCosts).toEqual([
+      { itemId: "protodisk", quantity: 33 },
+      { itemId: "pink-bolete", quantity: 3 },
+      { itemId: "t-creds", quantity: 126100 },
+      { itemId: "red-bolete", quantity: 5 },
+      { itemId: "protoset", quantity: 60 },
+      { itemId: "ruby-bolete", quantity: 5 },
+      { itemId: "metadiastima-photoemission-tube", quantity: 20 },
+      { itemId: "bloodcap", quantity: 8 },
     ]);
   });
 
