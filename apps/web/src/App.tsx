@@ -3,6 +3,7 @@ import { useDeferredValue, useEffect, useId, useLayoutEffect, useMemo, useRef, u
 import type {
   DemandProfilePreset,
   GameCatalog,
+  LiveRosterUpdateDocument,
   MaterialCost,
   OptimizationProfile,
   OptimizationResult,
@@ -23,11 +24,13 @@ import {
   createStarterScenario,
   createDefaultDemandProfile,
   fetchGameCatalog,
+  fetchLiveRosterUpdate,
   getFacilityLevelCapForControlNexus,
   getGrowthSlotCap,
   getRoomSlotCap,
   getUnlockedFacilityRoomCount,
   hydrateScenarioForCatalog,
+  mergeLiveRosterUpdate,
   migrateScenario,
   validateScenarioAgainstCatalog,
 } from "@endfield/data";
@@ -48,6 +51,7 @@ import type {
 } from "@endfield/optimizer";
 
 const DRAFT_KEY = "endfield-dijiang-optimizer:draft";
+const CATALOG_SYNC_SEEN_KEY = "endfield-dijiang-optimizer:catalog-sync-seen";
 const MAX_IMPORT_FILE_BYTES = 1_000_000;
 const OPTIMIZATION_PROFILES: Exclude<OptimizationProfile, "custom">[] = ["fast", "balanced", "thorough", "exhaustive"];
 const DEMAND_WEIGHT_ORDER: ProductKind[] = [
@@ -58,11 +62,66 @@ const DEMAND_WEIGHT_ORDER: ProductKind[] = [
   "rare_mineral",
 ];
 const APP_BASE_PATH = import.meta.env.BASE_URL;
+const LIVE_ROSTER_REFRESH_INTERVAL_MS = 60 * 60 * 1000;
 const TOOLTIP_VIEWPORT_MARGIN_PX = 12;
 const TOOLTIP_TRIGGER_GAP_PX = 8;
 
 function resolveAppPath(pathname: string): string {
   return `${APP_BASE_PATH}${pathname.replace(/^\/+/, "")}`;
+}
+
+interface CatalogLoadResult {
+  catalog: GameCatalog;
+  rosterUpdate: LiveRosterUpdateDocument | null;
+  addedOperatorIds: string[];
+  addedRecipeIds: string[];
+}
+
+async function loadCatalogWithLiveRoster(): Promise<CatalogLoadResult> {
+  const rosterUpdatePromise = fetchLiveRosterUpdate(
+    `${resolveAppPath("roster/latest.json")}?checked=${Date.now()}`,
+  ).catch(() => null);
+  const bundledCatalog = await fetchGameCatalog(resolveAppPath(`catalogs/${CURRENT_CATALOG_BUNDLE_ID}`));
+  const rosterUpdate = await rosterUpdatePromise;
+  if (!rosterUpdate || (rosterUpdate.operators.length === 0 && rosterUpdate.recipes.length === 0)) {
+    return { catalog: bundledCatalog, rosterUpdate, addedOperatorIds: [], addedRecipeIds: [] };
+  }
+  const merged = mergeLiveRosterUpdate(bundledCatalog, rosterUpdate);
+  return {
+    catalog: merged.catalog,
+    rosterUpdate,
+    addedOperatorIds: merged.addedOperatorIds,
+    addedRecipeIds: merged.addedRecipeIds,
+  };
+}
+
+function describeCatalogSync(
+  catalog: GameCatalog,
+  rosterUpdate: LiveRosterUpdateDocument,
+  addedOperatorIds: string[],
+  addedRecipeIds: string[],
+): string[] {
+  if (localStorage.getItem(CATALOG_SYNC_SEEN_KEY) === rosterUpdate.contentHash) {
+    return [];
+  }
+  const messages: string[] = [];
+  if (addedOperatorIds.length > 0) {
+    const names = addedOperatorIds.map((operatorId) => (
+      catalog.operators.find((operator) => operator.id === operatorId)?.name ?? operatorId
+    ));
+    messages.push(`Catalog sync added ${names.length} operator${names.length === 1 ? "" : "s"}: ${names.join(", ")}.`);
+  }
+  if (addedRecipeIds.length > 0) {
+    const names = addedRecipeIds.map((recipeId) => (
+      catalog.recipes.find((recipe) => recipe.id === recipeId)?.name ?? recipeId
+    ));
+    messages.push(`Catalog sync added ${names.length} Growth Chamber resource${names.length === 1 ? "" : "s"}: ${names.join(", ")}.`);
+  }
+  if (messages.length === 0) {
+    messages.push("Catalog sync applied updated operator or resource data.");
+  }
+  localStorage.setItem(CATALOG_SYNC_SEEN_KEY, rosterUpdate.contentHash);
+  return messages;
 }
 
 function isLikelyJsonFile(file: File): boolean {
@@ -783,6 +842,20 @@ function OperatorChip(
   );
 }
 
+function AnyOperatorChip() {
+  return (
+    <div className="operatorChip operatorChipPlaceholder">
+      <div className="avatar avatarPlaceholder" aria-label="Any operator">
+        <span aria-hidden="true">×</span>
+      </div>
+      <div className="operatorChipCopy">
+        <strong>Any</strong>
+        <div className="operatorChipMeta">Open slot in this plan</div>
+      </div>
+    </div>
+  );
+}
+
 function summarizeHydration(hydration: ReturnType<typeof hydrateScenarioForCatalog>): string[] {
   if (!hydration.hydrated) {
     return [];
@@ -920,6 +993,7 @@ function formatWeight(value: number): string {
 
 function App() {
   const [catalog, setCatalog] = useState<GameCatalog | null>(null);
+  const [rosterUpdate, setRosterUpdate] = useState<LiveRosterUpdateDocument | null>(null);
   const [scenario, setScenario] = useState<OptimizationScenario | null>(null);
   const [result, setResult] = useState<OptimizationResult | null>(null);
   const [recommendations, setRecommendations] = useState<UpgradeRecommendationResult | null>(null);
@@ -946,10 +1020,21 @@ function App() {
       let cancelled = false;
       (async () => {
         try {
-          const nextCatalog = await fetchGameCatalog(resolveAppPath(`catalogs/${CURRENT_CATALOG_BUNDLE_ID}`));
+          const catalogLoad = await loadCatalogWithLiveRoster();
+          const nextCatalog = catalogLoad.catalog;
           if (cancelled) {
             return;
           }
+          setRosterUpdate(catalogLoad.rosterUpdate);
+
+          const rosterMessages = catalogLoad.rosterUpdate
+            ? describeCatalogSync(
+                nextCatalog,
+                catalogLoad.rosterUpdate,
+                catalogLoad.addedOperatorIds,
+                catalogLoad.addedRecipeIds,
+              )
+            : [];
 
         const savedDraft = localStorage.getItem(DRAFT_KEY);
         if (!savedDraft) {
@@ -957,6 +1042,7 @@ function App() {
           setCatalog(nextCatalog);
           setScenario(starterScenario);
           saveScenarioDraft(starterScenario);
+          setMessages(rosterMessages);
           return;
         }
 
@@ -966,6 +1052,7 @@ function App() {
         setScenario(hydration.scenario);
         saveScenarioDraft(hydration.scenario);
         setMessages([
+          ...rosterMessages,
           ...(migration.migrated ? [`Loaded local draft and migrated it from format ${migration.fromFormatVersion} to ${migration.toFormatVersion}.`] : []),
           ...summarizeHydration(hydration),
           ...migration.warnings.map((issue) => issue.message),
@@ -985,6 +1072,57 @@ function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!catalog) {
+      return;
+    }
+
+    let cancelled = false;
+    const refreshLiveRoster = async () => {
+      try {
+        const nextUpdate = await fetchLiveRosterUpdate(
+          `${resolveAppPath("roster/latest.json")}?checked=${Date.now()}`,
+        );
+        if (cancelled
+          || (nextUpdate.operators.length === 0 && nextUpdate.recipes.length === 0)
+          || nextUpdate.contentHash === rosterUpdate?.contentHash) {
+          return;
+        }
+        const merged = mergeLiveRosterUpdate(catalog, nextUpdate);
+        setCatalog(merged.catalog);
+        setRosterUpdate(nextUpdate);
+        const syncMessages = describeCatalogSync(
+          merged.catalog,
+          nextUpdate,
+          merged.addedOperatorIds,
+          merged.addedRecipeIds,
+        );
+        if (syncMessages.length > 0) {
+          setMessages((current) => [
+            ...syncMessages,
+            ...current,
+          ]);
+        }
+      } catch {
+        // The bundled catalog remains usable while the generated update is unavailable.
+      }
+    };
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") {
+        void refreshLiveRoster();
+      }
+    };
+    const interval = window.setInterval(() => void refreshLiveRoster(), LIVE_ROSTER_REFRESH_INTERVAL_MS);
+    window.addEventListener("online", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      window.removeEventListener("online", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [catalog, rosterUpdate?.generatedAt]);
 
   useEffect(() => {
     if (scenario) {
@@ -1104,7 +1242,7 @@ function App() {
   }, [defaultSortedOperators, deferredSearch, rosterById, rosterSort, rosterOwnedFilter, rosterFacilityFilter]);
 
   if (loading || !catalog || !scenario) {
-    return <main className="shell"><p className="status">Loading bundled catalog...</p></main>;
+    return <main className="shell"><p className="status">Loading catalog and checking for roster updates...</p></main>;
   }
 
   const validation = validateScenarioAgainstCatalog(catalog, scenario);
@@ -1690,6 +1828,7 @@ function App() {
             <article><span>Catalog</span><strong>{CURRENT_CATALOG_VERSION}</strong></article>
             <article><span>Game version</span><strong>{catalog.manifest.gameVersion}</strong></article>
             <article><span>Snapshot</span><strong>{catalog.manifest.snapshotDate}</strong></article>
+            <article><span>Catalog sync</span><strong>{rosterUpdate ? new Date(rosterUpdate.sourceUpdatedAt ?? rosterUpdate.generatedAt).toLocaleDateString() : "Bundled"}</strong></article>
             <article><span>Operators</span><strong>{catalog.operators.length}</strong></article>
           </div>
         </div>
@@ -2733,6 +2872,13 @@ function App() {
                       .filter((recipe): recipe is NonNullable<typeof recipe> => recipe != null);
                     const nonZeroRoomOutputs = Object.entries(room.projectedOutputs).filter(([, value]) => value > 0);
                     const roomWarnings = room.warnings.filter((warning) => !warning.startsWith("Optimization search stopped"));
+                    const resultSlotCap = room.slotCap ?? getRoomSlotCap(
+                      catalog,
+                      room.roomKind,
+                      room.roomLevel,
+                      scenario.facilities.controlNexus.level,
+                    );
+                    const openSlotCount = Math.max(0, resultSlotCap - room.assignedOperatorIds.length);
                     return (
                       <article className="resultCard" key={room.roomId}>
                         <div className="resultHeader">
@@ -2742,24 +2888,23 @@ function App() {
                           </div>
                           <span className="miniStat">{room.dataConfidence}</span>
                         </div>
-                        {room.assignedOperatorIds.length > 0
-                          ? (
-                              <div className="operatorChipList operatorChipGrid">
-                                {room.assignedOperatorIds.map((operatorId) => {
-                                  const operator = operatorsById.get(operatorId);
-                                  return (
-                                    <OperatorChip
-                                      key={`${room.roomId}-${operatorId}`}
-                                      catalog={catalog}
-                                      operator={operator}
-                                      fallbackLabel={operatorId}
-                                      meta={`${operator?.className ?? "Unknown"} | ${operator?.rarity ?? "?"} star`}
-                                    />
-                                  );
-                                })}
-                              </div>
-                            )
-                          : <p className="resultLine">No operators assigned</p>}
+                        <div className="operatorChipList operatorChipGrid">
+                          {room.assignedOperatorIds.map((operatorId) => {
+                            const operator = operatorsById.get(operatorId);
+                            return (
+                              <OperatorChip
+                                key={`${room.roomId}-${operatorId}`}
+                                catalog={catalog}
+                                operator={operator}
+                                fallbackLabel={operatorId}
+                                meta={`${operator?.className ?? "Unknown"} | ${operator?.rarity ?? "?"} star`}
+                              />
+                            );
+                          })}
+                          {Array.from({ length: openSlotCount }, (_, slotIndex) => (
+                            <AnyOperatorChip key={`${room.roomId}-any-${slotIndex}`} />
+                          ))}
+                        </div>
                         {recipes.length > 0 && (
                           <div className="resultRecipeList">
                             {recipes.map((recipe) => (

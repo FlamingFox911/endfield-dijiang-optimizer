@@ -305,6 +305,19 @@ export interface GameCatalog {
   assets: ImageAsset[];
 }
 
+export interface LiveRosterUpdateDocument {
+  schemaVersion: 1;
+  generatedAt: string;
+  sourceUpdatedAt?: string;
+  contentHash: string;
+  source: SourceRef;
+  operators: OperatorDefinition[];
+  promotionOverrides: OperatorPromotionOverride[];
+  recipes: RecipeDefinition[];
+  assets: ImageAsset[];
+  warnings: string[];
+}
+
 export interface OwnedBaseSkillState {
   skillId: string;
   unlockedRank: SkillRank;
@@ -436,6 +449,7 @@ export interface RoomPlan {
   roomId: string;
   roomKind: FacilityKind;
   roomLevel: number;
+  slotCap?: number;
   chosenRecipeIds?: string[];
   chosenProductKind?: ProductKind;
   assignedOperatorIds: string[];

@@ -2,6 +2,7 @@ node_modules/
 dist/
 coverage/
 apps/web/public/catalogs/
+apps/web/public/roster/
 .DS_Store
 *.log
 *.tgz

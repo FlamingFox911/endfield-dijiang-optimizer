@@ -13,7 +13,7 @@ This repository now contains the full shared runtime, a packaged CLI, a browser 
 - Support both a CLI workflow and a richer GUI with portraits, input boxes, sliders where applicable, steppers, and facility cards.
 - Keep planning centered on one exact recipe selection per room, with optional hard assignments when the user wants fixed placements.
 - Save room recipe selections for reuse and support import/export of local scenario files.
-- Ship with a built-in library of operators, portraits, base skills, recipes, facilities, and other static game data.
+- Ship with a built-in library of operators, portraits, base skills, recipes, facilities, and other static game data, then overlay validated roster updates automatically when hosted.
 - Explain why a recommended assignment or upgrade wins through room score breakdowns and upgrade notes.
 
 ## Why the architecture is shaped this way
@@ -21,11 +21,11 @@ This repository now contains the full shared runtime, a packaged CLI, a browser 
 - Public Endfield data is fragmented. Operator pages expose many base-skill effects and material costs in text, but some slot caps, unlock requirements, production timings, and load values are inconsistent or image-only in public guides.
 - The official site published a security warning on March 12, 2026 against using unofficial tools that request account authorization. The tool therefore only uses the internet for the public operator and base-skill catalog and never for account login or account scraping.
 - Endfield is already live and updating. Version 1.1 Phase 1 started on March 12, 2026, and Phase 2 is scheduled for March 29, 2026, so all game data must be versioned instead of treated as timeless.
-- Dijiang data changes infrequently enough that the cleanest runtime model is a bundled catalog library, with updates handled as explicit catalog releases rather than live syncing.
+- Facility mechanics and established recipes remain immutable, versioned catalog snapshots. The public overlay refreshes operators and newly released rare Growth Chamber resources without cloning the entire catalog.
 
 ## Scope boundary
 
-- Internet usage is limited to maintainer-side catalog updates. End users should normally run against the bundled catalog library.
+- Internet usage is limited to public catalog data. User account data is never requested or fetched.
 - User state is always manual: owned operators, levels, unlocked base skills, room levels, and priorities are entered by the user or loaded from the user's own local JSON file.
 - There is no account scraping, no GRYPHLINE login, and no attempt to read live game data.
 
@@ -51,6 +51,15 @@ This repository now contains the full shared runtime, a packaged CLI, a browser 
 - `npm run optimize:example`
 - `npm run recommend:example`
 - `npm run sync:promotion-data`
+- `npm run sync:live-roster`
+
+## Automatic roster updates
+
+The web build normalizes the current public character and item payloads into `public/roster/latest.json`. GitHub Pages rebuilds this file every six hours through the scheduled deployment workflow. Open browser tabs check the same-origin update on startup, hourly, when they come back online, and when they become visible again.
+
+Updates are schema-validated before they can replace catalog definitions. Operator identity, rarity, class, portraits, both Base Skills, Dijiang modifiers, shared unlock costs, Elite IV material overrides, and new rare Growth Chamber resources are merged into the bundled catalog. Base Skill icons resolve to known bundled effect artwork, avoiding broken third-party icon paths. If the source is unavailable or introduces an unknown mechanic, the immutable bundled catalog stays active and the build records a warning instead of breaking the application.
+
+Each overlay includes a stable content hash that excludes generation and retrieval timestamps. The browser remembers the last announced hash, so restarting the development server or rebuilding an unchanged Pages deployment does not repeat the catalog-update notice.
 
 ## License
 

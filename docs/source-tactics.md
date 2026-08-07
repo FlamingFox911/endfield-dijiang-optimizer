@@ -2,6 +2,28 @@
 
 This document records how public catalog data is obtained at the domain level, so future sync work does not need to rediscover the access pattern.
 
+## endfieldtools.dev extracted data
+
+- Use for:
+  - automatic roster discovery
+  - operator rarity and profession
+  - translated Base Skill names and ranks
+  - Dijiang room, effect, target, and value parameters
+  - public character portraits
+  - Elite IV operator-specific material IDs
+  - new rarity-5 Growth Chamber item identities and icons
+- Preferred tactic:
+  - fetch `localdb/optimized/characters/characters-list.json`
+  - fetch each released character from `localdb/optimized/characters/details/{charId}.json`
+  - fetch `localdb/optimized/factory/factory-data.json` for rare resource discovery
+  - resolve English text through the modular `core`, `characters`, and `factory` i18n tables
+  - run `npm run sync:live-roster`, which applies the same effect and material mappings used by the curated snapshots
+- Safety rule:
+  - unknown professions, rooms, effect types, targets, rank shapes, or material IDs produce a warning and leave that operator on the bundled fallback
+  - live Base Skill icon paths are not trusted; the merge resolves each effect to bundled local artwork
+  - new rare-resource timings remain provisional until directly verified in game
+  - the browser accepts only the validated same-origin generated document; it does not contact an account API or third-party site directly
+
 ## endfield.wiki.gg
 
 - Use for:

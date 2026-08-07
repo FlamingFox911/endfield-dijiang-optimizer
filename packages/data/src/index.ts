@@ -11,6 +11,7 @@ import type {
   GameCatalog,
   ImageAsset,
   LevelProgressionMilestone,
+  LiveRosterUpdateDocument,
   MaterialCost,
   OptimizationProfile,
   OptimizationScenario,
@@ -74,6 +75,14 @@ export interface CatalogHydrationResult {
   hydrated: boolean;
   changes: MigrationChange[];
   stats: CatalogHydrationStats;
+}
+
+export interface LiveRosterMergeResult {
+  catalog: GameCatalog;
+  addedOperatorIds: string[];
+  updatedOperatorIds: string[];
+  addedRecipeIds: string[];
+  updatedRecipeIds: string[];
 }
 
 const DEFAULT_SLOT_CAPS = {
@@ -2510,6 +2519,287 @@ export async function fetchCatalogBundle(baseUrl = `/catalogs/${CURRENT_CATALOG_
 
 export async function fetchGameCatalog(baseUrl?: string): Promise<GameCatalog> {
   return toGameCatalog(await fetchCatalogBundle(baseUrl));
+}
+
+const LIVE_ROSTER_FACILITY_KINDS = new Set<FacilityKind>([
+  "control_nexus",
+  "manufacturing_cabin",
+  "growth_chamber",
+  "reception_room",
+]);
+const LIVE_ROSTER_EFFECT_METRICS = new Set([
+  "production_efficiency",
+  "growth_rate",
+  "mood_regen",
+  "mood_drop_reduction",
+  "clue_collection_efficiency",
+  "clue_rate_up",
+]);
+const LIVE_ROSTER_MODIFIER_TARGETS = new Set([
+  "operator_exp",
+  "weapon_exp",
+  "fungal",
+  "vitrified_plant",
+  "rare_mineral",
+  "clue_1",
+  "clue_2",
+  "clue_3",
+  "clue_4",
+  "clue_5",
+  "clue_6",
+  "clue_7",
+  "all",
+]);
+const LIVE_ROSTER_PRODUCT_KINDS = new Set([
+  "operator_exp",
+  "weapon_exp",
+  "fungal",
+  "vitrified_plant",
+  "rare_mineral",
+]);
+
+function requireLiveRoster(condition: unknown, message: string): asserts condition {
+  if (!condition) {
+    throw new Error(`Invalid live roster update: ${message}`);
+  }
+}
+
+function validateLiveRosterSource(source: unknown, path: string): void {
+  requireLiveRoster(isObject(source), `${path} must be an object.`);
+  requireLiveRoster(typeof source.id === "string" && source.id.length > 0, `${path}.id must be a non-empty string.`);
+  requireLiveRoster(typeof source.label === "string" && source.label.length > 0, `${path}.label must be a non-empty string.`);
+  requireLiveRoster(typeof source.url === "string" && /^https:\/\//.test(source.url), `${path}.url must be an HTTPS URL.`);
+  requireLiveRoster(typeof source.retrievedOn === "string" && /^\d{4}-\d{2}-\d{2}$/.test(source.retrievedOn), `${path}.retrievedOn must be an ISO date.`);
+  requireLiveRoster(
+    ["official", "guide_site", "community", "manual_override", "inferred"].includes(String(source.confidence)),
+    `${path}.confidence is unsupported.`,
+  );
+}
+
+export function parseLiveRosterUpdate(value: unknown): LiveRosterUpdateDocument {
+  requireLiveRoster(isObject(value), "document must be an object.");
+  requireLiveRoster(value.schemaVersion === 1, "schemaVersion must be 1.");
+  requireLiveRoster(
+    typeof value.generatedAt === "string" && Number.isFinite(Date.parse(value.generatedAt)),
+    "generatedAt must be an ISO timestamp.",
+  );
+  if (value.sourceUpdatedAt !== undefined) {
+    requireLiveRoster(
+      typeof value.sourceUpdatedAt === "string" && Number.isFinite(Date.parse(value.sourceUpdatedAt)),
+      "sourceUpdatedAt must be an ISO timestamp when present.",
+    );
+  }
+  requireLiveRoster(
+    typeof value.contentHash === "string" && /^[a-f0-9]{64}$/.test(value.contentHash),
+    "contentHash must be a lowercase SHA-256 digest.",
+  );
+  validateLiveRosterSource(value.source, "source");
+  requireLiveRoster(Array.isArray(value.operators), "operators must be an array.");
+  requireLiveRoster(Array.isArray(value.promotionOverrides), "promotionOverrides must be an array.");
+  requireLiveRoster(Array.isArray(value.recipes), "recipes must be an array.");
+  requireLiveRoster(Array.isArray(value.assets), "assets must be an array.");
+  requireLiveRoster(Array.isArray(value.warnings) && value.warnings.every((warning) => typeof warning === "string"), "warnings must be a string array.");
+
+  const operatorIds = new Set<string>();
+  for (const [operatorIndex, operator] of value.operators.entries()) {
+    const operatorPath = `operators[${operatorIndex}]`;
+    requireLiveRoster(isObject(operator), `${operatorPath} must be an object.`);
+    requireLiveRoster(typeof operator.id === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(operator.id), `${operatorPath}.id must be a slug.`);
+    requireLiveRoster(!operatorIds.has(operator.id), `${operatorPath}.id '${operator.id}' is duplicated.`);
+    operatorIds.add(operator.id);
+    requireLiveRoster(typeof operator.name === "string" && operator.name.length > 0, `${operatorPath}.name must be a non-empty string.`);
+    requireLiveRoster([4, 5, 6].includes(Number(operator.rarity)), `${operatorPath}.rarity must be 4, 5, or 6.`);
+    requireLiveRoster(typeof operator.className === "string" && operator.className.length > 0, `${operatorPath}.className must be a non-empty string.`);
+    requireLiveRoster(Array.isArray(operator.images) && operator.images.length > 0, `${operatorPath}.images must not be empty.`);
+    requireLiveRoster(
+      operator.images.every((asset) => isObject(asset)
+        && typeof asset.id === "string"
+        && asset.kind === "portrait"
+        && typeof asset.path === "string"
+        && /^https:\/\//.test(asset.path)),
+      `${operatorPath}.images must contain HTTPS portrait assets.`,
+    );
+    requireLiveRoster(Array.isArray(operator.sourceRefs) && operator.sourceRefs.length > 0, `${operatorPath}.sourceRefs must not be empty.`);
+    operator.sourceRefs.forEach((source, sourceIndex) => validateLiveRosterSource(source, `${operatorPath}.sourceRefs[${sourceIndex}]`));
+    requireLiveRoster(Array.isArray(operator.baseSkills) && operator.baseSkills.length === 2, `${operatorPath}.baseSkills must contain two skills.`);
+
+    const skillIds = new Set<string>();
+    for (const [skillIndex, skill] of operator.baseSkills.entries()) {
+      const skillPath = `${operatorPath}.baseSkills[${skillIndex}]`;
+      requireLiveRoster(isObject(skill), `${skillPath} must be an object.`);
+      requireLiveRoster(typeof skill.id === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(skill.id), `${skillPath}.id must be a slug.`);
+      requireLiveRoster(!skillIds.has(skill.id), `${skillPath}.id '${skill.id}' is duplicated.`);
+      skillIds.add(skill.id);
+      requireLiveRoster(typeof skill.name === "string" && skill.name.length > 0, `${skillPath}.name must be a non-empty string.`);
+      requireLiveRoster(LIVE_ROSTER_FACILITY_KINDS.has(skill.facilityKind as FacilityKind), `${skillPath}.facilityKind is unsupported.`);
+      requireLiveRoster(isObject(skill.icon) && skill.icon.kind === "icon" && typeof skill.icon.path === "string" && /^https:\/\//.test(skill.icon.path), `${skillPath}.icon must be an HTTPS icon asset.`);
+      requireLiveRoster(Array.isArray(skill.sourceRefs) && skill.sourceRefs.length > 0, `${skillPath}.sourceRefs must not be empty.`);
+      requireLiveRoster(Array.isArray(skill.ranks) && skill.ranks.length === 2, `${skillPath}.ranks must contain two ranks.`);
+      for (const [rankIndex, rank] of skill.ranks.entries()) {
+        const rankPath = `${skillPath}.ranks[${rankIndex}]`;
+        requireLiveRoster(isObject(rank), `${rankPath} must be an object.`);
+        requireLiveRoster(rank.rank === rankIndex + 1, `${rankPath}.rank must be ${rankIndex + 1}.`);
+        requireLiveRoster(["alpha", "beta", "gamma"].includes(String(rank.label)), `${rankPath}.label is unsupported.`);
+        requireLiveRoster(Array.isArray(rank.modifiers) && rank.modifiers.length > 0, `${rankPath}.modifiers must not be empty.`);
+        for (const modifier of rank.modifiers) {
+          requireLiveRoster(isObject(modifier), `${rankPath}.modifiers entries must be objects.`);
+          requireLiveRoster(LIVE_ROSTER_EFFECT_METRICS.has(String(modifier.metric)), `${rankPath} contains an unsupported metric.`);
+          requireLiveRoster(LIVE_ROSTER_MODIFIER_TARGETS.has(String(modifier.appliesTo)), `${rankPath} contains an unsupported target.`);
+          requireLiveRoster(typeof modifier.value === "number" && Number.isFinite(modifier.value) && modifier.value >= 0, `${rankPath} contains an invalid value.`);
+          requireLiveRoster(modifier.unit === "percent", `${rankPath} modifiers must use percent units.`);
+        }
+      }
+    }
+  }
+
+  for (const [overrideIndex, override] of value.promotionOverrides.entries()) {
+    const overridePath = `promotionOverrides[${overrideIndex}]`;
+    requireLiveRoster(isObject(override), `${overridePath} must be an object.`);
+    requireLiveRoster(typeof override.operatorId === "string" && operatorIds.has(override.operatorId), `${overridePath}.operatorId must reference an update operator.`);
+    requireLiveRoster(override.promotionTier === 4, `${overridePath}.promotionTier must be 4.`);
+    requireLiveRoster(Array.isArray(override.additionalMaterialCosts), `${overridePath}.additionalMaterialCosts must be an array.`);
+    requireLiveRoster(
+      override.additionalMaterialCosts.every((cost) => isObject(cost)
+        && typeof cost.itemId === "string"
+        && typeof cost.quantity === "number"
+        && Number.isInteger(cost.quantity)
+        && cost.quantity > 0),
+      `${overridePath}.additionalMaterialCosts contains an invalid cost.`,
+    );
+  }
+
+  const recipeIds = new Set<string>();
+  for (const [recipeIndex, recipe] of value.recipes.entries()) {
+    const recipePath = `recipes[${recipeIndex}]`;
+    requireLiveRoster(isObject(recipe), `${recipePath} must be an object.`);
+    requireLiveRoster(typeof recipe.id === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(recipe.id), `${recipePath}.id must be a slug.`);
+    requireLiveRoster(!recipeIds.has(recipe.id), `${recipePath}.id '${recipe.id}' is duplicated.`);
+    recipeIds.add(recipe.id);
+    requireLiveRoster(typeof recipe.name === "string" && recipe.name.length > 0, `${recipePath}.name must be a non-empty string.`);
+    requireLiveRoster(recipe.facilityKind === "growth_chamber", `${recipePath}.facilityKind must be growth_chamber.`);
+    requireLiveRoster(LIVE_ROSTER_PRODUCT_KINDS.has(String(recipe.productKind)), `${recipePath}.productKind is unsupported.`);
+    requireLiveRoster(Number.isInteger(recipe.roomLevel) && Number(recipe.roomLevel) >= 1 && Number(recipe.roomLevel) <= 3, `${recipePath}.roomLevel must be 1, 2, or 3.`);
+    requireLiveRoster(typeof recipe.baseDurationMinutes === "number" && Number.isFinite(recipe.baseDurationMinutes) && recipe.baseDurationMinutes > 0, `${recipePath}.baseDurationMinutes must be positive.`);
+    requireLiveRoster(typeof recipe.outputAmount === "number" && Number.isInteger(recipe.outputAmount) && recipe.outputAmount > 0, `${recipePath}.outputAmount must be a positive integer.`);
+    requireLiveRoster(Array.isArray(recipe.sourceRefs) && recipe.sourceRefs.length > 0, `${recipePath}.sourceRefs must not be empty.`);
+    recipe.sourceRefs.forEach((source, sourceIndex) => validateLiveRosterSource(source, `${recipePath}.sourceRefs[${sourceIndex}]`));
+    requireLiveRoster(["verified", "provisional", "heuristic"].includes(String(recipe.dataConfidence)), `${recipePath}.dataConfidence is unsupported.`);
+  }
+
+  const assetIds = new Set<string>();
+  for (const [assetIndex, asset] of value.assets.entries()) {
+    const assetPath = `assets[${assetIndex}]`;
+    requireLiveRoster(isObject(asset), `${assetPath} must be an object.`);
+    requireLiveRoster(typeof asset.id === "string" && asset.id.length > 0, `${assetPath}.id must be a non-empty string.`);
+    requireLiveRoster(!assetIds.has(asset.id), `${assetPath}.id '${asset.id}' is duplicated.`);
+    assetIds.add(asset.id);
+    requireLiveRoster(asset.kind === "icon", `${assetPath}.kind must be icon.`);
+    requireLiveRoster(typeof asset.path === "string" && /^https:\/\//.test(asset.path), `${assetPath}.path must be an HTTPS URL.`);
+  }
+
+  return value as unknown as LiveRosterUpdateDocument;
+}
+
+function getBaseSkillIconSignature(skill: OperatorDefinition["baseSkills"][number]): string | undefined {
+  const modifier = skill.ranks[0]?.modifiers[0];
+  return modifier ? `${skill.facilityKind}:${modifier.metric}:${modifier.appliesTo}` : undefined;
+}
+
+export function mergeLiveRosterUpdate(catalog: GameCatalog, update: LiveRosterUpdateDocument): LiveRosterMergeResult {
+  const currentById = new Map(catalog.operators.map((operator) => [operator.id, operator]));
+  const skillIconBySignature = new Map<string, OperatorDefinition["baseSkills"][number]["icon"]>();
+  for (const operator of catalog.operators) {
+    for (const skill of operator.baseSkills) {
+      const signature = getBaseSkillIconSignature(skill);
+      if (signature && !skillIconBySignature.has(signature)) {
+        skillIconBySignature.set(signature, skill.icon);
+      }
+    }
+  }
+  const addedOperatorIds: string[] = [];
+  const updatedOperatorIds: string[] = [];
+  const hydratedOperators = update.operators.map((operator) => {
+    (currentById.has(operator.id) ? updatedOperatorIds : addedOperatorIds).push(operator.id);
+    return {
+      ...operator,
+      baseSkills: operator.baseSkills.map((skill, skillIndex) => ({
+        ...skill,
+        icon: currentById.get(operator.id)?.baseSkills.find((currentSkill) => currentSkill.id === skill.id)?.icon
+          ?? skillIconBySignature.get(getBaseSkillIconSignature(skill) ?? "")
+          ?? skill.icon,
+        ranks: skill.ranks.map((rank) => {
+          const progression = getBaseSkillRankRequirement(catalog, (skillIndex + 1) as 1 | 2, rank.rank);
+          return {
+            ...rank,
+            materialCosts: progression?.materialCosts ?? rank.materialCosts,
+            unlockHint: progression
+              ? createBaseSkillUnlockHint(
+                operator.name,
+                skill.name,
+                rank.label,
+                progression.promotionTier,
+                progression.requiredLevel,
+              )
+              : rank.unlockHint,
+            sourceRefs: dedupeSourceRefs([
+              ...rank.sourceRefs,
+              ...(progression?.sourceRefs ?? []),
+            ]),
+          };
+        }),
+      })),
+    };
+  });
+
+  const updateIds = new Set(hydratedOperators.map((operator) => operator.id));
+  const overrideKeys = new Set(update.promotionOverrides.map((override) => `${override.operatorId}:${override.promotionTier}`));
+  const currentRecipeIds = new Set(catalog.recipes.map((recipe) => recipe.id));
+  const addedRecipeIds = update.recipes.filter((recipe) => !currentRecipeIds.has(recipe.id)).map((recipe) => recipe.id);
+  const updatedRecipeIds = update.recipes.filter((recipe) => currentRecipeIds.has(recipe.id)).map((recipe) => recipe.id);
+  const updateRecipeIds = new Set(update.recipes.map((recipe) => recipe.id));
+  const updateAssets = hydratedOperators.flatMap((operator) => [
+    ...operator.images,
+    ...operator.baseSkills.map((skill) => skill.icon),
+  ]).concat(update.assets);
+  const assetById = new Map(catalog.assets.map((asset) => [asset.id, asset]));
+  updateAssets.forEach((asset) => assetById.set(asset.id, asset));
+  const sourceById = new Map(catalog.sources.map((source) => [source.id, source]));
+  sourceById.set(update.source.id, update.source);
+  hydratedOperators.flatMap((operator) => operator.sourceRefs).forEach((source) => sourceById.set(source.id, source));
+  update.recipes.flatMap((recipe) => recipe.sourceRefs).forEach((source) => sourceById.set(source.id, source));
+
+  return {
+    catalog: {
+      ...catalog,
+      operators: [
+        ...catalog.operators.filter((operator) => !updateIds.has(operator.id)),
+        ...hydratedOperators,
+      ],
+      recipes: [
+        ...catalog.recipes.filter((recipe) => !updateRecipeIds.has(recipe.id)),
+        ...update.recipes,
+      ],
+      progression: {
+        ...catalog.progression,
+        promotionOverrides: [
+          ...catalog.progression.promotionOverrides.filter(
+            (override) => !overrideKeys.has(`${override.operatorId}:${override.promotionTier}`),
+          ),
+          ...update.promotionOverrides,
+        ],
+      },
+      sources: Array.from(sourceById.values()),
+      assets: Array.from(assetById.values()),
+    },
+    addedOperatorIds,
+    updatedOperatorIds,
+    addedRecipeIds,
+    updatedRecipeIds,
+  };
+}
+
+export async function fetchLiveRosterUpdate(url: string): Promise<LiveRosterUpdateDocument> {
+  return parseLiveRosterUpdate(await fetchJson<unknown>(url));
 }
 
 export function formatValidationIssues(issues: ValidationIssue[]): string {

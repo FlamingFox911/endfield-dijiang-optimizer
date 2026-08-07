@@ -11,6 +11,9 @@ import sources from "../../../catalogs/2026-04-17-v1.2/sources.json";
 import gaps from "../../../catalogs/2026-04-17-v1.2/gaps.json";
 import assets from "../../../catalogs/2026-04-17-v1.2/assets.json";
 
+import { toGameCatalog } from "@endfield/data";
+import type { LiveRosterUpdateDocument, SourceRef } from "@endfield/domain";
+
 import { App } from "./App";
 import type { OptimizerWorkerResponse } from "./optimizer-worker-types";
 
@@ -57,6 +60,50 @@ const responses = new Map<string, unknown>([
   ["/catalogs/2026-04-17-v1.2/gaps.json", gaps],
   ["/catalogs/2026-04-17-v1.2/assets.json", assets],
 ]);
+
+function createTestLiveRosterUpdate(): LiveRosterUpdateDocument {
+  const catalog = toGameCatalog({ manifest, progression, operators, facilities, recipes, sources, gaps, assets } as any);
+  const template = catalog.operators[0]!;
+  const source: SourceRef = {
+    id: "test-live-sync",
+    label: "Test live sync",
+    url: "https://example.com/live-sync",
+    retrievedOn: "2026-08-06",
+    confidence: "community",
+  };
+  return {
+    schemaVersion: 1,
+    generatedAt: "2026-08-06T12:00:00.000Z",
+    sourceUpdatedAt: "2026-08-05T10:00:00.000Z",
+    contentHash: "a".repeat(64),
+    source,
+    operators: [{
+      ...template,
+      id: "sync-test",
+      name: "Sync Test",
+      images: template.images.map((image, index) => ({
+        ...image,
+        id: `sync-test-image-${index}`,
+        path: `https://example.com/sync-test-${index}.png`,
+      })),
+      baseSkills: template.baseSkills.map((skill, skillIndex) => ({
+        ...skill,
+        icon: {
+          ...skill.icon,
+          id: `sync-test-skill-${skillIndex}`,
+          path: `https://example.com/sync-test-skill-${skillIndex}.png`,
+        },
+        sourceRefs: [source],
+        ranks: skill.ranks.map((rank) => ({ ...rank, sourceRefs: [source] })),
+      })),
+      sourceRefs: [source],
+    }],
+    promotionOverrides: [],
+    recipes: [],
+    assets: [],
+    warnings: [],
+  };
+}
 
 function requireHtmlElement<T extends Element>(element: T | null | undefined): HTMLElement {
   expect(element).not.toBeNull();
@@ -122,6 +169,7 @@ describe("App", () => {
 
   beforeEach(() => {
     localStorage.clear();
+    responses.delete("/roster/latest.json");
     vi.restoreAllMocks();
     workerInstances.length = 0;
     vi.stubGlobal(
@@ -129,13 +177,31 @@ describe("App", () => {
       vi.fn(async (input: string | URL) => {
         const key = String(input);
         const body = responses.get(key)
-          ?? Array.from(responses.entries()).find(([path]) => key.endsWith(path))?.[1];
+          ?? Array.from(responses.entries()).find(([path]) => key.endsWith(path) || key.includes(`${path}?`))?.[1];
         if (!body) {
           return new Response("not found", { status: 404 });
         }
         return new Response(JSON.stringify(body), { status: 200 });
       }),
     );
+  });
+
+  it("announces unchanged catalog sync content only once across rebuild timestamps", async () => {
+    const update = createTestLiveRosterUpdate();
+    responses.set("/roster/latest.json", update);
+
+    const firstRender = render(<App />);
+    expect(await screen.findByText("Catalog sync added 1 operator: Sync Test.")).toBeInTheDocument();
+    firstRender.unmount();
+
+    responses.set("/roster/latest.json", {
+      ...update,
+      generatedAt: "2026-08-07T12:00:00.000Z",
+    });
+    render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    expect(screen.queryByText("Catalog sync added 1 operator: Sync Test.")).not.toBeInTheDocument();
   });
 
   it("loads the bundled catalog and runs optimize from the UI", async () => {
@@ -251,6 +317,7 @@ describe("App", () => {
               roomId: "reception-1",
               roomKind: "reception_room",
               roomLevel: 1,
+              slotCap: 3,
               chosenRecipeIds: [],
               assignedOperatorIds: [],
               scoreBreakdown: { directProductionScore: 0, supportRoomScore: 0, crossRoomBonusContribution: 0, totalScore: 0 },
@@ -286,6 +353,11 @@ describe("App", () => {
     });
 
     expect(screen.queryByText("No recipe selected")).not.toBeInTheDocument();
+
+    const receptionHeading = screen.getAllByText("Reception Room").find((element) => element.closest(".resultCard"));
+    const receptionCard = requireHtmlElement(receptionHeading?.closest(".resultCard"));
+    expect(within(receptionCard).getAllByText("Any")).toHaveLength(3);
+    expect(within(receptionCard).getAllByLabelText("Any operator")).toHaveLength(3);
 
     const growthHeading = screen.getAllByText("Growth Chamber 1").find((element) => element.closest(".resultCard"));
     const growthCard = requireHtmlElement(growthHeading?.closest(".resultCard"));

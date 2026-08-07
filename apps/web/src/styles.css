@@ -1292,6 +1292,20 @@ button.secondary,
   min-width: 0;
 }
 
+.operatorChipPlaceholder {
+  color: var(--ink-soft);
+}
+
+.avatarPlaceholder {
+  border-style: dashed;
+  border-color: rgba(84, 88, 96, 0.45);
+  background: rgba(84, 88, 96, 0.08);
+  box-shadow: none;
+  color: rgba(84, 88, 96, 0.7);
+  font-size: 1.65rem;
+  font-weight: 400;
+}
+
 .operatorChipCopy {
   display: grid;
   gap: 2px;

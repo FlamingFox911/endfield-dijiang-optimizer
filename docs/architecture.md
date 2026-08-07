@@ -56,26 +56,21 @@ This library is versioned separately from user scenarios. A scenario points to a
 
 ## Catalog release model
 
-Catalog updates are rare and tied to major game updates, so the runtime model should be conservative.
+Facility, established recipe, and progression snapshots remain versioned and immutable. Operator roster changes and newly released rare Growth Chamber resources use a smaller generated overlay so routine additions do not require copying and republishing every catalog document and asset.
 
-Preferred model for v1:
-
-- bundle one catalog library with every app build
-- update the library only when a maintainer prepares a new catalog release
-- require users to download a newer app version when they want newer operators, recipes, assets, or facility data
-- do not support in-app catalog downloads or auto-update in v1
-
-Optional model for later:
-
-- support importing a side-loadable catalog pack without forcing a full app reinstall
-- validate the pack version and manifest before activating it
-- keep old packs installed so older scenario files remain reproducible
+- every web build fetches and normalizes the public character feed
+- the Pages deployment runs on pushes and every six hours
+- browser tabs periodically fetch the generated same-origin roster document
+- the data package validates the complete document before merging it
+- a timestamp-independent content hash deduplicates browser update notices across rebuilds
+- the bundled catalog remains the offline and source-failure fallback
+- the scenario keeps its immutable base catalog version, while hydration adds newly discovered roster entries without changing user-owned state
 
 ## Data model
 
 The catalog is versioned and immutable for a given snapshot. User scenarios are stored separately and refer to the catalog by version string.
 
-The bundled catalog library is the only thing ever sourced from public internet data, and that happens in the maintainer update workflow, not during normal end-user usage. User state is never internet-derived.
+Only public catalog data is sourced from the internet. The hosted browser reads a same-origin, build-generated roster overlay; user state is never internet-derived or transmitted.
 
 Core catalog entities:
 

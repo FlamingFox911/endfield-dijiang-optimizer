@@ -302,6 +302,74 @@ describe("optimizer runtime", () => {
     );
   });
 
+  it("values Reception Mood sustain and leaves targeted clue-rate candidates unassigned", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    const ownedIds = new Set(["akekuri", "ardelia", "estella", "arclight", "avywenna"]);
+
+    for (const operator of scenario.roster) {
+      operator.owned = ownedIds.has(operator.operatorId);
+      operator.baseSkillStates = operator.baseSkillStates.map((state) => ({
+        ...state,
+        unlockedRank:
+          (operator.operatorId === "akekuri" && state.skillId === "icebreaker")
+          || (operator.operatorId === "ardelia" && (state.skillId === "tales-of-the-land" || state.skillId === "mr-dollys-game"))
+          || (operator.operatorId === "estella" && state.skillId === "frequency-monitoring")
+            ? 2
+            : (operator.operatorId === "avywenna" && state.skillId === "messengers-secret")
+              || (operator.operatorId === "arclight" && state.skillId === "blade-of-the-wildlands")
+              ? 1
+              : 0,
+      }));
+    }
+
+    scenario.facilities.controlNexus.level = 5;
+    scenario.facilities.hardAssignments = [];
+    scenario.facilities.manufacturingCabins.forEach((room) => { room.enabled = false; });
+    scenario.facilities.growthChambers.forEach((room) => { room.enabled = false; });
+    scenario.facilities.receptionRoom!.enabled = true;
+    scenario.facilities.receptionRoom!.level = 3;
+
+    const result = solveScenario(catalog, scenario);
+    const receptionPlan = result.roomPlans.find((room) => room.roomId === "reception-1");
+    const akekuriExplanation = result.explanations.find(
+      (explanation) => explanation.roomId === "reception-1" && explanation.operatorId === "akekuri",
+    );
+
+    expect(receptionPlan?.assignedOperatorIds).toEqual(["ardelia", "estella", "akekuri"]);
+    expect(receptionPlan?.assignedOperatorIds).not.toContain("arclight");
+    expect(receptionPlan?.assignedOperatorIds).not.toContain("avywenna");
+    expect(akekuriExplanation?.projectedContribution).toBeGreaterThan(0);
+    expect(akekuriExplanation?.reasons.join(" ")).toContain("Long-run Reception Mood sustain");
+  });
+
+  it("leaves Reception slots open when only targeted clue-rate candidates are available", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+
+    for (const operator of scenario.roster) {
+      operator.owned = operator.operatorId === "arclight" || operator.operatorId === "avywenna";
+      operator.baseSkillStates = operator.baseSkillStates.map((state) => ({
+        ...state,
+        unlockedRank: operator.operatorId === "avywenna" && state.skillId === "messengers-secret" ? 1 : 0,
+      }));
+    }
+
+    scenario.facilities.controlNexus.level = 5;
+    scenario.facilities.hardAssignments = [];
+    scenario.facilities.manufacturingCabins.forEach((room) => { room.enabled = false; });
+    scenario.facilities.growthChambers.forEach((room) => { room.enabled = false; });
+    scenario.facilities.receptionRoom!.enabled = true;
+    scenario.facilities.receptionRoom!.level = 3;
+
+    const result = solveScenario(catalog, scenario);
+    const receptionPlan = result.roomPlans.find((room) => room.roomId === "reception-1");
+
+    expect(receptionPlan?.slotCap).toBe(3);
+    expect(receptionPlan?.assignedOperatorIds).toEqual([]);
+    expect(receptionPlan?.scoreBreakdown.supportRoomScore).toBe(0);
+  });
+
   it("values production-room Mood sustain from long-run uptime against the staffed seat and personal bonuses", async () => {
     const catalog = await loadDefaultCatalog();
     const scenario = createStarterScenario(catalog);

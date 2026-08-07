@@ -516,12 +516,13 @@ function evaluateRankModifiers(
           crossRoomScore += modifier.value * SUPPORT_WEIGHTS.controlNexusMoodRegenWeight;
           globalMoodRegenPercent += modifier.value;
           reasons.push(`control support +${(modifier.value * SUPPORT_WEIGHTS.controlNexusMoodRegenWeight).toFixed(1)}`);
-        } else if (room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber") {
+        } else if (
+          room.roomKind === "manufacturing_cabin"
+          || room.roomKind === "growth_chamber"
+          || room.roomKind === "reception_room"
+        ) {
           localMoodRegenPercent += modifier.value;
           reasons.push(`mood regen +${modifier.value}%`);
-        } else {
-          supportScore += modifier.value * SUPPORT_WEIGHTS.offRoomClueWeight;
-          reasons.push(`support utility +${(modifier.value * SUPPORT_WEIGHTS.offRoomClueWeight).toFixed(1)}`);
         }
         break;
       case "mood_drop_reduction":
@@ -529,7 +530,11 @@ function evaluateRankModifiers(
           crossRoomScore += modifier.value * SUPPORT_WEIGHTS.controlNexusMoodDropReductionWeight;
           globalMoodDropReductionPercent += modifier.value;
           reasons.push(`cross-room sustain +${(modifier.value * SUPPORT_WEIGHTS.controlNexusMoodDropReductionWeight).toFixed(1)}`);
-        } else if (room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber") {
+        } else if (
+          room.roomKind === "manufacturing_cabin"
+          || room.roomKind === "growth_chamber"
+          || room.roomKind === "reception_room"
+        ) {
           localMoodDropReductionPercent += modifier.value;
           reasons.push(`mood drop reduction +${modifier.value}%`);
         }
@@ -748,6 +753,25 @@ function evaluateOperatorForRoom(
     reasons.push(
       `Long-run Mood sustain: +${(boostedUptime * 100).toFixed(1)}% working uptime, preserving ${moodSustainScoreUnits.toFixed(2)} score.`,
     );
+  } else if (
+    room.roomKind === "reception_room"
+    && (localMoodRegenPercent > 0 || localMoodDropReductionPercent > 0)
+  ) {
+    const activeSupportScoreUnits =
+      (SUPPORT_WEIGHTS.receptionBaselineSupportScorePerSeat * receptionWeight)
+      + supportScore;
+    const moodSustainScoreUnits = getLocalMoodSustainUnits(
+      activeSupportScoreUnits,
+      localMoodDropReductionPercent,
+      localMoodRegenPercent,
+    );
+    const boostedUptime = getLongRunMoodWorkingUptime(localMoodDropReductionPercent, localMoodRegenPercent);
+
+    supportScore += moodSustainScoreUnits;
+    localMoodSustainScoreUnits += moodSustainScoreUnits;
+    reasons.push(
+      `Long-run Reception Mood sustain: +${(boostedUptime * 100).toFixed(1)}% working uptime, preserving ${moodSustainScoreUnits.toFixed(2)} support score.`,
+    );
   }
 
   return {
@@ -960,6 +984,7 @@ function computeRoomPlan(
       roomId: room.roomId,
       roomKind: room.roomKind,
       roomLevel: room.level,
+      slotCap: room.slotCap,
       chosenRecipeIds: room.fixedRecipeIds,
       chosenProductKind: room.recipes.length === 1 ? room.recipes[0]?.productKind : undefined,
       assignedOperatorIds: assignedOperatorIds.filter(Boolean) as string[],
@@ -1537,6 +1562,7 @@ export function solveNormalizedScenario(
     const candidateLimit = remainingOperatorIds.length * (slotQueue.length - slotIndex) > largeSearchStateThreshold
       ? Math.min(searchConfig.maxBranchCandidatesPerSlot, remainingOperatorIds.length)
       : remainingOperatorIds.length;
+    const supportRoomAllowsEmptySlots = room.roomKind === "control_nexus" || room.roomKind === "reception_room";
     const candidateIndexes = remainingOperatorIds
       .map((operatorId, index) => ({
         index,
@@ -1545,6 +1571,7 @@ export function solveNormalizedScenario(
           ? getExactControlMoodContribution(operatorId, assignedByRoom)
           : getOperatorContributionForRoom(operatorId, room),
       }))
+      .filter((candidate) => !supportRoomAllowsEmptySlots || candidate.contribution > 0)
       .sort((left, right) => right.contribution - left.contribution)
       .slice(0, candidateLimit);
 
@@ -1565,6 +1592,10 @@ export function solveNormalizedScenario(
         currentScore + addedScore,
       );
       nextAssignedByRoom.get(room.roomId)![targetSlot.slotIndex] = null;
+    }
+
+    if (supportRoomAllowsEmptySlots && !budgetExceeded) {
+      dfs(slotIndex + 1, assignedByRoom, remainingOperatorIds, currentScore);
     }
   };
 

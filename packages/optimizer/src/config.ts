@@ -3,7 +3,7 @@ import type { OptimizationProfile } from "@endfield/domain";
 import type { OptimizationSearchConfig } from "./types.js";
 
 export const SUPPORT_WEIGHTS = {
-  version: "v2",
+  version: "v3",
   controlNexusMoodRegenWeight: 0.55,
   controlNexusMoodDropReductionWeight: 0.45,
   assignedOperatorProductionEfficiencyPercent: 40,
@@ -14,6 +14,7 @@ export const SUPPORT_WEIGHTS = {
   // them below steady production once social-loop and store RNG variance are accounted for.
   receptionClueCollectionWeight: 0.01,
   receptionClueRateWeight: 0,
+  receptionBaselineSupportScorePerSeat: 1,
   offRoomClueWeight: 0.003,
   fallbackProductionPercentPerRank: 10,
   fallbackSupportPercentPerRank: 0.2,
