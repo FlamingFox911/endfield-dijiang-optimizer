@@ -633,6 +633,19 @@ function createEmptyUpdate(error: unknown, generatedAt = new Date().toISOString(
 
 async function main(): Promise<void> {
   const outputPath = readOutputArgument(process.argv.slice(2));
+  if (process.env.SYNC_LIVE_ROSTER_REUSE_EXISTING === "1") {
+    const existing = JSON.parse(await fs.readFile(outputPath, "utf8")) as Partial<LiveRosterUpdateDocument>;
+    if (!existing.contentHash?.match(/^[a-f0-9]{64}$/) || !Array.isArray(existing.operators)) {
+      throw new Error(`Cannot reuse invalid live catalog at '${outputPath}'.`);
+    }
+    if (!Array.isArray(existing.warnings) || existing.warnings.length > 0) {
+      throw new Error(`Cannot reuse live catalog with warnings at '${outputPath}'.`);
+    }
+    console.log(
+      `reused validated live catalog -> ${path.relative(process.cwd(), outputPath)} (${existing.operators.length} operators)`,
+    );
+    return;
+  }
   let update: LiveRosterUpdateDocument;
   try {
     if (process.env.SYNC_LIVE_ROSTER_DISABLE === "1") {

@@ -6,7 +6,8 @@ on:
       - main
       - master
   schedule:
-    - cron: "17 */6 * * *"
+    - cron: "17 0 * * *"
+    - cron: "17 6,12,18 * * *"
   workflow_dispatch:
 
 permissions:
@@ -19,7 +20,82 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.outcome.outputs.should_deploy }}
+    env:
+      PUBLISHED_CATALOG_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/roster/latest.json
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Choose scheduled catalog cadence
+        if: github.event_name == 'schedule'
+        id: schedule
+        run: >-
+          node scripts/catalog-sync-schedule.mjs
+          --published-url "$PUBLISHED_CATALOG_URL"
+          --schedule "${{ github.event.schedule }}"
+          --github-output "$GITHUB_OUTPUT"
+
+      - name: Install dependencies for catalog check
+        if: github.event_name == 'schedule' && steps.schedule.outputs.should_check == 'true'
+        run: npm ci
+
+      - name: Build catalog packages
+        if: github.event_name == 'schedule' && steps.schedule.outputs.should_check == 'true'
+        run: npm run build:packages
+
+      - name: Generate candidate catalog
+        if: github.event_name == 'schedule' && steps.schedule.outputs.should_check == 'true'
+        env:
+          CANDIDATE_PATH: ${{ runner.temp }}/latest.json
+        run: npm run sync:live-roster -- --output "$CANDIDATE_PATH"
+
+      - name: Compare candidate with published catalog
+        if: github.event_name == 'schedule' && steps.schedule.outputs.should_check == 'true'
+        id: compare
+        env:
+          CANDIDATE_PATH: ${{ runner.temp }}/latest.json
+        run: >-
+          npx tsx scripts/evaluate-live-roster-update.ts
+          --candidate "$CANDIDATE_PATH"
+          --published-url "$PUBLISHED_CATALOG_URL"
+          --github-output "$GITHUB_OUTPUT"
+
+      - name: Preserve changed catalog for deployment
+        if: github.event_name == 'schedule' && steps.compare.outputs.should_deploy == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-roster-candidate
+          path: ${{ runner.temp }}/latest.json
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Determine whether Pages should deploy
+        if: always()
+        id: outcome
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SCHEDULED_DEPLOY: ${{ steps.compare.outputs.should_deploy }}
+        run: |
+          if [[ "$EVENT_NAME" == "schedule" ]]; then
+            echo "should_deploy=${SCHEDULED_DEPLOY:-false}" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+
   deploy:
+    needs: prepare
+    if: needs.prepare.outputs.should_deploy == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -39,7 +115,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Restore scheduled catalog candidate
+        if: github.event_name == 'schedule'
+        uses: actions/download-artifact@v4
+        with:
+          name: live-roster-candidate
+          path: apps/web/public/roster
+
+      - name: Build web app from scheduled catalog
+        if: github.event_name == 'schedule'
+        env:
+          SYNC_LIVE_ROSTER_REUSE_EXISTING: "1"
+        run: npm run build --workspace @endfield/web
+
       - name: Build web app
+        if: github.event_name != 'schedule'
         run: npm run build --workspace @endfield/web
 
       - name: Configure Pages

@@ -76,10 +76,16 @@ This document records how public catalog data is obtained at the domain level, s
 
 - Use for:
   - official announcements
+  - announced operator availability dates used by `catalogs/live-sync-policy.json`
   - security or policy statements
 - Preferred tactic:
   - normal browser or HTTP fetch is acceptable
   - cite the official page directly
+- Sync rule:
+  - release information controls whether scheduled catalog checks use burst, daily, or weekly cadence
+  - an operator is considered covered only when its normalized live definition is published without sync warnings
+  - official announcements do not provide Dijiang effect values; EndfieldTools remains the structured source for those values
+  - the weekly fallback remains active between known releases so an unannounced upstream change is still discovered
 
 ## local-user-supplied
 

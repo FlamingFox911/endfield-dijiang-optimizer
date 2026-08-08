@@ -10,6 +10,7 @@ import {
   buildLiveRosterUpdate,
   mapFactorySkillModifier,
 } from "../scripts/sync-live-roster";
+import { evaluateLiveRosterDeployment } from "../scripts/evaluate-live-roster-update";
 
 const generatedAt = "2026-08-06T12:00:00.000Z";
 
@@ -165,6 +166,44 @@ describe("automatic live roster updates", () => {
     expect(regenerated.source.retrievedOn).not.toBe(first.source.retrievedOn);
     expect(regenerated.contentHash).toBe(first.contentHash);
     expect(changed.contentHash).not.toBe(first.contentHash);
+  });
+
+  it("deploys only safe semantic catalog changes", () => {
+    const published = buildLiveRosterUpdate(sourceData(), generatedAt);
+    const unchanged = buildLiveRosterUpdate(sourceData(), "2026-08-07T12:00:00.000Z");
+    const changedData = sourceData();
+    (changedData.details[0]!.factorySkills.skills.test_1_1.parameters[0]!.valueStringList[0] as string) = "0.25";
+    const changed = buildLiveRosterUpdate(changedData, "2026-08-07T12:00:00.000Z");
+
+    expect(evaluateLiveRosterDeployment(unchanged, published)).toEqual({
+      shouldDeploy: false,
+      reason: "semantic catalog content is unchanged",
+    });
+    expect(evaluateLiveRosterDeployment(changed, published)).toEqual({
+      shouldDeploy: true,
+      reason: "validated semantic catalog content changed",
+    });
+
+    const previouslyWarned = buildLiveRosterUpdate(sourceData(), generatedAt);
+    previouslyWarned.warnings.push("temporary source warning");
+    expect(evaluateLiveRosterDeployment(unchanged, previouslyWarned)).toEqual({
+      shouldDeploy: true,
+      reason: "published catalog health recovered",
+    });
+  });
+
+  it("blocks warned or regressive scheduled catalogs", () => {
+    const published = buildLiveRosterUpdate(sourceData(), generatedAt);
+    const warned = buildLiveRosterUpdate(sourceData(), "2026-08-07T12:00:00.000Z");
+    warned.warnings.push("source incomplete");
+    const regressiveData = sourceData();
+    regressiveData.details = [];
+    const regressive = buildLiveRosterUpdate(regressiveData, "2026-08-07T12:00:00.000Z");
+
+    expect(() => evaluateLiveRosterDeployment(warned, published)).toThrow("Candidate catalog has 1 warning");
+    expect(() => evaluateLiveRosterDeployment(regressive, published)).toThrow(
+      "would reduce live operators from 1 to 0",
+    );
   });
 
   it("hydrates shared skill costs and merges new operators without changing the catalog version", async () => {

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "dailySchedule": "17 0 * * *",
+  "burstSchedules": [
+    "17 0 * * *",
+    "17 6,12,18 * * *"
+  ],
+  "stableWeekdayUtc": 0,
+  "releaseLeadHours": 24,
+  "releaseBurstHours": 48,
+  "operatorReleases": [
+    {
+      "operatorId": "arcane",
+      "releaseAt": "2026-07-17T04:00:00.000Z",
+      "sourceUrl": "https://endfield.gryphline.com/en-us/news/5200"
+    },
+    {
+      "operatorId": "liino",
+      "releaseAt": "2026-08-09T04:00:00.000Z",
+      "sourceUrl": "https://endfield.gryphline.com/en-us/news/5200"
+    }
+  ]
+}

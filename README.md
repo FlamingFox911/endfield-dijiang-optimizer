@@ -55,11 +55,13 @@ This repository now contains the full shared runtime, a packaged CLI, a browser 
 
 ## Automatic roster updates
 
-The web build normalizes the current public character and item payloads into `public/roster/latest.json`. GitHub Pages rebuilds this file every six hours through the scheduled deployment workflow. Open browser tabs check the same-origin update on startup, hourly, when they come back online, and when they become visible again.
+The web build normalizes the current public character and item payloads into `public/roster/latest.json`. Scheduled GitHub Actions runs use `catalogs/live-sync-policy.json` to choose an adaptive cadence: every six hours around an announced operator release, daily while released information is incomplete, and weekly after coverage is complete. Open browser tabs check the same-origin update on startup, hourly, when they come back online, and when they become visible again.
 
 Updates are schema-validated before they can replace catalog definitions. Operator identity, rarity, class, portraits, both Base Skills, Dijiang modifiers, shared unlock costs, Elite IV material overrides, and new rare Growth Chamber resources are merged into the bundled catalog. Base Skill icons resolve to known bundled effect artwork, avoiding broken third-party icon paths. If the source is unavailable or introduces an unknown mechanic, the immutable bundled catalog stays active and the build records a warning instead of breaking the application.
 
 Each overlay includes a stable content hash that excludes generation and retrieval timestamps. The browser remembers the last announced hash, so restarting the development server or rebuilding an unchanged Pages deployment does not repeat the catalog-update notice.
+
+Scheduled checks generate and validate a candidate before the Pages deployment job can start. An unchanged hash, a source warning, or a reduction in live operators or resources produces no deployment. Pushes and manual workflow runs still deploy immediately so application changes are not held behind the catalog cadence. Official release dates only control check frequency and expected coverage; skill and resource values continue to come from the extracted data source.
 
 ## License
 

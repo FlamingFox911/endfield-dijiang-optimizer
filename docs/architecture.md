@@ -58,13 +58,18 @@ This library is versioned separately from user scenarios. A scenario points to a
 
 Facility, established recipe, and progression snapshots remain versioned and immutable. Operator roster changes and newly released rare Growth Chamber resources use a smaller generated overlay so routine additions do not require copying and republishing every catalog document and asset.
 
-- every web build fetches and normalizes the public character feed
-- the Pages deployment runs on pushes and every six hours
+- push and manual web builds fetch and normalize the public character feed
+- scheduled workflow heartbeats choose a six-hour release window, daily incomplete-data window, or weekly stable window from `catalogs/live-sync-policy.json`
+- a scheduled check generates and validates a candidate before starting the Pages deployment job
+- unchanged content hashes, source warnings, and regressive operator or resource counts block scheduled deployments
+- official operator release dates affect cadence and completeness checks, but never supply optimization values
 - browser tabs periodically fetch the generated same-origin roster document
 - the data package validates the complete document before merging it
 - a timestamp-independent content hash deduplicates browser update notices across rebuilds
 - the bundled catalog remains the offline and source-failure fallback
 - the scenario keeps its immutable base catalog version, while hydration adds newly discovered roster entries without changing user-owned state
+
+The frequent release-window cron remains a lightweight heartbeat because GitHub schedules are static. Outside an active release window, the heartbeat exits before dependency installation or source normalization. Once every officially released operator in the policy is present and the live document has no warnings, only the configured weekly slot performs a full catalog check. The Pages environment is attached to a separate conditional job, so skipped and unchanged checks do not create Pages deployments.
 
 ## Data model
 
