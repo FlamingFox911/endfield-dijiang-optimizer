@@ -26,7 +26,7 @@ export function evaluateLiveRosterDeployment(
   }
   if (candidate.recipes.length < published.recipes.length) {
     throw new Error(
-      `Candidate catalog would reduce live resource nodes from ${published.recipes.length} to ${candidate.recipes.length}.`,
+      `Candidate catalog would reduce live rare Growth Chamber recipes from ${published.recipes.length} to ${candidate.recipes.length}.`,
     );
   }
   if (candidate.contentHash === published.contentHash) {

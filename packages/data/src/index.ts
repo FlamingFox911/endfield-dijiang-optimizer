@@ -2722,32 +2722,39 @@ export function mergeLiveRosterUpdate(catalog: GameCatalog, update: LiveRosterUp
     (currentById.has(operator.id) ? updatedOperatorIds : addedOperatorIds).push(operator.id);
     return {
       ...operator,
-      baseSkills: operator.baseSkills.map((skill, skillIndex) => ({
-        ...skill,
-        icon: currentById.get(operator.id)?.baseSkills.find((currentSkill) => currentSkill.id === skill.id)?.icon
-          ?? skillIconBySignature.get(getBaseSkillIconSignature(skill) ?? "")
-          ?? skill.icon,
-        ranks: skill.ranks.map((rank) => {
-          const progression = getBaseSkillRankRequirement(catalog, (skillIndex + 1) as 1 | 2, rank.rank);
-          return {
-            ...rank,
-            materialCosts: progression?.materialCosts ?? rank.materialCosts,
-            unlockHint: progression
-              ? createBaseSkillUnlockHint(
-                operator.name,
-                skill.name,
-                rank.label,
-                progression.promotionTier,
-                progression.requiredLevel,
-              )
-              : rank.unlockHint,
-            sourceRefs: dedupeSourceRefs([
-              ...rank.sourceRefs,
-              ...(progression?.sourceRefs ?? []),
-            ]),
-          };
-        }),
-      })),
+      baseSkills: operator.baseSkills.map((skill, skillIndex) => {
+        const signature = getBaseSkillIconSignature(skill);
+        const currentSkill = currentById.get(operator.id)?.baseSkills.find((entry) => entry.id === skill.id);
+        const currentIcon = currentSkill && getBaseSkillIconSignature(currentSkill) === signature
+          ? currentSkill.icon
+          : undefined;
+        return {
+          ...skill,
+          icon: currentIcon
+            ?? skillIconBySignature.get(signature ?? "")
+            ?? skill.icon,
+          ranks: skill.ranks.map((rank) => {
+            const progression = getBaseSkillRankRequirement(catalog, (skillIndex + 1) as 1 | 2, rank.rank);
+            return {
+              ...rank,
+              materialCosts: progression?.materialCosts ?? rank.materialCosts,
+              unlockHint: progression
+                ? createBaseSkillUnlockHint(
+                  operator.name,
+                  skill.name,
+                  rank.label,
+                  progression.promotionTier,
+                  progression.requiredLevel,
+                )
+                : rank.unlockHint,
+              sourceRefs: dedupeSourceRefs([
+                ...rank.sourceRefs,
+                ...(progression?.sourceRefs ?? []),
+              ]),
+            };
+          }),
+        };
+      }),
     };
   });
 

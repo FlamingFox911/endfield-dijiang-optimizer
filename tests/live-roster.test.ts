@@ -226,6 +226,43 @@ describe("automatic live roster updates", () => {
     expect(operator?.baseSkills.every((skill) => !skill.icon.path.startsWith("https://"))).toBe(true);
   });
 
+  it("does not reuse a same-id icon after a skill's effect changes", async () => {
+    const catalog = await loadDefaultCatalog();
+    const current = catalog.operators.find((operator) => operator.id === "avywenna")!;
+    const unchangedSkill = structuredClone(current.baseSkills[0]!);
+    const changedSkill = structuredClone(current.baseSkills[1]!);
+    const oldIconId = changedSkill.icon.id;
+    changedSkill.name = "Factory Pioneer";
+    changedSkill.facilityKind = "manufacturing_cabin";
+    changedSkill.icon = {
+      id: "remote-replacement-icon",
+      kind: "icon",
+      path: "https://static.skport.com/factory-pioneer.png",
+    };
+    changedSkill.ranks.forEach((rank, index) => {
+      rank.modifiers = [{
+        metric: "production_efficiency",
+        appliesTo: "weapon_exp",
+        value: index === 0 ? 10 : 20,
+        unit: "percent",
+      }];
+    });
+    const update = buildLiveRosterUpdate(sourceData(), generatedAt);
+    update.operators = [{
+      ...current,
+      images: structuredClone(current.images),
+      baseSkills: [unchangedSkill, changedSkill],
+    }];
+
+    const merged = mergeLiveRosterUpdate(catalog, update);
+    const mergedSkill = merged.catalog.operators
+      .find((operator) => operator.id === "avywenna")
+      ?.baseSkills[1];
+
+    expect(mergedSkill?.icon.id).not.toBe(oldIconId);
+    expect(mergedSkill?.icon.path.startsWith("https://")).toBe(false);
+  });
+
   it("rejects an unsupported update before it reaches the optimizer", () => {
     const update = buildLiveRosterUpdate(sourceData(), generatedAt) as any;
     update.operators[0].baseSkills[0].ranks[0].modifiers[0].metric = "mystery_effect";

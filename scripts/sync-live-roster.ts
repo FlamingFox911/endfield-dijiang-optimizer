@@ -15,12 +15,19 @@ import type {
   SourceRef,
 } from "@endfield/domain";
 
+import {
+  buildSkportRoster,
+  fetchSkportRosterSource,
+  SKPORT_WIKI_URL,
+  type SkportRosterSourceData,
+} from "./sync-skport-roster";
+
 const DEFAULT_SOURCE_BASE_URL = "https://endfieldtools.dev";
 const DEFAULT_OUTPUT_PATH = path.resolve("apps", "web", "public", "roster", "latest.json");
 const EXCLUDED_CHARACTER_IDS = new Set(["chr_0002_endminm", "chr_0003_endminf", "chr_9000_endmin"]);
 const RETRY_ATTEMPTS = 3;
 
-function createLiveCatalogContentHash(content: {
+export function createLiveCatalogContentHash(content: {
   operators: OperatorDefinition[];
   promotionOverrides: OperatorPromotionOverride[];
   recipes: RecipeDefinition[];
@@ -153,6 +160,19 @@ export interface LiveRosterSourceData {
   factoryTranslations: TranslationTable;
   factoryItems: RemoteFactoryItem[];
   sourceUpdatedAt?: string;
+}
+
+export interface LiveRareResourceSourceData {
+  characterTranslations: TranslationTable;
+  factoryTranslations: TranslationTable;
+  factoryItems: RemoteFactoryItem[];
+  sourceUpdatedAt?: string;
+}
+
+interface LiveRareResourceBuildResult {
+  recipes: RecipeDefinition[];
+  assets: ImageAsset[];
+  warnings: string[];
 }
 
 function slugify(value: string): string {
@@ -533,6 +553,57 @@ export async function fetchLiveRosterSource(sourceBaseUrl = DEFAULT_SOURCE_BASE_
   };
 }
 
+export async function fetchLiveRareResourceSource(
+  sourceBaseUrl = DEFAULT_SOURCE_BASE_URL,
+): Promise<LiveRareResourceSourceData> {
+  const optimizedBaseUrl = `${sourceBaseUrl}/localdb/optimized`;
+  const [characterTranslations, coreTranslations, factoryTranslations, factoryResponse] = await Promise.all([
+    fetchJson<TranslationTable>(`${optimizedBaseUrl}/i18n/characters/I18nTextTable_EN.json`),
+    fetchJson<TranslationTable>(`${optimizedBaseUrl}/i18n/core/I18nTextTable_EN.json`),
+    fetchJson<TranslationTable>(`${optimizedBaseUrl}/i18n/factory/I18nTextTable_EN.json`),
+    fetchWithRetry(`${optimizedBaseUrl}/factory/factory-data.json`),
+  ]);
+  const factoryData = await factoryResponse.json() as RemoteFactoryData;
+  const lastModified = factoryResponse.headers.get("last-modified");
+  const sourceUpdatedAt = lastModified && Number.isFinite(new Date(lastModified).getTime())
+    ? new Date(lastModified).toISOString()
+    : undefined;
+  return {
+    characterTranslations,
+    factoryTranslations: { ...coreTranslations, ...factoryTranslations },
+    factoryItems: Object.values(factoryData.items ?? {}),
+    sourceUpdatedAt,
+  };
+}
+
+export function buildLiveRareResourceSupplement(
+  data: LiveRareResourceSourceData,
+  generatedAt = new Date().toISOString(),
+  sourceBaseUrl = DEFAULT_SOURCE_BASE_URL,
+): LiveRareResourceBuildResult {
+  const recipes: RecipeDefinition[] = [];
+  const assets: ImageAsset[] = [];
+  const warnings: string[] = [];
+  for (const item of data.factoryItems) {
+    try {
+      const resource = createLiveRareResource(
+        item,
+        data.characterTranslations,
+        data.factoryTranslations,
+        generatedAt,
+        sourceBaseUrl,
+      );
+      if (resource) {
+        recipes.push(resource.recipe);
+        assets.push(resource.asset);
+      }
+    } catch (error) {
+      warnings.push(error instanceof Error ? error.message : String(error));
+    }
+  }
+  return { recipes, assets, warnings };
+}
+
 export function buildLiveRosterUpdate(
   data: LiveRosterSourceData,
   generatedAt = new Date().toISOString(),
@@ -550,8 +621,7 @@ export function buildLiveRosterUpdate(
   const warnings: string[] = [];
   const operators: OperatorDefinition[] = [];
   const promotionOverrides: OperatorPromotionOverride[] = [];
-  const recipes: RecipeDefinition[] = [];
-  const assets: ImageAsset[] = [];
+  const supplement = buildLiveRareResourceSupplement(data, generatedAt, sourceBaseUrl);
   for (const detail of data.details) {
     try {
       const operator = createLiveRosterOperator(
@@ -576,29 +646,49 @@ export function buildLiveRosterUpdate(
       warnings.push(error instanceof Error ? error.message : String(error));
     }
   }
-  for (const item of data.factoryItems) {
-    try {
-      const resource = createLiveRareResource(
-        item,
-        data.characterTranslations,
-        data.factoryTranslations,
-        generatedAt,
-        sourceBaseUrl,
-      );
-      if (resource) {
-        recipes.push(resource.recipe);
-        assets.push(resource.asset);
-      }
-    } catch (error) {
-      warnings.push(error instanceof Error ? error.message : String(error));
-    }
-  }
+  warnings.push(...supplement.warnings);
+  const { recipes, assets } = supplement;
   return {
     schemaVersion: 1,
     generatedAt,
     sourceUpdatedAt: data.sourceUpdatedAt,
     contentHash: createLiveCatalogContentHash({ operators, promotionOverrides, recipes, assets }),
     source,
+    operators,
+    promotionOverrides,
+    recipes,
+    assets,
+    warnings,
+  };
+}
+
+export function buildOfficialPrimaryLiveRosterUpdate(
+  officialData: SkportRosterSourceData,
+  supplementalData: LiveRareResourceSourceData | undefined,
+  generatedAt = new Date().toISOString(),
+  sourceBaseUrl = DEFAULT_SOURCE_BASE_URL,
+): LiveRosterUpdateDocument {
+  const supplementalUpdate = supplementalData
+    ? buildLiveRareResourceSupplement(supplementalData, generatedAt, sourceBaseUrl)
+    : undefined;
+  const official = buildSkportRoster(
+    officialData,
+    generatedAt,
+  );
+  const operators = official.operators;
+  const promotionOverrides = official.promotionOverrides;
+  const recipes = supplementalUpdate?.recipes ?? [];
+  const assets = supplementalUpdate?.assets ?? [];
+  const warnings = [
+    ...official.warnings,
+    ...(supplementalUpdate?.warnings ?? []),
+  ];
+  return {
+    schemaVersion: 1,
+    generatedAt,
+    sourceUpdatedAt: official.sourceUpdatedAt,
+    contentHash: createLiveCatalogContentHash({ operators, promotionOverrides, recipes, assets }),
+    source: official.source,
     operators,
     promotionOverrides,
     recipes,
@@ -617,11 +707,11 @@ function createEmptyUpdate(error: unknown, generatedAt = new Date().toISOString(
     generatedAt,
     contentHash: createLiveCatalogContentHash({ operators, promotionOverrides, recipes, assets }),
     source: {
-      id: "endfieldtools-live-roster",
-      label: "EndfieldTools extracted character database",
-      url: `${DEFAULT_SOURCE_BASE_URL}/characters/`,
+      id: "skport-official-live-roster",
+      label: "Official SKPORT Endfield Wiki",
+      url: SKPORT_WIKI_URL,
       retrievedOn: generatedAt.slice(0, 10),
-      confidence: "community",
+      confidence: "official",
     },
     operators,
     promotionOverrides,
@@ -647,19 +737,43 @@ async function main(): Promise<void> {
     return;
   }
   let update: LiveRosterUpdateDocument;
-  try {
-    if (process.env.SYNC_LIVE_ROSTER_DISABLE === "1") {
-      throw new Error("Network sync was disabled by SYNC_LIVE_ROSTER_DISABLE=1.");
+  if (process.env.SYNC_LIVE_ROSTER_DISABLE === "1") {
+    update = createEmptyUpdate(new Error("Network sync was disabled by SYNC_LIVE_ROSTER_DISABLE=1."));
+  } else {
+    const [officialResult, supplementalResult] = await Promise.allSettled([
+      fetchSkportRosterSource(),
+      fetchLiveRareResourceSource(),
+    ]);
+    if (officialResult.status === "fulfilled") {
+      update = buildOfficialPrimaryLiveRosterUpdate(
+        officialResult.value,
+        supplementalResult.status === "fulfilled" ? supplementalResult.value : undefined,
+      );
+      if (supplementalResult.status === "rejected") {
+        const reason = supplementalResult.reason instanceof Error
+          ? supplementalResult.reason.message
+          : String(supplementalResult.reason);
+        update.warnings.push(`Supplemental rare Growth Chamber recipe data was unavailable. ${reason}`);
+      }
+    } else {
+      const officialReason = officialResult.reason instanceof Error
+        ? officialResult.reason.message
+        : String(officialResult.reason);
+      try {
+        update = buildLiveRosterUpdate(await fetchLiveRosterSource());
+        update.warnings.push(`Official SKPORT primary source was unavailable; using the community fallback. ${officialReason}`);
+      } catch (fallbackError) {
+        const fallbackReason = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+        update = createEmptyUpdate(
+          new Error(`Official source failed: ${officialReason} Community fallback failed: ${fallbackReason}`),
+        );
+      }
     }
-    update = buildLiveRosterUpdate(await fetchLiveRosterSource());
-  } catch (error) {
-    console.warn(error instanceof Error ? error.message : String(error));
-    update = createEmptyUpdate(error);
   }
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
   await fs.writeFile(outputPath, `${JSON.stringify(update, null, 2)}\n`, "utf8");
   console.log(
-    `synced live catalog -> ${path.relative(process.cwd(), outputPath)} (${update.operators.length} operators, ${update.recipes.length} resource nodes, ${update.warnings.length} warnings)`,
+    `synced live catalog -> ${path.relative(process.cwd(), outputPath)} (${update.operators.length} operators, ${update.recipes.length} rare Growth Chamber recipes, ${update.warnings.length} warnings)`,
   );
   update.warnings.forEach((warning) => console.warn(`roster sync warning: ${warning}`));
 }

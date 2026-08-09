@@ -56,13 +56,13 @@ This library is versioned separately from user scenarios. A scenario points to a
 
 ## Catalog release model
 
-Facility, established recipe, and progression snapshots remain versioned and immutable. Operator roster changes and newly released rare Growth Chamber resources use a smaller generated overlay so routine additions do not require copying and republishing every catalog document and asset.
+Facility, established recipe, and progression snapshots remain versioned and immutable. Operator roster changes and newly released rarity-5 Growth Chamber cultivation recipes use a smaller generated overlay so routine additions do not require copying and republishing every catalog document and asset.
 
-- push and manual web builds fetch and normalize the public character feed
+- push and manual web builds fetch and normalize every operator from the official SKPORT catalog; the extracted source separately discovers newly released rarity-5 Growth Chamber cultivation items and remains an outage fallback only when SKPORT is unavailable
 - scheduled workflow heartbeats choose a six-hour release window, daily incomplete-data window, or weekly stable window from `catalogs/live-sync-policy.json`
 - a scheduled check generates and validates a candidate before starting the Pages deployment job
-- unchanged content hashes, source warnings, and regressive operator or resource counts block scheduled deployments
-- official operator release dates affect cadence and completeness checks, but never supply optimization values
+- unchanged content hashes, source warnings, and regressive operator or Growth Chamber recipe counts block scheduled deployments
+- official operator release dates affect cadence and completeness checks; official SKPORT Base Skill tables supply operator optimization values
 - browser tabs periodically fetch the generated same-origin roster document
 - the data package validates the complete document before merging it
 - a timestamp-independent content hash deduplicates browser update notices across rebuilds
