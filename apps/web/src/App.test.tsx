@@ -379,6 +379,16 @@ describe("App", () => {
     expect(requireHtmlElement(portrait.closest(".avatar"))).toHaveAttribute("data-rarity", "5");
   });
 
+  it("does not send the Pages referrer when loading a remote operator portrait", async () => {
+    responses.set("/roster/latest.json", createTestLiveRosterUpdate());
+    render(<App />);
+
+    const portrait = await screen.findByRole("img", { name: "Sync Test portrait" });
+
+    expect(portrait).toHaveAttribute("src", "https://example.com/sync-test-0.png");
+    expect(portrait).toHaveAttribute("referrerpolicy", "no-referrer");
+  });
+
   it("uses clearer workspace and catalog labels", async () => {
     render(<App />);
 

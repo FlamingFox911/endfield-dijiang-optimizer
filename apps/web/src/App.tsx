@@ -742,6 +742,7 @@ function OperatorPortrait(
               src={portraitUrl}
               alt={`${operator.name} portrait`}
               loading="lazy"
+              referrerPolicy={/^https?:\/\//.test(portraitUrl) ? "no-referrer" : undefined}
               onError={() => setFailed(true)}
             />
           )
