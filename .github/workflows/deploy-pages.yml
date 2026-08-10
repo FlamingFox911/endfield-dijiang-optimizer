@@ -56,14 +56,14 @@ jobs:
       - name: Generate candidate catalog
         if: github.event_name == 'schedule' && steps.schedule.outputs.should_check == 'true'
         env:
-          CANDIDATE_PATH: ${{ runner.temp }}/latest.json
+          CANDIDATE_PATH: ${{ runner.temp }}/live-roster/latest.json
         run: npm run sync:live-roster -- --output "$CANDIDATE_PATH"
 
       - name: Compare candidate with published catalog
         if: github.event_name == 'schedule' && steps.schedule.outputs.should_check == 'true'
         id: compare
         env:
-          CANDIDATE_PATH: ${{ runner.temp }}/latest.json
+          CANDIDATE_PATH: ${{ runner.temp }}/live-roster/latest.json
         run: >-
           npx tsx scripts/evaluate-live-roster-update.ts
           --candidate "$CANDIDATE_PATH"
@@ -75,7 +75,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: live-roster-candidate
-          path: ${{ runner.temp }}/latest.json
+          path: ${{ runner.temp }}/live-roster
           if-no-files-found: error
           retention-days: 1
 

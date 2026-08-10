@@ -16,6 +16,7 @@ This document records how public catalog data is obtained at the domain level, s
   - fetch each released operator from `/web/v1/wiki/item/info?id={itemId}`
   - parse the structured document tables rather than rendered HTML
   - recognize `Talent Effect`, `Talent effect`, `Base Skill Effect`, and `Advancement Effect` table variants by their two ranked assignment rows, and normalize non-breaking whitespace before facility matching
+  - download official portrait originals without a cross-site referrer, resize them to 256 pixels, encode them as quality-84 WebP, and publish content-addressed files with the Pages artifact
   - run `npm run sync:live-roster`; no browser binary or user login is required
 - Safety rule:
   - `robots.txt` currently resolves to the wiki application shell rather than publishing crawler restrictions; keep detail requests in small batches anyway

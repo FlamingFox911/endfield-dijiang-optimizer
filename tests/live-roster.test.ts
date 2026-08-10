@@ -1,4 +1,9 @@
-import { describe, expect, it } from "vitest";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+
+import sharp from "sharp";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   mergeLiveRosterUpdate,
@@ -9,6 +14,7 @@ import { loadDefaultCatalog } from "@endfield/data/node";
 import {
   buildLiveRosterUpdate,
   mapFactorySkillModifier,
+  optimizeLiveRosterPortraits,
 } from "../scripts/sync-live-roster";
 import { evaluateLiveRosterDeployment } from "../scripts/evaluate-live-roster-update";
 
@@ -166,6 +172,38 @@ describe("automatic live roster updates", () => {
     expect(regenerated.source.retrievedOn).not.toBe(first.source.retrievedOn);
     expect(regenerated.contentHash).toBe(first.contentHash);
     expect(changed.contentHash).not.toBe(first.contentHash);
+  });
+
+  it("generates content-addressed 256px WebP portraits for same-origin hosting", async () => {
+    const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "endfield-portraits-"));
+    const sourceBytes = await sharp({
+      create: {
+        width: 1024,
+        height: 1024,
+        channels: 4,
+        background: { r: 192, g: 96, b: 48, alpha: 1 },
+      },
+    }).png().toBuffer();
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(sourceBytes, { status: 200 })));
+
+    try {
+      const update = await optimizeLiveRosterPortraits(
+        buildLiveRosterUpdate(sourceData(), generatedAt),
+        path.join(temporaryDirectory, "latest.json"),
+      );
+      const portraitPath = update.operators[0]!.images[0]!.path;
+      const portraitFile = path.join(temporaryDirectory, "portraits", path.basename(portraitPath));
+      const optimizedBytes = await fs.readFile(portraitFile);
+      const metadata = await sharp(optimizedBytes).metadata();
+
+      expect(portraitPath).toMatch(/^roster\/portraits\/test-operator-[a-f0-9]{12}\.webp$/);
+      expect(metadata).toMatchObject({ format: "webp", width: 256, height: 256 });
+      expect(optimizedBytes.byteLength).toBeLessThan(sourceBytes.byteLength);
+      expect(parseLiveRosterUpdate(update)).toBe(update);
+    } finally {
+      vi.unstubAllGlobals();
+      await fs.rm(temporaryDirectory, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
+    }
   });
 
   it("deploys only safe semantic catalog changes", () => {

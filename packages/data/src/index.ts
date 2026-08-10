@@ -2616,8 +2616,9 @@ export function parseLiveRosterUpdate(value: unknown): LiveRosterUpdateDocument 
         && typeof asset.id === "string"
         && asset.kind === "portrait"
         && typeof asset.path === "string"
-        && /^https:\/\//.test(asset.path)),
-      `${operatorPath}.images must contain HTTPS portrait assets.`,
+        && (/^https:\/\//.test(asset.path)
+          || /^roster\/portraits\/[a-z0-9]+(?:-[a-z0-9]+)*-[a-f0-9]{12}\.webp$/.test(asset.path))),
+      `${operatorPath}.images must contain HTTPS or optimized same-origin portrait assets.`,
     );
     requireLiveRoster(Array.isArray(operator.sourceRefs) && operator.sourceRefs.length > 0, `${operatorPath}.sourceRefs must not be empty.`);
     operator.sourceRefs.forEach((source, sourceIndex) => validateLiveRosterSource(source, `${operatorPath}.sourceRefs[${sourceIndex}]`));

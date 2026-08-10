@@ -442,6 +442,9 @@ function getCatalogAssetUrl(catalog: GameCatalog, assetPath: string): string {
   if (/^https?:\/\//.test(assetPath)) {
     return assetPath;
   }
+  if (assetPath.startsWith("roster/")) {
+    return resolveAppPath(assetPath);
+  }
 
   return resolveAppPath(`catalogs/${catalog.manifest.catalogId}/${assetPath.replace(/^\/+/, "")}`);
 }

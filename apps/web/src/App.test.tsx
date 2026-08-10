@@ -389,6 +389,18 @@ describe("App", () => {
     expect(portrait).toHaveAttribute("referrerpolicy", "no-referrer");
   });
 
+  it("resolves an optimized live portrait against the hosted application path", async () => {
+    const update = createTestLiveRosterUpdate();
+    update.operators[0]!.images[0]!.path = "roster/portraits/sync-test-0123456789ab.webp";
+    responses.set("/roster/latest.json", update);
+    render(<App />);
+
+    const portrait = await screen.findByRole("img", { name: "Sync Test portrait" });
+
+    expect(portrait).toHaveAttribute("src", "/roster/portraits/sync-test-0123456789ab.webp");
+    expect(portrait).not.toHaveAttribute("referrerpolicy");
+  });
+
   it("uses clearer workspace and catalog labels", async () => {
     render(<App />);
 

@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import sharp from "sharp";
 
 import type {
   EffectModifier,
@@ -26,6 +27,8 @@ const DEFAULT_SOURCE_BASE_URL = "https://endfieldtools.dev";
 const DEFAULT_OUTPUT_PATH = path.resolve("apps", "web", "public", "roster", "latest.json");
 const EXCLUDED_CHARACTER_IDS = new Set(["chr_0002_endminm", "chr_0003_endminf", "chr_9000_endmin"]);
 const RETRY_ATTEMPTS = 3;
+const LIVE_PORTRAIT_WIDTH = 256;
+const LIVE_PORTRAIT_WEBP_QUALITY = 84;
 
 export function createLiveCatalogContentHash(content: {
   operators: OperatorDefinition[];
@@ -721,6 +724,56 @@ function createEmptyUpdate(error: unknown, generatedAt = new Date().toISOString(
   };
 }
 
+export async function optimizeLiveRosterPortraits(
+  update: LiveRosterUpdateDocument,
+  outputPath: string,
+): Promise<LiveRosterUpdateDocument> {
+  if (update.operators.length === 0) {
+    return update;
+  }
+  const outputDirectory = path.dirname(outputPath);
+  const portraitDirectory = path.join(outputDirectory, "portraits");
+  await fs.rm(portraitDirectory, { recursive: true, force: true });
+  await fs.mkdir(portraitDirectory, { recursive: true });
+
+  const operators: OperatorDefinition[] = [];
+  for (let index = 0; index < update.operators.length; index += 5) {
+    operators.push(...await Promise.all(update.operators.slice(index, index + 5).map(async (operator) => {
+      const sourcePortrait = operator.images.find((image) => image.kind === "portrait");
+      if (!sourcePortrait?.path.startsWith("https://")) {
+        throw new Error(`Operator '${operator.name}' has no remote portrait to optimize.`);
+      }
+      const response = await fetchWithRetry(sourcePortrait.path);
+      const sourceBytes = Buffer.from(await response.arrayBuffer());
+      const optimizedBytes = await sharp(sourceBytes)
+        .rotate()
+        .resize({ width: LIVE_PORTRAIT_WIDTH, withoutEnlargement: true })
+        .webp({ quality: LIVE_PORTRAIT_WEBP_QUALITY, effort: 4, smartSubsample: true })
+        .toBuffer();
+      const digest = createHash("sha256").update(optimizedBytes).digest("hex").slice(0, 12);
+      const fileName = `${operator.id}-${digest}.webp`;
+      await fs.writeFile(path.join(portraitDirectory, fileName), optimizedBytes);
+      return {
+        ...operator,
+        images: operator.images.map((image) => image.kind === "portrait"
+          ? { ...image, path: `roster/portraits/${fileName}` }
+          : image),
+      };
+    })));
+  }
+
+  return {
+    ...update,
+    operators,
+    contentHash: createLiveCatalogContentHash({
+      operators,
+      promotionOverrides: update.promotionOverrides,
+      recipes: update.recipes,
+      assets: update.assets,
+    }),
+  };
+}
+
 async function main(): Promise<void> {
   const outputPath = readOutputArgument(process.argv.slice(2));
   if (process.env.SYNC_LIVE_ROSTER_REUSE_EXISTING === "1") {
@@ -730,6 +783,14 @@ async function main(): Promise<void> {
     }
     if (!Array.isArray(existing.warnings) || existing.warnings.length > 0) {
       throw new Error(`Cannot reuse live catalog with warnings at '${outputPath}'.`);
+    }
+    for (const operator of existing.operators) {
+      const portraitPath = operator?.images?.find((image) => image.kind === "portrait")?.path;
+      if (typeof portraitPath !== "string" || !portraitPath.startsWith("roster/portraits/")) {
+        throw new Error(`Cannot reuse live catalog with an unoptimized portrait for '${operator?.name ?? "unknown"}'.`);
+      }
+      const portraitFile = path.join(path.dirname(outputPath), "portraits", path.basename(portraitPath));
+      await fs.access(portraitFile);
     }
     console.log(
       `reused validated live catalog -> ${path.relative(process.cwd(), outputPath)} (${existing.operators.length} operators)`,
@@ -770,6 +831,7 @@ async function main(): Promise<void> {
       }
     }
   }
+  update = await optimizeLiveRosterPortraits(update, outputPath);
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
   await fs.writeFile(outputPath, `${JSON.stringify(update, null, 2)}\n`, "utf8");
   console.log(
