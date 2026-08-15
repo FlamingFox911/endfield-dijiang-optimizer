@@ -248,7 +248,7 @@ select:focus-visible,
 }
 
 .toolbarActions {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
 .pill,
@@ -1446,6 +1446,143 @@ dl div {
   width: min(520px, 100%);
   padding: 24px;
   background: rgba(255, 250, 242, 0.97);
+}
+
+.syncModal {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
+.syncWarning,
+.syncPreview,
+.syncedLoadout {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid rgba(179, 103, 53, 0.22);
+  border-radius: 20px;
+  background: rgba(248, 225, 196, 0.72);
+}
+
+.syncWarning p,
+.syncFileName,
+.syncPreviewWarnings,
+.syncedLoadout p {
+  margin-bottom: 0;
+}
+
+.syncScopeGrid,
+.syncPreviewStats,
+.syncedLoadoutGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.syncScopeGrid > div,
+.syncPreviewStats > div,
+.syncedLoadoutGrid > div {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--panel-strong);
+}
+
+.syncScopeGrid span,
+.syncPreviewStats span,
+.syncedLoadoutGrid span {
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.syncActions {
+  margin-top: 14px;
+}
+
+.syncInstructions {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0;
+  padding-left: 24px;
+  color: var(--ink-soft);
+}
+
+.bookmarkletSetup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0;
+  padding: 14px;
+  border: 1px solid rgba(49, 104, 87, 0.22);
+  border-radius: 18px;
+  background: rgba(231, 239, 234, 0.8);
+}
+
+.bookmarkletSetup p,
+.syncFallback p {
+  margin: 4px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+}
+
+.bookmarkletLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px dashed rgba(49, 104, 87, 0.55);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--accent-strong);
+  font-weight: 700;
+  cursor: grab;
+  user-select: none;
+}
+
+.bookmarkletLink:active {
+  cursor: grabbing;
+}
+
+.syncFallback {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--outline);
+  border-radius: 14px;
+}
+
+.syncFallback summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .bookmarkletSetup {
+    grid-template-columns: 1fr;
+  }
+}
+
+.syncConsent {
+  grid-template-columns: 20px minmax(0, 1fr);
+  margin-top: 16px;
+  border: 1px solid var(--outline);
+}
+
+.syncConsent input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+
+.syncedLoadout {
+  background: rgba(231, 239, 234, 0.8);
+  border-color: rgba(49, 104, 87, 0.2);
 }
 
 .modalStats {

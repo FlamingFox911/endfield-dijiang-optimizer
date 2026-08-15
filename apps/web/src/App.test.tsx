@@ -1114,6 +1114,66 @@ describe("App", () => {
     expect(revokeObjectUrl).toHaveBeenCalledWith("blob:test");
   });
 
+  it("previews and confirms a local one-time SKPort roster import", async () => {
+    render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    await userEvent.click(screen.getByRole("button", { name: "Sync SKPort roster" }));
+    const dialog = screen.getByRole("dialog", { name: "Sync SKPort roster" });
+    expect(within(dialog).getByText("Back up your current scenario first.")).toBeInTheDocument();
+    expect(within(dialog).getByText(/does not read or save request headers, cookies, passwords, or account tokens/i)).toBeInTheDocument();
+    const bookmarklet = within(dialog).getByRole("link", { name: "SKPort roster capture bookmarklet" });
+    expect(bookmarklet.getAttribute("href")).toMatch(/^javascript:/);
+    expect(bookmarklet.getAttribute("href")).toContain("/game/endfield/team/user-game-data");
+    const applyButton = within(dialog).getByRole("button", { name: "Apply one-time import" });
+    expect(applyButton).toBeDisabled();
+
+    const payload = {
+      data: {
+        detail: {
+          base: { charNum: 1, saveTime: 1_786_750_000 },
+          chars: [{
+            id: "char_chen",
+            level: 67,
+            evolvePhase: 3,
+            charData: { id: "char_chen", name: "Chen Qianyu" },
+            weapon: {
+              level: 50,
+              weaponData: { id: "wpn_test", name: "Test Weapon" },
+            },
+            userSkills: {},
+          }],
+        },
+      },
+    };
+    const file = new File([JSON.stringify(payload)], "card-detail.json", { type: "application/json" });
+    Object.defineProperty(file, "text", {
+      value: vi.fn(async () => JSON.stringify(payload)),
+    });
+    const captureInput = within(dialog).getByLabelText("Choose SKPort capture") as HTMLInputElement;
+    fireEvent.change(captureInput, { target: { files: [file] } });
+
+    expect(await within(dialog).findByText("Complete roster capture")).toBeInTheDocument();
+    expect(within(dialog).getByText("1 / 1 reported")).toBeInTheDocument();
+    await userEvent.click(within(dialog).getByRole("checkbox"));
+    expect(applyButton).toBeEnabled();
+    await userEvent.click(applyButton);
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Sync SKPort roster" })).not.toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /Edit roster/i })).toHaveTextContent("1 owned");
+    });
+    expect(screen.getByText(/Imported 1 matched operator from SKPort/i)).toBeInTheDocument();
+    const savedDraft = JSON.parse(localStorage.getItem("endfield-dijiang-optimizer:draft") ?? "{}");
+    expect(savedDraft.rosterImport).toMatchObject({ provider: "skport", completeRoster: true });
+    expect(savedDraft.roster.find((entry: { operatorId: string }) => entry.operatorId === "chen-qianyu")).toMatchObject({
+      owned: true,
+      level: 67,
+      promotionTier: 3,
+      skportSnapshot: { weapon: { name: "Test Weapon" } },
+    });
+  });
+
   it("imports a scenario JSON file", async () => {
     render(<App />);
     await screen.findByText("Endfield Dijiang Optimizer");

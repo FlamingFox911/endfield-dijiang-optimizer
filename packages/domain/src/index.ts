@@ -323,12 +323,73 @@ export interface OwnedBaseSkillState {
   unlockedRank: SkillRank;
 }
 
+export interface SkportSyncedWeapon {
+  id: string;
+  name?: string;
+  level?: number;
+  refinementLevel?: number;
+  breakthroughLevel?: number;
+}
+
+export interface SkportSyncedGear {
+  slot: "body" | "arm" | "accessory_1" | "accessory_2";
+  id: string;
+  name?: string;
+  level?: string;
+  rarity?: string;
+  setName?: string;
+}
+
+export interface SkportSyncedTacticalItem {
+  id: string;
+  name?: string;
+  rarity?: string;
+}
+
+export interface SkportSyncedCombatSkill {
+  id: string;
+  level: number;
+  maxLevel?: number;
+}
+
+export interface SkportOwnedOperatorSnapshot {
+  sourceOperatorId: string;
+  potentialLevel?: number;
+  weapon?: SkportSyncedWeapon;
+  gear: SkportSyncedGear[];
+  tacticalItem?: SkportSyncedTacticalItem;
+  combatSkills: SkportSyncedCombatSkill[];
+}
+
+export interface SkportInventoryEntry {
+  id: string;
+  name?: string;
+  ownedCount: number;
+}
+
+export interface SkportInventorySnapshot {
+  weapons: SkportInventoryEntry[];
+  gear: SkportInventoryEntry[];
+  tacticalItems: SkportInventoryEntry[];
+}
+
 export interface OwnedOperatorState {
   operatorId: string;
   owned: boolean;
   level: number;
   promotionTier: 0 | 1 | 2 | 3 | 4;
   baseSkillStates: OwnedBaseSkillState[];
+  skportSnapshot?: SkportOwnedOperatorSnapshot;
+}
+
+export interface RosterImportMetadata {
+  provider: "skport";
+  importedAt: string;
+  sourceSavedAt?: string;
+  sourceOperatorCount: number;
+  matchedOperatorCount: number;
+  completeRoster: boolean;
+  inventory?: SkportInventorySnapshot;
 }
 
 export interface OperatorBaseProgressionRequirement {
@@ -399,6 +460,7 @@ export interface OptimizationScenario {
   scenarioFormatVersion: ScenarioFormatVersion;
   catalogVersion: CatalogVersion;
   roster: OwnedOperatorState[];
+  rosterImport?: RosterImportMetadata;
   facilities: FacilityState;
   options: BaseOptimizationOptions;
 }

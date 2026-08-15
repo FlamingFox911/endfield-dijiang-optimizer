@@ -33,7 +33,7 @@
           "operatorId": { "type": "string" },
           "owned": { "type": "boolean" },
           "level": { "type": "integer", "minimum": 1, "maximum": 90 },
-          "promotionTier": { "type": "integer", "minimum": 0, "maximum": 3 },
+          "promotionTier": { "type": "integer", "minimum": 0, "maximum": 4 },
           "baseSkillStates": {
             "type": "array",
             "items": {
@@ -48,10 +48,108 @@
               },
               "additionalProperties": false
             }
+          },
+          "skportSnapshot": {
+            "type": "object",
+            "required": ["sourceOperatorId", "gear", "combatSkills"],
+            "properties": {
+              "sourceOperatorId": { "type": "string" },
+              "potentialLevel": { "type": "number" },
+              "weapon": {
+                "type": "object",
+                "required": ["id"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "name": { "type": "string" },
+                  "level": { "type": "number" },
+                  "refinementLevel": { "type": "number" },
+                  "breakthroughLevel": { "type": "number" }
+                },
+                "additionalProperties": false
+              },
+              "gear": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["slot", "id"],
+                  "properties": {
+                    "slot": { "type": "string", "enum": ["body", "arm", "accessory_1", "accessory_2"] },
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "level": { "type": "string" },
+                    "rarity": { "type": "string" },
+                    "setName": { "type": "string" }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "tacticalItem": {
+                "type": "object",
+                "required": ["id"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "name": { "type": "string" },
+                  "rarity": { "type": "string" }
+                },
+                "additionalProperties": false
+              },
+              "combatSkills": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["id", "level"],
+                  "properties": {
+                    "id": { "type": "string" },
+                    "level": { "type": "number" },
+                    "maxLevel": { "type": "number" }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
           }
         },
         "additionalProperties": false
       }
+    },
+    "rosterImport": {
+      "type": "object",
+      "required": [
+        "provider",
+        "importedAt",
+        "sourceOperatorCount",
+        "matchedOperatorCount",
+        "completeRoster"
+      ],
+      "properties": {
+        "provider": { "const": "skport" },
+        "importedAt": { "type": "string", "format": "date-time" },
+        "sourceSavedAt": { "type": "string", "format": "date-time" },
+        "sourceOperatorCount": { "type": "integer", "minimum": 0 },
+        "matchedOperatorCount": { "type": "integer", "minimum": 0 },
+        "completeRoster": { "type": "boolean" },
+        "inventory": {
+          "type": "object",
+          "required": ["weapons", "gear", "tacticalItems"],
+          "properties": {
+            "weapons": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/skportInventoryEntry" }
+            },
+            "gear": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/skportInventoryEntry" }
+            },
+            "tacticalItems": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/skportInventoryEntry" }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     },
     "facilities": {
       "type": "object",
@@ -119,5 +217,17 @@
       "additionalProperties": false
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "skportInventoryEntry": {
+      "type": "object",
+      "required": ["id", "ownedCount"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "ownedCount": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  }
 }

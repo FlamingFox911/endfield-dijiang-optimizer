@@ -2,9 +2,9 @@
 
 ## Scope
 
-The application solves one thing well: given a manually entered roster, current base-skill unlocks, current Dijiang room levels, global hard assignments, and exact per-room recipe selections, it recommends the best assignments and the next best Base Skill unlocks to chase.
+The application solves one thing well: given a user-controlled roster, current base-skill unlocks, current Dijiang room levels, global hard assignments, and exact per-room recipe selections, it recommends the best assignments and the next best Base Skill unlocks to chase.
 
-The first release is intentionally local-first and offline-friendly. It should not ask for GRYPHLINE login, scrape accounts, or try to read live account data.
+The first release is intentionally local-first and offline-friendly. It does not ask for GRYPHLINE login or scrape accounts. An optional one-time import can read an official response capture that the user explicitly selects from disk.
 
 ## Chosen stack
 
@@ -18,10 +18,10 @@ The browser-first GUI is deliberate. It supports portraits, sliders, steppers, a
 
 ## Explicit non-goals
 
-- No account scraping.
+- No credential collection, account scraping, or replay of captured requests.
 - No in-game authentication.
-- No attempt to infer roster state from live services.
-- No hidden sync layer. Player state comes only from manual entry or local scenario files the player controls.
+- No direct or recurring live account sync.
+- No hidden sync layer. Player state comes from manual entry or local files the player controls, including an optional official SKPort response capture.
 - No runtime dependence on live guide sites for normal app use.
 
 ## Monorepo boundaries
@@ -75,7 +75,7 @@ The frequent release-window cron remains a lightweight heartbeat because GitHub 
 
 The catalog is versioned and immutable for a given snapshot. User scenarios are stored separately and refer to the catalog by version string.
 
-Only public catalog data is sourced from the internet. The hosted browser reads a same-origin, build-generated roster overlay; user state is never internet-derived or transmitted.
+Only public catalog data is fetched by the optimizer. The hosted browser reads a same-origin, build-generated catalog overlay. Optional account-derived state enters through a user-selected local response capture and is never transmitted by the app. On Team Picks, the capture bookmarklet reuses SKPort's already-loaded request client to retrieve `user-game-data` and public name catalogs, downloads them on the user's device, and restores its Fetch/XHR fallback hooks immediately after capture or cancellation. Older `card/detail` responses remain supported.
 
 Core catalog entities:
 
@@ -95,7 +95,7 @@ Core catalog entities:
 Core user-scenario entities:
 
 - Owned operator state
-  Includes current level, promotion tier, and explicit base-skill rank per skill, all supplied manually by the user.
+  Includes current level, promotion tier, and explicit base-skill rank per skill. Optional SKPort snapshots preserve equipped loadout details for reference without affecting scoring.
 - Facility state
   Includes room levels, enabled rooms, user-selected room recipes where applicable, and hard assignments.
 - Production plan
@@ -345,7 +345,7 @@ When a scenario references an older catalog version:
 - v1 should offer an explicit migration step instead of silently changing assumptions
 - keeping multiple installed catalogs is a later enhancement, not a v1 requirement
 
-The web app can cache drafts locally, but JSON import and export should stay the source of truth. Import and export here mean local user-managed files, not account sync. Saved scenarios should preserve room recipe selections and hard assignments so users can reuse the same production plan later.
+The web app can cache drafts locally, but JSON import and export should stay the source of truth. Saved scenarios preserve room recipe selections, hard assignments, and any explicitly imported SKPort snapshot so users can reuse the same production plan later. SKPort import remains a user-initiated, one-time local file operation rather than a recurring account connection.
 
 ## Asset strategy
 

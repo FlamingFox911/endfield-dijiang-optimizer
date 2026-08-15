@@ -177,6 +177,7 @@ Each scenario contains:
 
 - `catalogVersion`
 - owned operators and Base Skill unlock state
+- optional SKPort import metadata and equipped-loadout snapshots
 - facility levels
 - per-room selected recipes
 - global hard assignments
@@ -191,12 +192,16 @@ Room availability is also part of scenario validation. For the current catalog:
 
 The room recipe plan is user-owned scenario data. The solver does not choose recipes in v1; it optimizes operator placement around the user's exact per-room recipe choices.
 
-Owned operator state records only the values that affect planning in v1:
+Owned operator state records the values that affect planning in v1:
 
 - ownership
 - current level
 - current promotion tier
 - explicit Base Skill rank state
+
+After an explicit one-time SKPort import, an operator may also contain `skportSnapshot`. It preserves the source operator id, potential, equipped weapon, equipped gear, tactical item, and combat-skill levels for reference and round-trip JSON export. These fields do not affect v1 scoring. Scenario-level `rosterImport` records the import time, matched counts, completeness, and any reported weapon, gear, and tactical-item inventory.
+
+The Team Picks payload exposes operator progression, combat-skill levels, weapon ownership, and gear and tactical-item quantities. It does not expose Base Skill unlocks, essences, or per-operator equipped loadouts, so the importer preserves existing Base Skill selections and does not invent unavailable values. Older card payloads may include equipped-loadout references.
 
 ## Validation expectations
 

@@ -30,6 +30,8 @@ import type {
   MigrationResult,
 } from "@endfield/domain";
 
+export * from "./skport-import.js";
+
 export const CURRENT_CATALOG_VERSION: CatalogVersion = "2026-04-17/v1.2";
 export const CURRENT_CATALOG_BUNDLE_ID = "2026-04-17-v1.2";
 export const CURRENT_SCENARIO_FORMAT_VERSION = 1 as const;
@@ -1433,6 +1435,7 @@ export function hydrateScenarioForCatalog(
     });
 
     return {
+      ...existing,
       operatorId: existing.operatorId,
       owned: existing.owned,
       level: existing.level,
@@ -2298,6 +2301,77 @@ function validateScenarioShape(scenario: OptimizationScenario): ValidationIssue[
           ),
         );
       }
+
+      const snapshot = operator.skportSnapshot as unknown;
+      if (snapshot != null) {
+        if (!isObject(snapshot)
+          || typeof snapshot.sourceOperatorId !== "string"
+          || !Array.isArray(snapshot.gear)
+          || !Array.isArray(snapshot.combatSkills)) {
+          issues.push(makeIssue(
+            "invalid_skport_snapshot",
+            `${rosterPath}.skportSnapshot`,
+            "SKPort operator snapshots must include a source operator id plus gear and combat-skill arrays.",
+          ));
+          continue;
+        }
+        const invalidGear = snapshot.gear.some((gear) => !isObject(gear)
+          || typeof gear.id !== "string"
+          || typeof gear.slot !== "string"
+          || (gear.name != null && typeof gear.name !== "string"));
+        const invalidCombatSkill = snapshot.combatSkills.some((skill) => !isObject(skill)
+          || typeof skill.id !== "string"
+          || typeof skill.level !== "number"
+          || !Number.isFinite(skill.level));
+        const weapon = snapshot.weapon;
+        const tacticalItem = snapshot.tacticalItem;
+        if (invalidGear
+          || invalidCombatSkill
+          || (weapon != null && (!isObject(weapon) || typeof weapon.id !== "string" || (weapon.name != null && typeof weapon.name !== "string")))
+          || (tacticalItem != null && (!isObject(tacticalItem) || typeof tacticalItem.id !== "string" || (tacticalItem.name != null && typeof tacticalItem.name !== "string")))) {
+          issues.push(makeIssue(
+            "invalid_skport_loadout",
+            `${rosterPath}.skportSnapshot`,
+            "SKPort loadout entries must use valid string ids, optional string names, and numeric skill levels.",
+          ));
+        }
+      }
+    }
+  }
+
+  const rosterImport = scenario.rosterImport as unknown;
+  if (rosterImport != null && (!isObject(rosterImport)
+    || rosterImport.provider !== "skport"
+    || typeof rosterImport.importedAt !== "string"
+    || typeof rosterImport.sourceOperatorCount !== "number"
+    || typeof rosterImport.matchedOperatorCount !== "number"
+    || typeof rosterImport.completeRoster !== "boolean")) {
+    issues.push(makeIssue(
+      "invalid_roster_import_metadata",
+      "rosterImport",
+      "Roster import metadata must identify SKPort and include its import time, counts, and completeness flag.",
+    ));
+  }
+  if (isObject(rosterImport) && rosterImport.inventory != null) {
+    const inventory = rosterImport.inventory;
+    const inventoryCollections = isObject(inventory)
+      ? [inventory.weapons, inventory.gear, inventory.tacticalItems]
+      : [];
+    const validInventory = inventoryCollections.length === 3
+      && inventoryCollections.every((collection) => Array.isArray(collection)
+        && collection.every((entry) => isObject(entry)
+          && typeof entry.id === "string"
+          && entry.id.length > 0
+          && (entry.name == null || (typeof entry.name === "string" && entry.name.length > 0))
+          && typeof entry.ownedCount === "number"
+          && Number.isInteger(entry.ownedCount)
+          && entry.ownedCount >= 1));
+    if (!validInventory) {
+      issues.push(makeIssue(
+        "invalid_skport_inventory",
+        "rosterImport.inventory",
+        "SKPort inventory must contain weapon, gear, and tactical-item entries with valid ids and positive integer quantities.",
+      ));
     }
   }
 

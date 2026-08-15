@@ -2,8 +2,10 @@
 
 The web app is the main GUI target. It is browser-first so the optimizer remains easy to host locally or publish as a static app later.
 
-The web app never asks for account login. All player state is entered manually or loaded from local scenario files.
+The web app never asks for account login. Player state is entered manually, loaded from local scenario files, or explicitly imported once from a user-selected official SKPort response capture.
 It should load the bundled catalog library at startup so the app works offline for normal use.
+
+The optional SKPort import includes a bookmarklet that reuses Team Picks' already-loaded official request client to download `user-game-data` and the public character/item name catalogs as a local JSON capture. Directly saved JSON/HAR files and older `card/detail` responses remain fallbacks. The workflow never reads request credentials, previews changes, recommends a JSON backup, and never turns into a hidden or recurring account sync.
 
 The UI should keep one streamlined planning surface with room recipe pickers and always-available hard assignments.
 

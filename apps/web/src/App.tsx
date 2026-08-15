@@ -19,6 +19,7 @@ import {
   CURRENT_CATALOG_VERSION,
   DEMAND_PROFILE_PRESETS,
   MAX_OPERATOR_LEVEL,
+  applySkportRosterImport,
   clampOperatorLevel,
   clampDemandWeight,
   createStarterScenario,
@@ -32,8 +33,10 @@ import {
   hydrateScenarioForCatalog,
   mergeLiveRosterUpdate,
   migrateScenario,
+  parseSkportRosterImportText,
   validateScenarioAgainstCatalog,
 } from "@endfield/data";
+import type { SkportRosterImportPreview } from "@endfield/data";
 import {
   DEFAULT_OPTIMIZATION_EFFORT,
   DEFAULT_OPTIMIZATION_PROFILE,
@@ -44,6 +47,7 @@ import {
 } from "@endfield/optimizer";
 
 import { createOptimizerWorker } from "./optimizer.worker.client";
+import { SKPORT_CAPTURE_BOOKMARKLET } from "./skport-capture-bookmarklet";
 import type { OptimizerWorkerResponse } from "./optimizer-worker-types";
 import type {
   OptimizationProgressSnapshot,
@@ -53,6 +57,7 @@ import type {
 const DRAFT_KEY = "endfield-dijiang-optimizer:draft";
 const CATALOG_SYNC_SEEN_KEY = "endfield-dijiang-optimizer:catalog-sync-seen";
 const MAX_IMPORT_FILE_BYTES = 1_000_000;
+const MAX_SKPORT_IMPORT_FILE_BYTES = 50_000_000;
 const OPTIMIZATION_PROFILES: Exclude<OptimizationProfile, "custom">[] = ["fast", "balanced", "thorough", "exhaustive"];
 const DEMAND_WEIGHT_ORDER: ProductKind[] = [
   "operator_exp",
@@ -128,6 +133,10 @@ function isLikelyJsonFile(file: File): boolean {
   return file.type === "application/json"
     || file.type === "text/json"
     || /\.json$/i.test(file.name);
+}
+
+function isLikelySkportImportFile(file: File): boolean {
+  return isLikelyJsonFile(file) || /\.har$/i.test(file.name);
 }
 
 function getFacilityMaxLevel(catalog: GameCatalog, facilityKind: GameCatalog["facilities"][number]["kind"]): number {
@@ -1014,11 +1023,25 @@ function App() {
   const [flashedValidationTargetId, setFlashedValidationTargetId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<AppTab>("roster");
   const [selectedOperatorId, setSelectedOperatorId] = useState<string | null>(null);
+  const [skportImportOpen, setSkportImportOpen] = useState(false);
+  const [skportImportConsent, setSkportImportConsent] = useState(false);
+  const [skportImportPreview, setSkportImportPreview] = useState<SkportRosterImportPreview | null>(null);
+  const [skportImportFileName, setSkportImportFileName] = useState<string | null>(null);
+  const [skportImportError, setSkportImportError] = useState<string | null>(null);
+  const [skportBookmarkletCopied, setSkportBookmarkletCopied] = useState(false);
+  const skportBookmarkletLinkRef = useRef<HTMLAnchorElement>(null);
   const workerRef = useRef<Worker | null>(null);
   const activeRunIdRef = useRef<number | null>(null);
   const activeRunKindRef = useRef<"optimization" | "recommendations" | null>(null);
   const nextRunIdRef = useRef(1);
   const flashedValidationTargetTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!skportImportOpen) {
+      return;
+    }
+    skportBookmarkletLinkRef.current?.setAttribute("href", SKPORT_CAPTURE_BOOKMARKLET);
+  }, [skportImportOpen]);
 
   useEffect(() => {
       let cancelled = false;
@@ -1780,6 +1803,74 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
+  const openSkportImport = () => {
+    setSkportImportConsent(false);
+    setSkportImportPreview(null);
+    setSkportImportFileName(null);
+    setSkportImportError(null);
+    setSkportBookmarkletCopied(false);
+    setSkportImportOpen(true);
+  };
+
+  const closeSkportImport = () => {
+    setSkportImportOpen(false);
+    setSkportImportConsent(false);
+    setSkportImportPreview(null);
+    setSkportImportFileName(null);
+    setSkportImportError(null);
+    setSkportBookmarkletCopied(false);
+  };
+
+  const copySkportCaptureBookmarklet = async () => {
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard access is unavailable.");
+      }
+      await navigator.clipboard.writeText(SKPORT_CAPTURE_BOOKMARKLET);
+      setSkportBookmarkletCopied(true);
+      setSkportImportError(null);
+    } catch {
+      setSkportBookmarkletCopied(false);
+      setSkportImportError("The browser could not copy the bookmarklet. Drag the capture helper to your bookmarks bar instead.");
+    }
+  };
+
+  const previewSkportImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+    setSkportImportPreview(null);
+    setSkportImportFileName(file.name);
+    setSkportImportError(null);
+    try {
+      if (!isLikelySkportImportFile(file)) {
+        throw new Error("SKPort roster import requires a .json or .har file.");
+      }
+      if (file.size > MAX_SKPORT_IMPORT_FILE_BYTES) {
+        throw new Error(`SKPort capture is too large. Keep the file at or below ${Math.floor(MAX_SKPORT_IMPORT_FILE_BYTES / 1_000_000)} MB.`);
+      }
+      setSkportImportPreview(parseSkportRosterImportText(await file.text(), catalog));
+    } catch (error) {
+      setSkportImportError(error instanceof Error ? error.message : "Failed to read the SKPort roster capture.");
+    }
+  };
+
+  const confirmSkportImport = () => {
+    if (!skportImportConsent || !skportImportPreview) {
+      return;
+    }
+    const imported = applySkportRosterImport(scenario, skportImportPreview);
+    setScenario(imported.scenario);
+    setMessages([
+      `Imported ${imported.updatedOperatorCount} matched operator${imported.updatedOperatorCount === 1 ? "" : "s"} from SKPort${imported.clearedOperatorCount > 0 ? ` and marked ${imported.clearedOperatorCount} absent operator${imported.clearedOperatorCount === 1 ? "" : "s"} unowned` : ""}.`,
+      ...imported.warnings,
+    ]);
+    closeSkportImport();
+    setActiveTab("roster");
+  };
+
   const importScenario = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
@@ -1834,6 +1925,7 @@ function App() {
             <article><span>Snapshot</span><strong>{catalog.manifest.snapshotDate}</strong></article>
             <article><span>Catalog sync</span><strong>{rosterUpdate ? new Date(rosterUpdate.sourceUpdatedAt ?? rosterUpdate.generatedAt).toLocaleDateString() : "Bundled"}</strong></article>
             <article><span>Operators</span><strong>{catalog.operators.length}</strong></article>
+            <article><span>Roster import</span><strong>{scenario.rosterImport ? new Date(scenario.rosterImport.importedAt).toLocaleDateString() : "Manual"}</strong></article>
           </div>
         </div>
         <div className="heroPanel">
@@ -1992,6 +2084,7 @@ function App() {
           <button className="secondary" onClick={() => requestRun("recommendations")} disabled={optimizationRun != null || recommendationRun != null}>Recommend unlocks</button>
           <button className="secondary" onClick={exportScenario}>Export JSON</button>
           <label className="secondary upload">Import JSON<input type="file" accept="application/json" onChange={importScenario} /></label>
+          <button className="secondary" type="button" onClick={openSkportImport}>Sync SKPort roster</button>
         </div>
       </section>
 
@@ -2104,6 +2197,94 @@ function App() {
             <div className="toolbarActions">
               <button type="button" onClick={confirmPendingRun}>Proceed</button>
               <button type="button" className="secondary" onClick={() => setPendingRunConfirmation(null)}>Cancel</button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {skportImportOpen && (
+        <section className="modalBackdrop">
+          <div className="modalCard syncModal" role="dialog" aria-modal="true" aria-label="Sync SKPort roster">
+            <div className="panelHeader panelHeaderWide">
+              <div>
+                <p className="eyebrow">Optional one-time import</p>
+                <h2>Sync SKPort roster</h2>
+              </div>
+              <span className="miniStat">Local processing</span>
+            </div>
+            <div className="syncWarning">
+              <strong>Back up your current scenario first.</strong>
+              <p>This unofficial third-party use is at your own volition. Applying a complete capture replaces saved ownership, operator levels, promotions, and equipped loadout snapshots. Use Export JSON before continuing.</p>
+              <p>HAR files can contain sensitive session tokens even though this importer ignores them. Keep the capture private and delete it when you no longer need it.</p>
+            </div>
+            <p className="status">
+              The capture helper uses the official request client already loaded by Team Picks and downloads the roster locally. It does not read or save request headers, cookies, passwords, or account tokens.
+            </p>
+            <ol className="syncInstructions">
+              <li>Drag the capture helper below to your browser's bookmarks bar once. Copying its address into a new bookmark also works.</li>
+              <li>On the <a href="https://www.skport.com/game/endfield" target="_blank" rel="noreferrer">official SKPort Endfield page</a>, open <strong>Team Picks</strong> from the yellow Game Tools panel.</li>
+              <li>On Team Picks, activate the saved bookmarklet. If <strong>Sync Data</strong> is off, approve or enable it; if no download begins while it is on, toggle it off and on once.</li>
+              <li>The helper downloads a file beginning with <code>endfield-skport-roster-</code> automatically. Return here and choose that file below.</li>
+            </ol>
+            <div className="bookmarkletSetup">
+              <div>
+                <strong>SKPort roster capture</strong>
+                <p>Drag this link to the bookmarks bar; clicking it inside the optimizer does nothing.</p>
+              </div>
+              <a
+                ref={skportBookmarkletLinkRef}
+                className="bookmarkletLink"
+                aria-label="SKPort roster capture bookmarklet"
+                onClick={(event) => event.preventDefault()}
+              >
+                Drag capture helper
+              </a>
+              <button type="button" className="secondary" onClick={copySkportCaptureBookmarklet}>
+                {skportBookmarkletCopied ? "Bookmarklet copied" : "Copy bookmarklet"}
+              </button>
+            </div>
+            <details className="syncFallback">
+              <summary>Manual Network-panel fallback</summary>
+              <p>Record the Network panel while enabling Sync Data, filter for <code>user-game-data</code>, and save that response as JSON or save a HAR with response content. Older <code>card/detail</code> captures are also supported.</p>
+            </details>
+            <div className="syncScopeGrid">
+              <div><span>Imported</span><strong>Ownership, level, promotion</strong></div>
+              <div><span>Saved when reported</span><strong>Combat skills, weapons, gear, tactical items</strong></div>
+              <div><span>Not available</span><strong>Base Skill unlocks, essences, Team Picks loadouts</strong></div>
+            </div>
+            <div className="toolbarActions syncActions">
+              <button type="button" className="secondary" onClick={exportScenario}>Export backup JSON</button>
+              <label className="secondary upload">Choose SKPort capture<input type="file" accept="application/json,.json,.har" onChange={previewSkportImport} /></label>
+            </div>
+            {skportImportFileName && <p className="syncFileName">Selected: {skportImportFileName}</p>}
+            {skportImportError && <div className="messageBar error"><p>{skportImportError}</p></div>}
+            {skportImportPreview && (
+              <div className="syncPreview" aria-label="SKPort import preview">
+                <div className="panelHeader panelHeaderWide">
+                  <div>
+                    <p className="eyebrow">Preview</p>
+                    <h3>{skportImportPreview.completeRoster ? "Complete roster capture" : "Partial roster capture"}</h3>
+                  </div>
+                  <span className="miniStat">{skportImportPreview.matchedOperatorCount} matched</span>
+                </div>
+                <div className="syncPreviewStats">
+                  <div><span>Operators in file</span><strong>{skportImportPreview.sourceOperatorCount}{skportImportPreview.reportedOperatorCount != null ? ` / ${skportImportPreview.reportedOperatorCount} reported` : ""}</strong></div>
+                  <div><span>Weapons reported</span><strong>{skportImportPreview.weaponCount}</strong></div>
+                  <div><span>Gear quantity</span><strong>{skportImportPreview.gearCount}</strong></div>
+                  <div><span>Tactical quantity</span><strong>{skportImportPreview.tacticalItemCount}</strong></div>
+                </div>
+                <div className="messageBar warning syncPreviewWarnings">
+                  {skportImportPreview.warnings.map((warning) => <p key={warning}>{warning}</p>)}
+                </div>
+              </div>
+            )}
+            <label className="toggle syncConsent">
+              <input type="checkbox" checked={skportImportConsent} onChange={(event) => setSkportImportConsent(event.target.checked)} />
+              <span>I understand this is unofficial, have made any backup I need, and want to overwrite the fields listed above.</span>
+            </label>
+            <div className="toolbarActions syncActions">
+              <button type="button" onClick={confirmSkportImport} disabled={!skportImportConsent || !skportImportPreview}>Apply one-time import</button>
+              <button type="button" className="secondary" onClick={closeSkportImport}>Cancel</button>
             </div>
           </div>
         </section>
@@ -2305,6 +2486,41 @@ function App() {
                 </div>
 
                 <p className="editorHint editorHintSubtle">Level and promotion are used to estimate what it takes to unlock the next Base Skill rank. Base Skill unlocks depend on meeting the prerequisite level, reaching the required Elite tier, and then unlocking the skill itself.</p>
+
+                {selectedOwnedState?.skportSnapshot && (
+                  <section className="syncedLoadout" aria-label={`${selectedOperator.name} SKPort loadout`}>
+                    <div className="panelHeader panelHeaderWide">
+                      <div>
+                        <p className="eyebrow">SKPort snapshot</p>
+                        <h3>Equipped loadout</h3>
+                      </div>
+                      {selectedOwnedState.skportSnapshot.potentialLevel != null && (
+                        <span className="miniStat">Potential {selectedOwnedState.skportSnapshot.potentialLevel}</span>
+                      )}
+                    </div>
+                    <div className="syncedLoadoutGrid">
+                      <div>
+                        <span>Weapon</span>
+                        <strong>{selectedOwnedState.skportSnapshot.weapon?.name ?? selectedOwnedState.skportSnapshot.weapon?.id ?? "Not reported"}</strong>
+                        {selectedOwnedState.skportSnapshot.weapon?.level != null && <small>Level {selectedOwnedState.skportSnapshot.weapon.level}</small>}
+                      </div>
+                      <div>
+                        <span>Gear</span>
+                        <strong>{selectedOwnedState.skportSnapshot.gear.length} equipped piece{selectedOwnedState.skportSnapshot.gear.length === 1 ? "" : "s"}</strong>
+                        <small>{selectedOwnedState.skportSnapshot.gear.map((gear) => gear.name ?? gear.id).join(", ") || "Not reported"}</small>
+                      </div>
+                      <div>
+                        <span>Tactical item</span>
+                        <strong>{selectedOwnedState.skportSnapshot.tacticalItem?.name ?? selectedOwnedState.skportSnapshot.tacticalItem?.id ?? "Not reported"}</strong>
+                      </div>
+                      <div>
+                        <span>Combat skills</span>
+                        <strong>{selectedOwnedState.skportSnapshot.combatSkills.length} reported</strong>
+                      </div>
+                    </div>
+                    <p className="editorHint editorHintSubtle">Reference only. Equipped loadout data is preserved in JSON exports but is not currently used by Dijiang assignment scoring.</p>
+                  </section>
+                )}
 
                 <div className="skillGrid editorSkillGrid">
                   {selectedOperator.baseSkills.map((skill) => {
