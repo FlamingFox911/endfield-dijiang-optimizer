@@ -1940,7 +1940,7 @@ function App() {
         <div className="heroCopy">
           <p className="eyebrow">Local-first optimizer</p>
           <h1>Endfield Dijiang Optimizer</h1>
-          <p className="lede">The editor now uses a tabbed workspace and a portrait-driven roster so you can configure operators without the roster dominating the page.</p>
+          <p className="lede">Configure your roster and Dijiang facilities to find the strongest operator assignments and upgrade priorities.</p>
           <div className="heroStats">
             <article><span>Catalog</span><strong>{CURRENT_CATALOG_VERSION}</strong></article>
             <article><span>Game version</span><strong>{catalog.manifest.gameVersion}</strong></article>
