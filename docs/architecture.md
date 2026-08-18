@@ -75,7 +75,7 @@ The frequent release-window cron remains a lightweight heartbeat because GitHub 
 
 The catalog is versioned and immutable for a given snapshot. User scenarios are stored separately and refer to the catalog by version string.
 
-Only public catalog data is fetched by the optimizer. The hosted browser reads a same-origin, build-generated catalog overlay. Optional account-derived state enters through a user-selected local response capture and is never transmitted by the app. On Team Picks, the capture bookmarklet reuses SKPort's already-loaded request client to retrieve `user-game-data` and public name catalogs, downloads them on the user's device, and restores its Fetch/XHR fallback hooks immediately after capture or cancellation. Older `card/detail` responses remain supported.
+Only public catalog data is fetched by the optimizer. The hosted browser reads a same-origin, build-generated catalog overlay. Optional account-derived state enters through a user-selected local response capture and is never transmitted by the app. On Team Picks, the capture bookmarklet reuses SKPort's already-loaded request client to retrieve `user-game-data`, public name catalogs, and `user-char-data` for each owned assignable operator. It removes account identifiers, compacts the responses, and offers local clipboard or JSON transfer before restoring its Fetch/XHR fallback hooks. Older `card/detail` responses remain supported.
 
 Core catalog entities:
 

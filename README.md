@@ -63,12 +63,12 @@ Each overlay includes a stable content hash that excludes generation and retriev
 
 ## Optional SKPort roster import
 
-The web app can perform a one-time, local import from SKPort's official Team Picks data sync. Its included bookmarklet uses the request client already loaded by Team Picks to retrieve `/game/endfield/team/user-game-data` plus the public name catalogs, then downloads a JSON capture automatically. An older `card/detail` response or a manually saved response/HAR remains available as a fallback. Before applying it, the app recommends exporting a backup, explains the third-party risk, and previews whether the capture represents the complete roster or only a selected showcase.
+The web app can perform a one-time, local import from SKPort's official Team Picks data sync. Its included bookmarklet uses the request client already loaded by Team Picks to retrieve `/game/endfield/team/user-game-data`, then automatically requests `/game/endfield/team/user-char-data` for each owned assignable operator. It produces a compact capture that can be copied into the optimizer or downloaded as JSON. An older `card/detail` response or a manually saved response/HAR remains available as a fallback. Before applying it, the app recommends exporting a backup, explains the third-party risk, and previews whether the capture represents the complete roster or only a selected showcase.
 
 - A complete capture replaces operator ownership, level, promotion, and saved equipped-loadout snapshots. Operators absent from it are marked unowned.
 - A partial capture updates matched operators but preserves operators that are absent, because their ownership cannot be inferred safely.
-- Team Picks weapon ownership, gear and tactical-item quantities, and combat-skill levels are preserved in scenario JSON for reference, but do not affect Dijiang scoring. Older card captures may also preserve equipped loadouts.
-- Base Skill unlocks, essences, and per-operator equipped loadouts are not exposed by Team Picks and are not guessed. Existing Base Skill selections are preserved.
+- Team Picks weapon ownership, gear and tactical-item quantities, combat-skill levels, and per-operator equipped loadouts are preserved in scenario JSON for reference, but do not affect Dijiang scoring.
+- Base Skill unlocks, essences, weapon progression, and item enhancement rolls are not exposed by these Team Picks responses and are not guessed. Existing Base Skill selections are preserved.
 - The bookmarklet reuses SKPort's already-loaded request client; it does not recreate request signing or read/export headers, cookies, passwords, or tokens.
 - HAR request headers, cookies, and tokens are ignored. Only the matching response body is parsed, entirely in the browser.
 

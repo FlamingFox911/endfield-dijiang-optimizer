@@ -63,6 +63,7 @@ export interface SkportRosterImportPreview {
   gearCount: number;
   tacticalItemCount: number;
   combatSkillCount: number;
+  loadoutOperatorCount: number;
   inventorySnapshot?: SkportInventorySnapshot;
   unmatchedOperatorNames: string[];
   warnings: string[];
@@ -188,6 +189,37 @@ function unwrapTeamUserGameData(value: unknown): JsonRecord | undefined {
   return undefined;
 }
 
+function unwrapTeamUserCharData(value: unknown): JsonRecord | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+  const userChar = nestedRecord(value, "userChar");
+  if (userChar && asString(userChar.charId)) {
+    return userChar;
+  }
+  for (const key of ["data", "response"]) {
+    const nested = nestedRecord(value, key);
+    if (nested) {
+      const unwrapped = unwrapTeamUserCharData(nested);
+      if (unwrapped) {
+        return unwrapped;
+      }
+    }
+  }
+  return undefined;
+}
+
+function operatorDetailsFromCapture(value: unknown): Map<string, JsonRecord> {
+  if (!isRecord(value) || !Array.isArray(value.operatorDetails)) {
+    return new Map();
+  }
+  return new Map(value.operatorDetails.flatMap((entry) => {
+    const detail = unwrapTeamUserCharData(entry);
+    const charId = asString(detail?.charId);
+    return detail && charId ? [[charId, detail] as const] : [];
+  }));
+}
+
 function characterNamesFromCatalog(value: unknown): Map<string, string> {
   if (!isRecord(value)) {
     return new Map();
@@ -257,6 +289,7 @@ function teamUserGameDataToCardDetail(
     gear: new Map(),
     tacticalItems: new Map(),
   },
+  operatorDetails = new Map<string, JsonRecord>(),
 ): JsonRecord {
   const userChars = isRecord(userGameData.userChars) ? userGameData.userChars : {};
   const chars = Object.values(userChars).flatMap((entry) => {
@@ -267,12 +300,13 @@ function teamUserGameDataToCardDetail(
     if (!charId) {
       return [];
     }
+    const operatorDetail = operatorDetails.get(charId);
+    const detailCharData = nestedRecord(operatorDetail, "charData");
     return [{
+      ...entry,
+      ...operatorDetail,
       id: charId,
-      level: entry.level,
-      evolvePhase: entry.evolvePhase,
-      userSkills: entry.userSkills,
-      charData: { id: charId, name: referenceNames.characters.get(charId) ?? charId },
+      charData: detailCharData ?? { id: charId, name: referenceNames.characters.get(charId) ?? charId },
     }];
   });
   const inventory: SkportInventorySnapshot = {
@@ -304,6 +338,9 @@ function teamUserGameDataToCardDetail(
     base: {
       charNum: chars.length,
       importSource: "team-user-game-data",
+      operatorDetailIds: chars
+        .map((character) => asString(character.id))
+        .filter((charId): charId is string => charId != null && operatorDetails.has(charId)),
     },
     chars,
     inventory,
@@ -322,7 +359,7 @@ function extractCardDetail(value: unknown): JsonRecord {
       weapons: itemNamesFromCatalog(value, "weapons"),
       gear: itemNamesFromCatalog(value, "equips"),
       tacticalItems: itemNamesFromCatalog(value, "tacticalItems"),
-    });
+    }, operatorDetailsFromCapture(value));
   }
 
   const log = nestedRecord(value, "log");
@@ -334,6 +371,7 @@ function extractCardDetail(value: unknown): JsonRecord {
       gear: new Map(),
       tacticalItems: new Map(),
     };
+    const harOperatorDetails = new Map<string, JsonRecord>();
     for (const entry of entries) {
       const request = nestedRecord(entry, "request");
       const url = asString(request?.url);
@@ -360,6 +398,28 @@ function extractCardDetail(value: unknown): JsonRecord {
         // Continue without the optional catalog-name response.
       }
     }
+    for (const entry of entries) {
+      const request = nestedRecord(entry, "request");
+      const url = asString(request?.url);
+      if (!url || !/\/game\/endfield\/team\/user-char-data(?:[/?#]|$)/i.test(url)) {
+        continue;
+      }
+      const response = nestedRecord(entry, "response");
+      const content = nestedRecord(response, "content");
+      const responseText = asString(content?.text);
+      if (!responseText) {
+        continue;
+      }
+      try {
+        const detail = unwrapTeamUserCharData(JSON.parse(decodeHarContent(responseText, content?.encoding)));
+        const charId = asString(detail?.charId);
+        if (detail && charId) {
+          harOperatorDetails.set(charId, detail);
+        }
+      } catch {
+        // Continue without an optional per-operator loadout response.
+      }
+    }
     for (let index = entries.length - 1; index >= 0; index -= 1) {
       const entry = entries[index];
       const request = nestedRecord(entry, "request");
@@ -381,7 +441,7 @@ function extractCardDetail(value: unknown): JsonRecord {
         }
         const teamData = unwrapTeamUserGameData(parsed);
         if (teamData) {
-          return teamUserGameDataToCardDetail(teamData, harReferenceNames);
+          return teamUserGameDataToCardDetail(teamData, harReferenceNames, harOperatorDetails);
         }
       } catch {
         // Continue looking for another successful card-detail response in the capture.
@@ -555,6 +615,14 @@ export function parseSkportRosterImport(input: unknown, catalog: GameCatalog): S
     .filter((character) => !character.catalogOperatorId
       && !SKPORT_NON_ASSIGNABLE_OPERATOR_NAMES.has(normalizeOperatorKey(character.sourceName)))
     .map((character) => character.sourceName);
+  const matchedOperatorCount = characters.filter((character) => character.catalogOperatorId).length;
+  const operatorDetailIds = new Set(Array.isArray(base.operatorDetailIds)
+    ? base.operatorDetailIds.flatMap((value) => asString(value) ?? [])
+    : []);
+  const loadoutOperatorCount = isTeamUserGameData
+    ? characters.filter((character) => character.catalogOperatorId && operatorDetailIds.has(character.sourceOperatorId)).length
+    : characters.filter((character) => character.catalogOperatorId
+      && (character.snapshot.weapon || character.snapshot.gear.length > 0 || character.snapshot.tacticalItem)).length;
   const warnings: string[] = [];
   if (!completeRoster) {
     warnings.push(
@@ -567,21 +635,27 @@ export function parseSkportRosterImport(input: unknown, catalog: GameCatalog): S
     warnings.push(`No catalog match was found for: ${unmatchedOperatorNames.join(", ")}.`);
   }
   warnings.push("SKPort does not expose Dijiang Base Skill unlocks in this payload, so existing Base Skill selections will be preserved.");
-  warnings.push(isTeamUserGameData
-    ? "SKPort Team Picks reports operator progression and inventory ownership, but not each operator's equipped loadout; existing equipped-loadout snapshots are replaced with the reported combat-skill levels."
-    : "Only equipped weapons, gear, and tactical items are present; unequipped inventory and essences are not available in this payload.");
+  if (isTeamUserGameData && loadoutOperatorCount < matchedOperatorCount) {
+    warnings.push(loadoutOperatorCount > 0
+      ? `Equipped loadouts were captured for ${loadoutOperatorCount} of ${matchedOperatorCount} matched operators. Operators without a detail response contain combat-skill progression only.`
+      : "This Team Picks capture contains account inventory but no per-operator loadout details. Existing equipped-loadout snapshots are replaced with the reported combat-skill levels.");
+  }
+  if (!isTeamUserGameData) {
+    warnings.push("Only equipped weapons, gear, and tactical items are present; unequipped inventory and essences are not available in this payload.");
+  }
 
   return {
     characters,
     sourceOperatorCount: characters.length,
     reportedOperatorCount,
-    matchedOperatorCount: characters.filter((character) => character.catalogOperatorId).length,
+    matchedOperatorCount,
     completeRoster,
     sourceSavedAt: normalizeTimestamp(base.saveTime),
     weaponCount: inventorySnapshot?.weapons.length ?? characters.filter((character) => character.snapshot.weapon).length,
     gearCount: inventorySnapshot?.gear.reduce((count, entry) => count + entry.ownedCount, 0) ?? characters.reduce((count, character) => count + character.snapshot.gear.length, 0),
     tacticalItemCount: inventorySnapshot?.tacticalItems.reduce((count, entry) => count + entry.ownedCount, 0) ?? characters.filter((character) => character.snapshot.tacticalItem).length,
     combatSkillCount: characters.reduce((count, character) => count + character.snapshot.combatSkills.length, 0),
+    loadoutOperatorCount,
     inventorySnapshot,
     unmatchedOperatorNames,
     warnings,

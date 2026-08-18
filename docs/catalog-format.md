@@ -201,7 +201,7 @@ Owned operator state records the values that affect planning in v1:
 
 After an explicit one-time SKPort import, an operator may also contain `skportSnapshot`. It preserves the source operator id, potential, equipped weapon, equipped gear, tactical item, and combat-skill levels for reference and round-trip JSON export. These fields do not affect v1 scoring. Scenario-level `rosterImport` records the import time, matched counts, completeness, and any reported weapon, gear, and tactical-item inventory.
 
-The Team Picks payload exposes operator progression, combat-skill levels, weapon ownership, and gear and tactical-item quantities. It does not expose Base Skill unlocks, essences, or per-operator equipped loadouts, so the importer preserves existing Base Skill selections and does not invent unavailable values. Older card payloads may include equipped-loadout references.
+Team Picks' roster payload exposes operator progression, combat-skill levels, weapon ownership, and gear and tactical-item quantities. Its per-operator detail payload additionally exposes equipped weapons, four gear slots, and tactical items. These responses do not expose Base Skill unlocks, essences, weapon progression, or item enhancement rolls, so the importer preserves existing Base Skill selections and does not invent unavailable values.
 
 ## Validation expectations
 

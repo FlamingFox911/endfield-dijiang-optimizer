@@ -1027,6 +1027,7 @@ function App() {
   const [skportImportConsent, setSkportImportConsent] = useState(false);
   const [skportImportPreview, setSkportImportPreview] = useState<SkportRosterImportPreview | null>(null);
   const [skportImportFileName, setSkportImportFileName] = useState<string | null>(null);
+  const [skportImportText, setSkportImportText] = useState("");
   const [skportImportError, setSkportImportError] = useState<string | null>(null);
   const [skportBookmarkletCopied, setSkportBookmarkletCopied] = useState(false);
   const skportBookmarkletLinkRef = useRef<HTMLAnchorElement>(null);
@@ -1807,6 +1808,7 @@ function App() {
     setSkportImportConsent(false);
     setSkportImportPreview(null);
     setSkportImportFileName(null);
+    setSkportImportText("");
     setSkportImportError(null);
     setSkportBookmarkletCopied(false);
     setSkportImportOpen(true);
@@ -1817,6 +1819,7 @@ function App() {
     setSkportImportConsent(false);
     setSkportImportPreview(null);
     setSkportImportFileName(null);
+    setSkportImportText("");
     setSkportImportError(null);
     setSkportBookmarkletCopied(false);
   };
@@ -1842,6 +1845,7 @@ function App() {
       return;
     }
     setSkportImportPreview(null);
+    setSkportImportText("");
     setSkportImportFileName(file.name);
     setSkportImportError(null);
     try {
@@ -1854,6 +1858,24 @@ function App() {
       setSkportImportPreview(parseSkportRosterImportText(await file.text(), catalog));
     } catch (error) {
       setSkportImportError(error instanceof Error ? error.message : "Failed to read the SKPort roster capture.");
+    }
+  };
+
+  const previewPastedSkportImport = () => {
+    const text = skportImportText.trim();
+    setSkportImportPreview(null);
+    setSkportImportFileName("Pasted capture");
+    setSkportImportError(null);
+    try {
+      if (!text) {
+        throw new Error("Paste the SKPort import data before previewing it.");
+      }
+      if (text.length > MAX_SKPORT_IMPORT_FILE_BYTES) {
+        throw new Error(`SKPort capture is too large. Keep pasted data at or below ${Math.floor(MAX_SKPORT_IMPORT_FILE_BYTES / 1_000_000)} MB.`);
+      }
+      setSkportImportPreview(parseSkportRosterImportText(text, catalog));
+    } catch (error) {
+      setSkportImportError(error instanceof Error ? error.message : "Failed to read the pasted SKPort roster capture.");
     }
   };
 
@@ -2218,13 +2240,13 @@ function App() {
               <p>HAR files can contain sensitive session tokens even though this importer ignores them. Keep the capture private and delete it when you no longer need it.</p>
             </div>
             <p className="status">
-              The capture helper uses the official request client already loaded by Team Picks and downloads the roster locally. It does not read or save request headers, cookies, passwords, or account tokens.
+              The capture helper uses the official request client already loaded by Team Picks, captures each owned operator's loadout, and copies a local import payload. It does not read or save request headers, cookies, passwords, or account tokens.
             </p>
             <ol className="syncInstructions">
               <li>Drag the capture helper below to your browser's bookmarks bar once. Copying its address into a new bookmark also works.</li>
               <li>On the <a href="https://www.skport.com/game/endfield" target="_blank" rel="noreferrer">official SKPort Endfield page</a>, open <strong>Team Picks</strong> from the yellow Game Tools panel.</li>
-              <li>On Team Picks, activate the saved bookmarklet. If <strong>Sync Data</strong> is off, approve or enable it; if no download begins while it is on, toggle it off and on once.</li>
-              <li>The helper downloads a file beginning with <code>endfield-skport-roster-</code> automatically. Return here and choose that file below.</li>
+              <li>On Team Picks, activate the saved bookmarklet. If <strong>Sync Data</strong> is off, approve or enable it; if capture does not begin while it is on, toggle it off and on once.</li>
+              <li>Wait while the helper captures every owned operator, then click <strong>Copy import data</strong>. Return here, paste it below, and preview it. JSON download remains available as a fallback.</li>
             </ol>
             <div className="bookmarkletSetup">
               <div>
@@ -2249,12 +2271,31 @@ function App() {
             </details>
             <div className="syncScopeGrid">
               <div><span>Imported</span><strong>Ownership, level, promotion</strong></div>
-              <div><span>Saved when reported</span><strong>Combat skills, weapons, gear, tactical items</strong></div>
-              <div><span>Not available</span><strong>Base Skill unlocks, essences, Team Picks loadouts</strong></div>
+              <div><span>Saved when reported</span><strong>Combat skills, equipped loadouts, account inventory</strong></div>
+              <div><span>Not available</span><strong>Base Skill unlocks, essences, item enhancement rolls</strong></div>
+            </div>
+            <div className="syncPaste">
+              <label htmlFor="skport-capture-text">Paste captured import data</label>
+              <textarea
+                id="skport-capture-text"
+                value={skportImportText}
+                onChange={(event) => {
+                  setSkportImportText(event.target.value);
+                  setSkportImportPreview(null);
+                  setSkportImportFileName(null);
+                  setSkportImportError(null);
+                }}
+                placeholder="Paste the data copied by the SKPort capture helper"
+                rows={4}
+                spellCheck={false}
+              />
+              <button type="button" className="secondary" onClick={previewPastedSkportImport} disabled={!skportImportText.trim()}>
+                Preview pasted capture
+              </button>
             </div>
             <div className="toolbarActions syncActions">
               <button type="button" className="secondary" onClick={exportScenario}>Export backup JSON</button>
-              <label className="secondary upload">Choose SKPort capture<input type="file" accept="application/json,.json,.har" onChange={previewSkportImport} /></label>
+              <label className="secondary upload">Choose JSON/HAR fallback<input type="file" accept="application/json,.json,.har" onChange={previewSkportImport} /></label>
             </div>
             {skportImportFileName && <p className="syncFileName">Selected: {skportImportFileName}</p>}
             {skportImportError && <div className="messageBar error"><p>{skportImportError}</p></div>}
@@ -2269,6 +2310,7 @@ function App() {
                 </div>
                 <div className="syncPreviewStats">
                   <div><span>Operators in file</span><strong>{skportImportPreview.sourceOperatorCount}{skportImportPreview.reportedOperatorCount != null ? ` / ${skportImportPreview.reportedOperatorCount} reported` : ""}</strong></div>
+                  <div><span>Loadouts captured</span><strong>{skportImportPreview.loadoutOperatorCount} / {skportImportPreview.matchedOperatorCount}</strong></div>
                   <div><span>Weapons reported</span><strong>{skportImportPreview.weaponCount}</strong></div>
                   <div><span>Gear quantity</span><strong>{skportImportPreview.gearCount}</strong></div>
                   <div><span>Tactical quantity</span><strong>{skportImportPreview.tacticalItemCount}</strong></div>

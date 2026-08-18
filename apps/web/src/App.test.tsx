@@ -1146,14 +1146,12 @@ describe("App", () => {
         },
       },
     };
-    const file = new File([JSON.stringify(payload)], "card-detail.json", { type: "application/json" });
-    Object.defineProperty(file, "text", {
-      value: vi.fn(async () => JSON.stringify(payload)),
-    });
-    const captureInput = within(dialog).getByLabelText("Choose SKPort capture") as HTMLInputElement;
-    fireEvent.change(captureInput, { target: { files: [file] } });
+    const captureText = within(dialog).getByLabelText("Paste captured import data");
+    fireEvent.change(captureText, { target: { value: JSON.stringify(payload) } });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Preview pasted capture" }));
 
     expect(await within(dialog).findByText("Complete roster capture")).toBeInTheDocument();
+    expect(within(dialog).getByText("Selected: Pasted capture")).toBeInTheDocument();
     expect(within(dialog).getByText("1 / 1 reported")).toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole("checkbox"));
     expect(applyButton).toBeEnabled();

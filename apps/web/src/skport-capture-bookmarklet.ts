@@ -16,14 +16,19 @@ const SKPORT_CAPTURE_SOURCE = String.raw`(function(){
   var originalSend=xhrPrototype.send;
   var requestUrlKey="__endfieldDijiangRosterRequestUrl";
   var finished=false;
+  var capturing=false;
   var directRequest=null;
   var retryTimer=null;
+  var captureText=null;
+  var captureFileName=null;
   var panel=document.createElement("div");
   panel.id="endfield-dijiang-roster-capture";
   panel.setAttribute("style","position:fixed;z-index:2147483647;right:20px;bottom:20px;width:min(380px,calc(100vw - 40px));padding:18px;border:1px solid #d89b37;border-radius:14px;background:#171a20;color:#f8f4ea;box-shadow:0 18px 50px rgba(0,0,0,.45);font:14px/1.45 system-ui,sans-serif;text-align:left");
-  panel.innerHTML="<div style='font-weight:750;font-size:16px;margin-bottom:7px'>Endfield roster capture is listening</div><div data-capture-status>In Team Picks, enable or re-enable the official Sync Data option. Do not reload the whole browser tab.</div><div style='margin-top:9px;color:#d5c8b3;font-size:12px'>Only the Endfield roster response will be saved. Keep the downloaded file private because it can contain account and game-profile data.</div><button type='button' data-capture-close style='margin-top:12px;padding:7px 11px;border:1px solid #777;border-radius:8px;background:#2a2e36;color:#fff;cursor:pointer'>Cancel</button>";
+  panel.innerHTML="<div style='font-weight:750;font-size:16px;margin-bottom:7px'>Endfield roster capture is ready</div><div data-capture-status>In Team Picks, enable or re-enable the official Sync Data option. The helper will capture every owned operator automatically.</div><div style='margin-top:9px;color:#d5c8b3;font-size:12px'>Only roster, inventory, and equipped-loadout data will be copied. Request credentials and account identifiers are excluded.</div><div style='display:flex;flex-wrap:wrap;gap:8px;margin-top:12px'><button type='button' data-capture-copy hidden style='padding:7px 11px;border:1px solid #79bd8f;border-radius:8px;background:#28633d;color:#fff;cursor:pointer'>Copy import data</button><button type='button' data-capture-download hidden style='padding:7px 11px;border:1px solid #d89b37;border-radius:8px;background:#60451d;color:#fff;cursor:pointer'>Download JSON instead</button><button type='button' data-capture-close style='padding:7px 11px;border:1px solid #777;border-radius:8px;background:#2a2e36;color:#fff;cursor:pointer'>Cancel</button></div>";
   document.documentElement.appendChild(panel);
   var statusNode=panel.querySelector("[data-capture-status]");
+  var copyButton=panel.querySelector("[data-capture-copy]");
+  var downloadButton=panel.querySelector("[data-capture-download]");
   var closeButton=panel.querySelector("[data-capture-close]");
   function focusPanel(){panel.scrollIntoView({block:"nearest"});panel.animate([{opacity:.55},{opacity:1}],{duration:240});}
   function setStatus(message,color){statusNode.textContent=message;if(color){statusNode.style.color=color;}}
@@ -49,30 +54,82 @@ const SKPORT_CAPTURE_SOURCE = String.raw`(function(){
     if(payload.response&&payload.response!==payload&&hasRoster(payload.response)){return true;}
     return false;
   }
-  function capture(payload,referenceCatalogs){
+  function getUserGameData(payload){
+    if(!payload||typeof payload!=="object"){return null;}
+    if(payload.userGameData&&payload.userGameData.userChars&&typeof payload.userGameData.userChars==="object"){return payload.userGameData;}
+    return getUserGameData(payload.data)||getUserGameData(payload.response);
+  }
+  function getUserChar(payload){
+    if(!payload||typeof payload!=="object"){return null;}
+    if(payload.userChar&&payload.userChar.charId){return payload.userChar;}
+    return getUserChar(payload.data)||getUserChar(payload.response);
+  }
+  function getCatalogCharacters(payload){
+    if(!payload||typeof payload!=="object"){return [];}
+    if(Array.isArray(payload.chars)){return payload.chars;}
+    return getCatalogCharacters(payload.data)||getCatalogCharacters(payload.characterCatalog);
+  }
+  function getCatalogItems(payload,key){
+    if(!payload||typeof payload!=="object"){return [];}
+    if(Array.isArray(payload[key])){return payload[key];}
+    return getCatalogItems(payload.data,key);
+  }
+  function compactCatalog(payload,key){
+    if(!payload){return null;}
+    var items=getCatalogItems(payload,key).map(function(item){return {id:item.id,name:item.name};}).filter(function(item){return item.id&&item.name;});
+    var data={};data[key]=items;return {data:data};
+  }
+  function compactOperatorDetail(payload){
+    var character=getUserChar(payload);
+    if(!character){return null;}
+    function namedData(value){return value&&typeof value==="object"?{id:value.id,name:value.name,level:value.level,rarity:value.rarity,suit:value.suit?{name:value.suit.name}:undefined}:undefined;}
+    function gear(value){return value?{equipId:value.equipId,ownedCount:value.ownedCount,equipData:namedData(value.equipData)}:undefined;}
+    function tactical(value){return value?{tacticalItemId:value.tacticalItemId,ownedCount:value.ownedCount,tacticalItemData:namedData(value.tacticalItemData)}:undefined;}
+    return {data:{userChar:{charId:character.charId,owned:character.owned,level:character.level,evolvePhase:character.evolvePhase,potentialLevel:character.potentialLevel,userSkills:character.userSkills,weapon:character.weapon?{weaponId:character.weapon.weaponId,owned:character.weapon.owned,level:character.weapon.level,refineLevel:character.weapon.refineLevel,breakthroughLevel:character.weapon.breakthroughLevel,weaponData:namedData(character.weapon.weaponData)}:undefined,bodyEquip:gear(character.bodyEquip),armEquip:gear(character.armEquip),firstAccessory:gear(character.firstAccessory),secondAccessory:gear(character.secondAccessory),tacticalItem:tactical(character.tacticalItem),charData:namedData(character.charData),gender:character.gender}}};
+  }
+  function sanitize(value){
+    return JSON.parse(JSON.stringify(value,function(key,current){return key==="roleId"||key==="serverId"||key==="userId"?undefined:current;}));
+  }
+  function capture(payload,referenceCatalogs,operatorDetails,detailSummary){
     if(finished){return;}
     if(!hasRoster(payload)){setStatus("The roster request completed, but its response did not contain operator data. Try re-enabling Sync Data.","#ffba7a");return;}
     finished=true;
     restore();
     var capturedAt=new Date().toISOString();
-    var output={captureFormat:"endfield-dijiang-skport-roster-v2",capturedAt:capturedAt,source:location.origin,response:payload};
+    var gameData=getUserGameData(payload);
+    var output={captureFormat:"endfield-dijiang-skport-roster-v3",capturedAt:capturedAt,source:location.origin,response:gameData?{data:{userGameData:sanitize(gameData)}}:sanitize(payload),operatorDetails:(operatorDetails||[]).map(compactOperatorDetail).filter(Boolean),operatorDetailSummary:detailSummary||{requested:0,captured:0}};
     if(referenceCatalogs){
-      output.characterCatalog=referenceCatalogs.characters;
-      output.weaponCatalog=referenceCatalogs.weapons;
-      output.equipmentCatalog=referenceCatalogs.equipment;
-      output.tacticalItemCatalog=referenceCatalogs.tacticalItems;
+      output.characterCatalog=compactCatalog(referenceCatalogs.characters,"chars");
+      output.weaponCatalog=compactCatalog(referenceCatalogs.weapons,"weapons");
+      output.equipmentCatalog=compactCatalog(referenceCatalogs.equipment,"equips");
+      output.tacticalItemCatalog=compactCatalog(referenceCatalogs.tacticalItems,"tacticalItems");
     }
-    var blob=new Blob([JSON.stringify(output,null,2)],{type:"application/json"});
+    captureText=JSON.stringify(output);
+    captureFileName="endfield-skport-roster-"+capturedAt.slice(0,19).replace(/[:T]/g,"-")+".json";
+    copyButton.hidden=false;
+    downloadButton.hidden=false;
+    setStatus(output.operatorDetailSummary.requested>0?"Captured "+output.operatorDetailSummary.captured+" / "+output.operatorDetailSummary.requested+" operator loadouts. Copy the import data, then paste it into the optimizer.":"Roster captured. Copy the import data, then paste it into the optimizer.",output.operatorDetailSummary.captured===output.operatorDetailSummary.requested?"#8ee7a2":"#ffdf82");
+    closeButton.textContent="Close";
+  }
+  async function copyCapture(){
+    if(!captureText){return;}
+    try{
+      await navigator.clipboard.writeText(captureText);
+      setStatus("Import data copied. Return to the optimizer, paste it into the SKPort import box, and preview it.","#8ee7a2");
+    }catch(error){setStatus("Clipboard access was blocked. Use Download JSON instead.","#ffba7a");}
+  }
+  function downloadCapture(){
+    if(!captureText||!captureFileName){return;}
+    var blob=new Blob([captureText],{type:"application/json"});
     var objectUrl=URL.createObjectURL(blob);
     var anchor=document.createElement("a");
     anchor.href=objectUrl;
-    anchor.download="endfield-skport-roster-"+capturedAt.slice(0,19).replace(/[:T]/g,"-")+".json";
+    anchor.download=captureFileName;
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
     setTimeout(function(){URL.revokeObjectURL(objectUrl);},1000);
-    setStatus("Roster captured and downloaded. Return to the optimizer and choose the downloaded JSON file.","#8ee7a2");
-    closeButton.textContent="Close";
+    setStatus("Roster JSON downloaded. Return to the optimizer and choose that file.","#8ee7a2");
   }
   function readXhr(xhr){
     try{
@@ -84,7 +141,7 @@ const SKPORT_CAPTURE_SOURCE = String.raw`(function(){
   function wrappedOpen(method,url){this[requestUrlKey]=String(url);return originalOpen.apply(this,arguments);}
   function wrappedSend(){
     var xhr=this;
-    if(isTarget(xhr[requestUrlKey])){xhr.addEventListener("load",function(){readXhr(xhr);},{once:true});}
+    if(!capturing&&isTarget(xhr[requestUrlKey])){xhr.addEventListener("load",function(){readXhr(xhr);},{once:true});}
     return originalSend.apply(xhr,arguments);
   }
   function wrappedFetch(){
@@ -92,13 +149,14 @@ const SKPORT_CAPTURE_SOURCE = String.raw`(function(){
     var request=args[0];
     var url=request&&typeof request==="object"&&"url" in request?request.url:request;
     var responsePromise=originalFetch.apply(this,args);
-    if(isTarget(url)){
+    if(!capturing&&isTarget(url)){
       responsePromise.then(function(response){return response.clone().json();}).then(capture).catch(function(){setStatus("The roster response could not be read. Try reopening the game card.","#ffba7a");});
     }
     return responsePromise;
   }
   async function runDirectCapture(){
-    if(finished||!directRequest){return;}
+    if(finished||capturing||!directRequest){return;}
+    capturing=true;
     try{
       var rosterResponse=await directRequest("/web/v1/game/endfield/team/user-game-data",{});
       if(!hasRoster(rosterResponse)){
@@ -114,8 +172,29 @@ const SKPORT_CAPTURE_SOURCE = String.raw`(function(){
       function catalogValue(index){return catalogResults[index].status==="fulfilled"?catalogResults[index].value:null;}
       var characterCatalog=catalogValue(0);
       if(!characterCatalog){setStatus("The roster was found, but SKPort's character-name catalog did not load. Click inside Team Picks to retry.","#ffba7a");return;}
-      capture(rosterResponse,{characters:characterCatalog,weapons:catalogValue(1),equipment:catalogValue(2),tacticalItems:catalogValue(3)});
+      var gameData=getUserGameData(rosterResponse);
+      var names=new Map(getCatalogCharacters(characterCatalog).map(function(character){return [character.id,character.name];}));
+      var owned=Object.values(gameData.userChars||{}).filter(function(character){return character&&character.owned===true&&String(names.get(character.charId)||"").toLowerCase()!=="endministrator";});
+      var operatorDetails=new Array(owned.length);
+      var nextIndex=0;
+      var completed=0;
+      async function worker(){
+        while(nextIndex<owned.length){
+          var index=nextIndex++;
+          var character=owned[index];
+          try{
+            var detailResponse=await directRequest("/web/v1/game/endfield/team/user-char-data",{roleId:gameData.roleId,charId:character.charId});
+            if(getUserChar(detailResponse)){operatorDetails[index]=detailResponse;}
+          }catch(error){}
+          completed+=1;
+          setStatus("Capturing equipped loadouts "+completed+" / "+owned.length+"…","#ffdf82");
+        }
+      }
+      await Promise.all(Array.from({length:Math.min(3,owned.length)},worker));
+      var capturedDetails=operatorDetails.filter(Boolean);
+      capture(rosterResponse,{characters:characterCatalog,weapons:catalogValue(1),equipment:catalogValue(2),tacticalItems:catalogValue(3)},capturedDetails,{requested:owned.length,captured:capturedDetails.length});
     }catch(error){setStatus("The helper is ready. Enable or re-enable Sync Data; the response will be captured when SKPort requests it.","#ffdf82");}
+    finally{if(!finished){capturing=false;}}
   }
   function scheduleDirectCapture(){
     if(finished||!directRequest){return;}
@@ -137,6 +216,8 @@ const SKPORT_CAPTURE_SOURCE = String.raw`(function(){
   window.fetch=wrappedFetch;
   xhrPrototype.open=wrappedOpen;
   xhrPrototype.send=wrappedSend;
+  copyButton.addEventListener("click",copyCapture);
+  downloadButton.addEventListener("click",downloadCapture);
   closeButton.addEventListener("click",close);
   window[stateKey]={focus:focusPanel,close:close};
   loadOfficialRequestClient();

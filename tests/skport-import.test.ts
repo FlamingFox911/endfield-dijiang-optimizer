@@ -170,9 +170,76 @@ describe("SKPort roster import", () => {
     expect(result.clearedOperatorCount).toBe(0);
   });
 
+  it("merges per-operator Team Picks loadouts found in a HAR", () => {
+    const rosterResponse = {
+      data: {
+        userGameData: {
+          userChars: {
+            hash_chen: {
+              charId: "hash_chen",
+              owned: true,
+              level: "67",
+              evolvePhase: 3,
+              userSkills: { skill_1: { skillId: "skill_1", level: "6" } },
+            },
+          },
+          userWeapons: {},
+          userEquips: {},
+          userTacticalItems: {},
+        },
+      },
+    };
+    const operatorResponse = {
+      data: {
+        userChar: {
+          ...rosterResponse.data.userGameData.userChars.hash_chen,
+          weapon: {
+            weaponId: "weapon_hash",
+            owned: true,
+            weaponData: { id: "weapon_hash", name: "Test Weapon" },
+          },
+          bodyEquip: {
+            equipId: "gear_hash",
+            ownedCount: 1,
+            equipData: { id: "gear_hash", name: "Test Gear" },
+          },
+          tacticalItem: {
+            tacticalItemId: "item_hash",
+            ownedCount: 1,
+            tacticalItemData: { id: "item_hash", name: "Test Item" },
+          },
+          charData: { id: "hash_chen", name: "Chen Qianyu" },
+        },
+      },
+    };
+    const responseEntry = (url: string, response: unknown) => ({
+      request: { url },
+      response: { content: { mimeType: "application/json", text: JSON.stringify(response) } },
+    });
+    const preview = parseSkportRosterImportText(JSON.stringify({
+      log: {
+        entries: [
+          responseEntry("https://zonai.skport.com/web/v1/game/endfield/search-chars", {
+            data: { chars: [{ id: "hash_chen", name: "Chen Qianyu" }] },
+          }),
+          responseEntry("https://zonai.skport.com/web/v1/game/endfield/team/user-game-data", rosterResponse),
+          responseEntry("https://zonai.skport.com/web/v1/game/endfield/team/user-char-data?roleId=private&charId=hash_chen", operatorResponse),
+        ],
+      },
+    }), catalog);
+
+    expect(preview.loadoutOperatorCount).toBe(1);
+    expect(preview.characters[0]?.snapshot).toMatchObject({
+      weapon: { id: "weapon_hash", name: "Test Weapon" },
+      gear: [{ slot: "body", id: "gear_hash", name: "Test Gear" }],
+      tacticalItem: { id: "item_hash", name: "Test Item" },
+    });
+    expect(preview.warnings.join(" ")).not.toMatch(/without a detail response|no per-operator loadout/i);
+  });
+
   it("imports owned progression from the official Team Picks sync response", () => {
     const preview = parseSkportRosterImport({
-      captureFormat: "endfield-dijiang-skport-roster-v2",
+      captureFormat: "endfield-dijiang-skport-roster-v3",
       characterCatalog: {
         data: {
           chars: [
@@ -185,6 +252,34 @@ describe("SKPort roster import", () => {
       weaponCatalog: { data: { weapons: [{ id: "weapon_hash", name: "Test Weapon" }] } },
       equipmentCatalog: { data: { equips: [{ id: "gear_hash", name: "Test Gear" }] } },
       tacticalItemCatalog: { data: { tacticalItems: [{ id: "item_hash", name: "Test Item" }] } },
+      operatorDetails: [{
+        code: 0,
+        data: {
+          userChar: {
+            charId: "hash_chen",
+            owned: true,
+            level: "67",
+            evolvePhase: 3,
+            userSkills: { skill_1: { skillId: "skill_1", level: "6" } },
+            weapon: {
+              weaponId: "weapon_hash",
+              owned: true,
+              weaponData: { id: "weapon_hash", name: "Test Weapon" },
+            },
+            bodyEquip: {
+              equipId: "gear_hash",
+              ownedCount: 3,
+              equipData: { id: "gear_hash", name: "Test Gear" },
+            },
+            tacticalItem: {
+              tacticalItemId: "item_hash",
+              ownedCount: 2,
+              tacticalItemData: { id: "item_hash", name: "Test Item" },
+            },
+            charData: { id: "hash_chen", name: "Chen Qianyu" },
+          },
+        },
+      }],
       response: {
         code: 0,
         data: {
@@ -229,6 +324,7 @@ describe("SKPort roster import", () => {
       weaponCount: 1,
       gearCount: 3,
       tacticalItemCount: 2,
+      loadoutOperatorCount: 1,
       inventorySnapshot: {
         weapons: [{ id: "weapon_hash", name: "Test Weapon", ownedCount: 1 }],
         gear: [{ id: "gear_hash", name: "Test Gear", ownedCount: 3 }],
@@ -240,11 +336,16 @@ describe("SKPort roster import", () => {
       catalogOperatorId: "chen-qianyu",
       level: 67,
       promotionTier: 3,
-      snapshot: { combatSkills: [{ id: "skill_1", level: 6 }] },
+      snapshot: {
+        weapon: { id: "weapon_hash", name: "Test Weapon" },
+        gear: [{ slot: "body", id: "gear_hash", name: "Test Gear" }],
+        tacticalItem: { id: "item_hash", name: "Test Item" },
+        combatSkills: [{ id: "skill_1", level: 6 }],
+      },
     });
-    expect(preview.warnings.join(" ")).toMatch(/Team Picks reports operator progression/i);
     expect(preview.unmatchedOperatorNames).toEqual([]);
     expect(preview.warnings.join(" ")).not.toMatch(/Endministrator|No catalog match/i);
+    expect(preview.warnings.join(" ")).not.toMatch(/no per-operator loadout|Operators without a detail response/i);
 
     const imported = applySkportRosterImport(createStarterScenario(catalog), preview, "2026-08-15T02:00:00.000Z");
     expect(imported.scenario.rosterImport?.inventory).toEqual(preview.inventorySnapshot);

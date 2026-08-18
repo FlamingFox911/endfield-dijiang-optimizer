@@ -1503,6 +1503,40 @@ dl div {
   margin-top: 14px;
 }
 
+.syncPaste {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px 12px;
+  margin-top: 14px;
+}
+
+.syncPaste label {
+  grid-column: 1 / -1;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.syncPaste textarea {
+  width: 100%;
+  min-height: 88px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--panel-strong);
+  color: var(--ink);
+  font: 0.8rem/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.syncPaste textarea:focus {
+  outline: 2px solid color-mix(in srgb, var(--teal) 45%, transparent);
+  outline-offset: 1px;
+}
+
 .syncInstructions {
   display: grid;
   gap: 8px;
@@ -1563,6 +1597,10 @@ dl div {
 
 @media (max-width: 720px) {
   .bookmarkletSetup {
+    grid-template-columns: 1fr;
+  }
+
+  .syncPaste {
     grid-template-columns: 1fr;
   }
 }
