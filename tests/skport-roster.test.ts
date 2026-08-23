@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildSkportRoster,
   createSkportSign,
+  isSkportPreviewItem,
   parseSkportModifier,
 } from "../scripts/sync-skport-roster";
 
@@ -205,5 +206,33 @@ describe("official SKPORT roster source", () => {
         { itemId: "talos-cap", quantity: 8 },
       ],
     }]);
+  });
+
+  it("ignores announced preview operators without weakening released-operator validation", () => {
+    const data: any = officialSourceData();
+    const preview = {
+      itemId: "1174",
+      name: "Purrchena",
+      brief: {
+        cover: "https://static.skport.com/purrchena.png",
+        dotType: "label_type_preview",
+      },
+    };
+    data.operatorItems.push(preview, {
+      itemId: "released-without-details",
+      name: "Released Without Details",
+      brief: {
+        cover: "https://static.skport.com/released.png",
+        dotType: "",
+      },
+    });
+
+    const result = buildSkportRoster(data, "2026-08-22T12:00:00.000Z");
+
+    expect(isSkportPreviewItem(preview)).toBe(true);
+    expect(result.operators.map((operator) => operator.name)).toEqual(["Liino"]);
+    expect(result.warnings).toEqual([
+      "Official operator 'Released Without Details' has no detail payload.",
+    ]);
   });
 });

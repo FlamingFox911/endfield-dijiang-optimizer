@@ -13,7 +13,7 @@ This document records how public catalog data is obtained at the domain level, s
   - request a public anonymous token from `https://zonai.skport.com/web/v1/auth/refresh`
   - sign the official wiki API requests using the same timestamped HMAC-SHA256 and MD5 flow as the public site client
   - fetch catalog metadata from `/web/v1/wiki/item/catalog?typeMainId=1`
-  - fetch each released operator from `/web/v1/wiki/item/info?id={itemId}`
+  - exclude entries whose official catalog card uses `brief.dotType = label_type_preview`, then fetch each released operator from `/web/v1/wiki/item/info?id={itemId}`
   - parse the structured document tables rather than rendered HTML
   - recognize `Talent Effect`, `Talent effect`, `Base Skill Effect`, and `Advancement Effect` table variants by their two ranked assignment rows, and normalize non-breaking whitespace before facility matching
   - download official portrait originals without a cross-site referrer, resize them to 256 pixels, encode them as quality-84 WebP, and publish content-addressed files with the Pages artifact
@@ -21,6 +21,7 @@ This document records how public catalog data is obtained at the domain level, s
 - Safety rule:
   - `robots.txt` currently resolves to the wiki application shell rather than publishing crawler restrictions; keep detail requests in small batches anyway
   - unsupported descriptions, missing operator fields, incomplete promotion costs, or unknown table shapes produce a warning that blocks a scheduled deployment
+  - missing data on an explicitly marked preview entry is expected and does not warn or change the optimizer catalog; once SKPORT removes the preview marker, the normal two-skill validation applies automatically
   - an operator without exactly two supported official Base Skill tables produces a warning; operator fields are never mixed with a secondary source
   - the browser app never calls SKPORT directly; it reads only the validated same-origin generated overlay
 

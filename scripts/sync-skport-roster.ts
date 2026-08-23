@@ -32,12 +32,17 @@ interface SkportCatalogItem {
   name: string;
   brief: {
     cover: string;
+    dotType?: string | null;
     subTypeList?: Array<{
       subTypeId: string;
       value: string;
     }>;
   };
   publishedAtTs?: string;
+}
+
+export function isSkportPreviewItem(item: SkportCatalogItem): boolean {
+  return item.brief.dotType === "label_type_preview";
 }
 
 interface SkportFilterTag {
@@ -280,7 +285,9 @@ export async function fetchSkportRosterSource(): Promise<SkportRosterSourceData>
   if (!operatorType?.items?.length) {
     throw new Error("SKPORT returned no operator catalog entries.");
   }
-  const operatorItems = operatorType.items.filter((entry) => !entry.name.startsWith("Endministrator"));
+  const operatorItems = operatorType.items.filter((entry) => (
+    !entry.name.startsWith("Endministrator") && !isSkportPreviewItem(entry)
+  ));
   const allItems = mainType?.typeSub?.flatMap((entry) => entry.items ?? []) ?? [];
   const tagNamesById: Record<string, string> = {};
   for (const subType of mainType?.typeSub ?? []) {
@@ -584,6 +591,11 @@ export function buildSkportRoster(
   const promotionOverrides: OperatorPromotionOverride[] = [];
   const warnings: string[] = [];
   for (const item of data.operatorItems) {
+    // SKPORT publishes explicitly marked preview cards before their optimization data exists.
+    // They become eligible automatically when the official catalog removes the preview marker.
+    if (isSkportPreviewItem(item)) {
+      continue;
+    }
     const detail = detailById.get(item.itemId);
     if (!detail) {
       warnings.push(`Official operator '${item.name}' has no detail payload.`);
