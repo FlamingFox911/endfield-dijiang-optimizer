@@ -1,8 +1,14 @@
 import fs from "node:fs/promises";
+import { createHash, createHmac } from "node:crypto";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 const DEFAULT_POLICY_PATH = path.resolve("catalogs", "live-sync-policy.json");
+const SKPORT_API_HOST = "https://zonai.skport.com";
+const SKPORT_CATALOG_PATH = "/web/v1/wiki/item/catalog";
+const OPERATOR_NAME_OVERRIDES = {
+  "Mi Fu": "Mifu",
+};
 
 function hours(value) {
   return value * 60 * 60 * 1_000;
@@ -44,7 +50,13 @@ function validatePolicy(policy) {
   return policy;
 }
 
-export function decideCatalogSync(policyInput, publishedUpdate, nowInput, scheduleExpression) {
+export function decideCatalogSync(
+  policyInput,
+  publishedUpdate,
+  nowInput,
+  scheduleExpression,
+  upstreamReleasedOperatorIds = [],
+) {
   const policy = validatePolicy(policyInput);
   const now = nowInput instanceof Date ? nowInput : new Date(nowInput);
   if (!Number.isFinite(now.getTime())) {
@@ -60,6 +72,8 @@ export function decideCatalogSync(policyInput, publishedUpdate, nowInput, schedu
   const missingOperatorIds = released
     .map((release) => release.operatorId)
     .filter((operatorId) => !publishedOperatorIds.has(operatorId));
+  const upstreamMissingOperatorIds = [...new Set(upstreamReleasedOperatorIds)]
+    .filter((operatorId) => operatorId && !publishedOperatorIds.has(operatorId));
   const hasPublishedWarnings = !publishedUpdate || !Array.isArray(publishedUpdate.warnings)
     || publishedUpdate.warnings.length > 0;
   const activeRelease = policy.operatorReleases.find((release) => {
@@ -71,7 +85,7 @@ export function decideCatalogSync(policyInput, publishedUpdate, nowInput, schedu
   let cadence;
   if (activeRelease) {
     cadence = "burst";
-  } else if (missingOperatorIds.length > 0 || hasPublishedWarnings) {
+  } else if (missingOperatorIds.length > 0 || upstreamMissingOperatorIds.length > 0 || hasPublishedWarnings) {
     cadence = "daily";
   } else {
     cadence = "weekly";
@@ -91,10 +105,88 @@ export function decideCatalogSync(policyInput, publishedUpdate, nowInput, schedu
     cadence,
     shouldCheck,
     missingOperatorIds,
+    upstreamMissingOperatorIds,
     activeOperatorId: activeRelease?.operatorId,
     nextOperatorId: nextRelease?.operatorId,
     nextReleaseAt: nextRelease?.releaseAt,
   };
+}
+
+function slugify(value) {
+  return value
+    .toLowerCase()
+    .replace(/[\u2018\u2019']/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function readReleasedSkportOperatorIds(catalogData) {
+  const mainType = catalogData?.catalog?.find((entry) => entry.id === "1");
+  const operatorType = mainType?.typeSub?.find((entry) => entry.id === "1");
+  return (operatorType?.items ?? [])
+    .filter((entry) => (
+      typeof entry?.name === "string"
+      && !entry.name.startsWith("Endministrator")
+      && entry.brief?.dotType !== "label_type_preview"
+    ))
+    .map((entry) => slugify(OPERATOR_NAME_OVERRIDES[entry.name] ?? entry.name));
+}
+
+function createSkportSign(pathname, query, timestamp, token) {
+  const signedHeaders = {
+    platform: "3",
+    timestamp,
+    dId: "",
+    vName: "1.0.0",
+  };
+  const message = `${pathname}${query}${timestamp}${JSON.stringify(signedHeaders)}`;
+  const hmac = createHmac("sha256", token).update(message).digest("hex");
+  return createHash("md5").update(hmac).digest("hex");
+}
+
+async function fetchSkportReleasedOperatorIds() {
+  try {
+    const authResponse = await fetch(`${SKPORT_API_HOST}/web/v1/auth/refresh`, {
+      headers: { "User-Agent": "endfield-dijiang-optimizer-catalog-scheduler/0.2" },
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!authResponse.ok) {
+      throw new Error(`authentication returned ${authResponse.status} ${authResponse.statusText}`);
+    }
+    const auth = await authResponse.json();
+    if (auth.code !== 0 || !auth.data?.token || !auth.timestamp) {
+      throw new Error(auth.message || `authentication returned code ${auth.code}`);
+    }
+
+    const query = new URLSearchParams({ typeMainId: "1" }).toString();
+    const timestamp = String(auth.timestamp);
+    const response = await fetch(`${SKPORT_API_HOST}${SKPORT_CATALOG_PATH}?${query}`, {
+      headers: {
+        "sk-language": "en",
+        platform: "3",
+        timestamp,
+        vName: "1.0.0",
+        sign: createSkportSign(SKPORT_CATALOG_PATH, query, timestamp, auth.data.token),
+        "User-Agent": "endfield-dijiang-optimizer-catalog-scheduler/0.2",
+      },
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!response.ok) {
+      throw new Error(`catalog returned ${response.status} ${response.statusText}`);
+    }
+    const document = await response.json();
+    if (document.code !== 0) {
+      throw new Error(document.message || `catalog returned code ${document.code}`);
+    }
+    const operatorIds = readReleasedSkportOperatorIds(document.data);
+    if (operatorIds.length === 0) {
+      throw new Error("catalog contained no released operators");
+    }
+    return operatorIds;
+  } catch (error) {
+    console.warn(`Could not inspect the official SKPORT roster; using the release policy cadence. ${error instanceof Error ? error.message : String(error)}`);
+    return [];
+  }
 }
 
 async function fetchPublishedUpdate(url) {
@@ -124,12 +216,25 @@ async function main() {
     throw new Error("--published-url is required.");
   }
   const policy = JSON.parse(await fs.readFile(policyPath, "utf8"));
-  const decision = decideCatalogSync(policy, await fetchPublishedUpdate(publishedUrl), now, scheduleExpression);
+  const [publishedUpdate, upstreamReleasedOperatorIds] = await Promise.all([
+    fetchPublishedUpdate(publishedUrl),
+    fetchSkportReleasedOperatorIds(),
+  ]);
+  const decision = decideCatalogSync(
+    policy,
+    publishedUpdate,
+    now,
+    scheduleExpression,
+    upstreamReleasedOperatorIds,
+  );
   const summary = [
     `cadence=${decision.cadence}`,
     `check=${decision.shouldCheck}`,
     decision.activeOperatorId ? `active=${decision.activeOperatorId}` : undefined,
     decision.missingOperatorIds.length > 0 ? `missing=${decision.missingOperatorIds.join(",")}` : undefined,
+    decision.upstreamMissingOperatorIds.length > 0
+      ? `upstream-missing=${decision.upstreamMissingOperatorIds.join(",")}`
+      : undefined,
     decision.nextOperatorId ? `next=${decision.nextOperatorId}@${decision.nextReleaseAt}` : undefined,
   ].filter(Boolean).join(" ");
   console.log(`catalog sync schedule: ${summary}`);

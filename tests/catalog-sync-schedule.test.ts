@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { decideCatalogSync } from "../scripts/catalog-sync-schedule.mjs";
+import {
+  decideCatalogSync,
+  readReleasedSkportOperatorIds,
+} from "../scripts/catalog-sync-schedule.mjs";
 
 const policy = {
   schemaVersion: 1,
@@ -106,5 +109,47 @@ describe("release-aware catalog sync schedule", () => {
 
     expect(unavailable).toMatchObject({ cadence: "daily", shouldCheck: true });
     expect(warned).toMatchObject({ cadence: "daily", shouldCheck: true });
+  });
+
+  it("uses daily cadence when SKPORT publishes an operator absent from the deployed roster", () => {
+    const daily = decideCatalogSync(
+      policy,
+      published(["arcane", "liino"]),
+      new Date("2026-08-20T00:30:00.000Z"),
+      policy.dailySchedule,
+      ["arcane", "liino", "typhoeus"],
+    );
+    const extraSlot = decideCatalogSync(
+      policy,
+      published(["arcane", "liino"]),
+      new Date("2026-08-20T12:30:00.000Z"),
+      policy.burstSchedules[1],
+      ["arcane", "liino", "typhoeus"],
+    );
+
+    expect(daily).toMatchObject({
+      cadence: "daily",
+      shouldCheck: true,
+      upstreamMissingOperatorIds: ["typhoeus"],
+    });
+    expect(extraSlot).toMatchObject({ cadence: "daily", shouldCheck: false });
+  });
+
+  it("does not treat SKPORT preview cards as released operators", () => {
+    const operatorIds = readReleasedSkportOperatorIds({
+      catalog: [{
+        id: "1",
+        typeSub: [{
+          id: "1",
+          items: [
+            { name: "Typhoeus", brief: { dotType: "label_type_preview" } },
+            { name: "Mi Fu", brief: {} },
+            { name: "Endministrator (Male)", brief: {} },
+          ],
+        }],
+      }],
+    });
+
+    expect(operatorIds).toEqual(["mifu"]);
   });
 });

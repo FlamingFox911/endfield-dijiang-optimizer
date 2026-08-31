@@ -6,7 +6,7 @@
     "17 6,12,18 * * *"
   ],
   "stableWeekdayUtc": 0,
-  "releaseLeadHours": 24,
+  "releaseLeadHours": 48,
   "releaseBurstHours": 48,
   "operatorReleases": [
     {
@@ -18,6 +18,11 @@
       "operatorId": "liino",
       "releaseAt": "2026-08-09T04:00:00.000Z",
       "sourceUrl": "https://endfield.gryphline.com/en-us/news/5200"
+    },
+    {
+      "operatorId": "typhoeus",
+      "releaseAt": "2026-09-02T04:00:00.000Z",
+      "sourceUrl": "https://endfield.gryphline.com/en-us/news/5209"
     }
   ]
 }
