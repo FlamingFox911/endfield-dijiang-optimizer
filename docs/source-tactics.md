@@ -94,6 +94,7 @@ This document records how public catalog data is obtained at the domain level, s
 - Use for:
   - official announcements
   - announced operator availability dates used by `catalogs/live-sync-policy.json`
+  - official named game versions shown with the live catalog sync
   - security or policy statements
 - Preferred tactic:
   - normal browser or HTTP fetch is acceptable

@@ -46,6 +46,9 @@ function validatePolicy(policy) {
     if (!release?.operatorId || !Number.isFinite(Date.parse(release.releaseAt))) {
       throw new Error("Every catalog sync operator release needs an operatorId and valid releaseAt timestamp.");
     }
+    if (release.gameVersion !== undefined && (typeof release.gameVersion !== "string" || release.gameVersion.length === 0)) {
+      throw new Error("Catalog sync gameVersion values must be non-empty strings.");
+    }
   }
   return policy;
 }

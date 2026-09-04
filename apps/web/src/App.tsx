@@ -16,7 +16,6 @@ import type {
 
 import {
   CURRENT_CATALOG_BUNDLE_ID,
-  CURRENT_CATALOG_VERSION,
   DEMAND_PROFILE_PRESETS,
   MAX_OPERATOR_LEVEL,
   applySkportRosterImport,
@@ -71,15 +70,29 @@ const LIVE_ROSTER_REFRESH_INTERVAL_MS = 60 * 60 * 1000;
 const TOOLTIP_VIEWPORT_MARGIN_PX = 12;
 const TOOLTIP_TRIGGER_GAP_PX = 8;
 
+interface SeenCatalogSyncState {
+  schemaVersion: 1;
+  contentHash: string;
+  operatorIds: string[];
+  recipeIds: string[];
+}
+
 function resolveAppPath(pathname: string): string {
   return `${APP_BASE_PATH}${pathname.replace(/^\/+/, "")}`;
+}
+
+function formatLocalIsoDate(timestamp: string): string {
+  const date = new Date(timestamp);
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
 }
 
 interface CatalogLoadResult {
   catalog: GameCatalog;
   rosterUpdate: LiveRosterUpdateDocument | null;
-  addedOperatorIds: string[];
-  addedRecipeIds: string[];
 }
 
 async function loadCatalogWithLiveRoster(): Promise<CatalogLoadResult> {
@@ -89,26 +102,58 @@ async function loadCatalogWithLiveRoster(): Promise<CatalogLoadResult> {
   const bundledCatalog = await fetchGameCatalog(resolveAppPath(`catalogs/${CURRENT_CATALOG_BUNDLE_ID}`));
   const rosterUpdate = await rosterUpdatePromise;
   if (!rosterUpdate || (rosterUpdate.operators.length === 0 && rosterUpdate.recipes.length === 0)) {
-    return { catalog: bundledCatalog, rosterUpdate, addedOperatorIds: [], addedRecipeIds: [] };
+    return { catalog: bundledCatalog, rosterUpdate };
   }
   const merged = mergeLiveRosterUpdate(bundledCatalog, rosterUpdate);
   return {
     catalog: merged.catalog,
     rosterUpdate,
-    addedOperatorIds: merged.addedOperatorIds,
-    addedRecipeIds: merged.addedRecipeIds,
   };
 }
 
 function describeCatalogSync(
   catalog: GameCatalog,
   rosterUpdate: LiveRosterUpdateDocument,
-  addedOperatorIds: string[],
-  addedRecipeIds: string[],
+  knownDraftOperatorIds: string[] = [],
 ): string[] {
-  if (localStorage.getItem(CATALOG_SYNC_SEEN_KEY) === rosterUpdate.contentHash) {
+  const storedValue = localStorage.getItem(CATALOG_SYNC_SEEN_KEY);
+  let previousState: SeenCatalogSyncState | undefined;
+  if (storedValue) {
+    try {
+      const parsed = JSON.parse(storedValue) as Partial<SeenCatalogSyncState>;
+      if (parsed.schemaVersion === 1
+        && typeof parsed.contentHash === "string"
+        && Array.isArray(parsed.operatorIds)
+        && parsed.operatorIds.every((operatorId) => typeof operatorId === "string")
+        && Array.isArray(parsed.recipeIds)
+        && parsed.recipeIds.every((recipeId) => typeof recipeId === "string")) {
+        previousState = parsed as SeenCatalogSyncState;
+      }
+    } catch {
+      // Older releases stored only a bare content hash. It is migrated below.
+    }
+  }
+  const nextState: SeenCatalogSyncState = {
+    schemaVersion: 1,
+    contentHash: rosterUpdate.contentHash,
+    operatorIds: rosterUpdate.operators.map((operator) => operator.id),
+    recipeIds: rosterUpdate.recipes.map((recipe) => recipe.id),
+  };
+  if (!storedValue) {
+    localStorage.setItem(CATALOG_SYNC_SEEN_KEY, JSON.stringify(nextState));
     return [];
   }
+  if (previousState?.contentHash === rosterUpdate.contentHash || storedValue === rosterUpdate.contentHash) {
+    localStorage.setItem(CATALOG_SYNC_SEEN_KEY, JSON.stringify(nextState));
+    return [];
+  }
+
+  const priorOperatorIds = new Set(previousState?.operatorIds ?? knownDraftOperatorIds);
+  const priorRecipeIds = new Set(previousState?.recipeIds ?? []);
+  const addedOperatorIds = nextState.operatorIds.filter((operatorId) => !priorOperatorIds.has(operatorId));
+  const addedRecipeIds = previousState
+    ? nextState.recipeIds.filter((recipeId) => !priorRecipeIds.has(recipeId))
+    : [];
   const messages: string[] = [];
   if (addedOperatorIds.length > 0) {
     const names = addedOperatorIds.map((operatorId) => (
@@ -122,11 +167,20 @@ function describeCatalogSync(
     ));
     messages.push(`Catalog sync added ${names.length} Growth Chamber resource${names.length === 1 ? "" : "s"}: ${names.join(", ")}.`);
   }
-  if (messages.length === 0) {
+  if (messages.length === 0 && previousState) {
     messages.push("Catalog sync applied updated operator or resource data.");
   }
-  localStorage.setItem(CATALOG_SYNC_SEEN_KEY, rosterUpdate.contentHash);
+  localStorage.setItem(CATALOG_SYNC_SEEN_KEY, JSON.stringify(nextState));
   return messages;
+}
+
+function readDraftOperatorIds(value: unknown): string[] {
+  if (!value || typeof value !== "object" || !("roster" in value) || !Array.isArray(value.roster)) {
+    return [];
+  }
+  return value.roster
+    .map((entry) => entry && typeof entry === "object" && "operatorId" in entry ? entry.operatorId : undefined)
+    .filter((operatorId): operatorId is string => typeof operatorId === "string");
 }
 
 function isLikelyJsonFile(file: File): boolean {
@@ -869,12 +923,15 @@ function AnyOperatorChip() {
   );
 }
 
-function summarizeHydration(hydration: ReturnType<typeof hydrateScenarioForCatalog>): string[] {
+function summarizeHydration(
+  hydration: ReturnType<typeof hydrateScenarioForCatalog>,
+  includeAddedOperators = true,
+): string[] {
   if (!hydration.hydrated) {
     return [];
   }
   const messages: string[] = [];
-  if (hydration.stats.addedOperators > 0) {
+  if (includeAddedOperators && hydration.stats.addedOperators > 0) {
     messages.push(`Expanded the draft with ${hydration.stats.addedOperators} missing operator entr${hydration.stats.addedOperators === 1 ? "y" : "ies"} from the active catalog.`);
   }
   if (hydration.stats.addedBaseSkillStates > 0) {
@@ -1045,26 +1102,26 @@ function App() {
   }, [skportImportOpen]);
 
   useEffect(() => {
-      let cancelled = false;
-      (async () => {
-        try {
-          const catalogLoad = await loadCatalogWithLiveRoster();
-          const nextCatalog = catalogLoad.catalog;
-          if (cancelled) {
-            return;
-          }
-          setRosterUpdate(catalogLoad.rosterUpdate);
-
-          const rosterMessages = catalogLoad.rosterUpdate
-            ? describeCatalogSync(
-                nextCatalog,
-                catalogLoad.rosterUpdate,
-                catalogLoad.addedOperatorIds,
-                catalogLoad.addedRecipeIds,
-              )
-            : [];
+    let cancelled = false;
+    (async () => {
+      try {
+        const catalogLoad = await loadCatalogWithLiveRoster();
+        const nextCatalog = catalogLoad.catalog;
+        if (cancelled) {
+          return;
+        }
+        setRosterUpdate(catalogLoad.rosterUpdate);
 
         const savedDraft = localStorage.getItem(DRAFT_KEY);
+        const savedDraftInput = savedDraft ? JSON.parse(savedDraft) as unknown : undefined;
+        const rosterMessages = catalogLoad.rosterUpdate
+          ? describeCatalogSync(
+              nextCatalog,
+              catalogLoad.rosterUpdate,
+              readDraftOperatorIds(savedDraftInput),
+            )
+          : [];
+
         if (!savedDraft) {
           const starterScenario = createStarterScenario(nextCatalog);
           setCatalog(nextCatalog);
@@ -1074,7 +1131,7 @@ function App() {
           return;
         }
 
-        const migration = migrateScenario(JSON.parse(savedDraft));
+        const migration = migrateScenario(savedDraftInput);
         const hydration = hydrateScenarioForCatalog(nextCatalog, migration.scenario);
         setCatalog(nextCatalog);
         setScenario(hydration.scenario);
@@ -1082,7 +1139,7 @@ function App() {
         setMessages([
           ...rosterMessages,
           ...(migration.migrated ? [`Loaded local draft and migrated it from format ${migration.fromFormatVersion} to ${migration.toFormatVersion}.`] : []),
-          ...summarizeHydration(hydration),
+          ...summarizeHydration(hydration, false),
           ...migration.warnings.map((issue) => issue.message),
         ]);
       } catch (error) {
@@ -1123,8 +1180,6 @@ function App() {
         const syncMessages = describeCatalogSync(
           merged.catalog,
           nextUpdate,
-          merged.addedOperatorIds,
-          merged.addedRecipeIds,
         );
         if (syncMessages.length > 0) {
           setMessages((current) => [
@@ -1180,7 +1235,7 @@ function App() {
     }
 
     setScenario(hydration.scenario);
-    setMessages((current) => [...summarizeHydration(hydration), ...current]);
+    setMessages((current) => [...summarizeHydration(hydration, false), ...current]);
   }, [catalog, scenario]);
 
   useEffect(() => {
@@ -1942,17 +1997,11 @@ function App() {
           <h1>Endfield Dijiang Optimizer</h1>
           <p className="lede">Configure your roster and Dijiang facilities to find the strongest operator assignments and upgrade priorities.</p>
           <div className="heroStats">
-            <article><span>Catalog</span><strong>{CURRENT_CATALOG_VERSION}</strong></article>
-            <article><span>Game version</span><strong>{catalog.manifest.gameVersion}</strong></article>
-            <article><span>Snapshot</span><strong>{catalog.manifest.snapshotDate}</strong></article>
-            <article><span>Catalog sync</span><strong>{rosterUpdate ? new Date(rosterUpdate.sourceUpdatedAt ?? rosterUpdate.generatedAt).toLocaleDateString() : "Bundled"}</strong></article>
+            <article><span>Catalog sync</span><strong>{rosterUpdate ? formatLocalIsoDate(rosterUpdate.sourceUpdatedAt ?? rosterUpdate.generatedAt) : "Bundled"}</strong></article>
+            <article><span>Game version</span><strong>{rosterUpdate?.gameVersion ?? catalog.manifest.gameVersion}</strong></article>
             <article><span>Operators</span><strong>{catalog.operators.length}</strong></article>
-            <article><span>Roster import</span><strong>{scenario.rosterImport ? new Date(scenario.rosterImport.importedAt).toLocaleDateString() : "Manual"}</strong></article>
-          </div>
-        </div>
-        <div className="heroPanel">
-          <div className="heroMetaGrid">
-            <div>
+            <article><span>Roster import</span><strong>{scenario.rosterImport ? formatLocalIsoDate(scenario.rosterImport.importedAt) : "Manual"}</strong></article>
+            <article>
               <span className="labelWithHelp">
                 <span>Owned operators</span>
                 <HelpPopover
@@ -1962,30 +2011,8 @@ function App() {
                 />
               </span>
               <strong>{ownedOperators.length}</strong>
-            </div>
-            <div><span>Recipes</span><strong>{catalog.recipes.length}</strong></div>
-            <div>
-              <span className="labelWithHelp">
-                <span>Source refs</span>
-                <HelpPopover
-                  label="?"
-                  assistiveLabel={`This catalog snapshot bundles ${catalog.sources.length} maintainer-side source references.`}
-                  content={"Number of maintainer-side source references bundled with this catalog snapshot.\n\nThese citations document where catalog values came from.\nThe app does not use account login or live account scraping."}
-                />
-              </span>
-              <strong>{catalog.sources.length}</strong>
-            </div>
-            <div>
-              <span className="labelWithHelp">
-                <span>Known data gaps</span>
-                <HelpPopover
-                  label="?"
-                  assistiveLabel={`This catalog snapshot declares ${catalog.gaps.length} known data gaps that may reduce scoring exactness.`}
-                  content={"Number of known data gaps declared by this catalog snapshot.\n\nThese are intentionally tracked source gaps or unresolved details rather than silently hidden omissions.\nScoring stays conservative where exact demand or timing data is unavailable."}
-                />
-              </span>
-              <strong>{catalog.gaps.length}</strong>
-            </div>
+            </article>
+            <article><span>Recipes</span><strong>{catalog.recipes.length}</strong></article>
           </div>
         </div>
       </header>

@@ -13,6 +13,7 @@ import { loadDefaultCatalog } from "@endfield/data/node";
 
 import {
   buildLiveRosterUpdate,
+  createLiveCatalogContentHash,
   mapFactorySkillModifier,
   optimizeLiveRosterPortraits,
 } from "../scripts/sync-live-roster";
@@ -172,6 +173,26 @@ describe("automatic live roster updates", () => {
     expect(regenerated.source.retrievedOn).not.toBe(first.source.retrievedOn);
     expect(regenerated.contentHash).toBe(first.contentHash);
     expect(changed.contentHash).not.toBe(first.contentHash);
+  });
+
+  it("includes the active game version in live catalog identity", () => {
+    const update = buildLiveRosterUpdate(sourceData(), generatedAt);
+    const homecomingHash = createLiveCatalogContentHash({
+      gameVersion: "Homecoming",
+      operators: update.operators,
+      promotionOverrides: update.promotionOverrides,
+      recipes: update.recipes,
+      assets: update.assets,
+    });
+    const dreamscapeHash = createLiveCatalogContentHash({
+      gameVersion: "Dreamscape of Wind and Snow",
+      operators: update.operators,
+      promotionOverrides: update.promotionOverrides,
+      recipes: update.recipes,
+      assets: update.assets,
+    });
+
+    expect(homecomingHash).not.toBe(dreamscapeHash);
   });
 
   it("generates content-addressed 256px WebP portraits for same-origin hosting", async () => {

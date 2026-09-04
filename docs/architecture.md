@@ -63,6 +63,7 @@ Facility, established recipe, and progression snapshots remain versioned and imm
 - a scheduled check generates and validates a candidate before starting the Pages deployment job
 - unchanged content hashes, source warnings, and regressive operator or Growth Chamber recipe counts block scheduled deployments
 - official operator release dates affect cadence and completeness checks; official SKPORT Base Skill tables supply operator optimization values
+- the live overlay carries the official named game version associated with the latest effective release-policy entry, so the UI does not confuse an older immutable bundle version with the active game release
 - browser tabs periodically fetch the generated same-origin roster document
 - the data package validates the complete document before merging it
 - a timestamp-independent content hash deduplicates browser update notices across rebuilds
@@ -70,6 +71,8 @@ Facility, established recipe, and progression snapshots remain versioned and imm
 - the scenario keeps its immutable base catalog version, while hydration adds newly discovered roster entries without changing user-owned state
 
 The frequent release-window cron remains a lightweight heartbeat because GitHub schedules are static. Outside an active release window, it only reads the deployed update document and the official SKPORT catalog listing before exiting ahead of dependency installation or source normalization. A released SKPORT entry absent from the deployment restores daily full checks, which protects against a stale manual release calendar. Once every officially released operator in the policy and SKPORT listing is present and the live document has no warnings, only the configured weekly slot performs a full catalog check. The Pages environment is attached to a separate conditional job, so skipped and unchanged checks do not create Pages deployments.
+
+Browser clients persist the content hash plus operator and recipe identifiers from the last live overlay they observed. The first observation initializes silently; later sync notices compare consecutive overlays rather than comparing every update with the immutable bundled snapshot. Legacy hash-only state is migrated using the saved draft to avoid replaying previously added operators.
 
 ## Data model
 

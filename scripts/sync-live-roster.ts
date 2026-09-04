@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import sharp from "sharp";
 
 import type {
@@ -25,18 +25,22 @@ import {
 
 const DEFAULT_SOURCE_BASE_URL = "https://endfieldtools.dev";
 const DEFAULT_OUTPUT_PATH = path.resolve("apps", "web", "public", "roster", "latest.json");
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const LIVE_SYNC_POLICY_PATH = path.join(REPO_ROOT, "catalogs", "live-sync-policy.json");
 const EXCLUDED_CHARACTER_IDS = new Set(["chr_0002_endminm", "chr_0003_endminf", "chr_9000_endmin"]);
 const RETRY_ATTEMPTS = 3;
 const LIVE_PORTRAIT_WIDTH = 256;
 const LIVE_PORTRAIT_WEBP_QUALITY = 84;
 
 export function createLiveCatalogContentHash(content: {
+  gameVersion?: string;
   operators: OperatorDefinition[];
   promotionOverrides: OperatorPromotionOverride[];
   recipes: RecipeDefinition[];
   assets: ImageAsset[];
 }): string {
   const canonicalContent = {
+    gameVersion: content.gameVersion,
     operators: [...content.operators].sort((left, right) => left.id.localeCompare(right.id)),
     promotionOverrides: [...content.promotionOverrides].sort((left, right) => (
       `${left.operatorId}:${left.promotionTier}`.localeCompare(`${right.operatorId}:${right.promotionTier}`)
@@ -56,6 +60,24 @@ export function createLiveCatalogContentHash(content: {
     return value;
   });
   return createHash("sha256").update(serialized).digest("hex");
+}
+
+async function readCurrentGameVersion(at = new Date()): Promise<string | undefined> {
+  const policy = JSON.parse(await fs.readFile(LIVE_SYNC_POLICY_PATH, "utf8")) as {
+    operatorReleases?: Array<{
+      releaseAt?: string;
+      gameVersion?: string;
+    }>;
+  };
+  return (policy.operatorReleases ?? [])
+    .filter((release) => (
+      typeof release.gameVersion === "string"
+      && typeof release.releaseAt === "string"
+      && Number.isFinite(Date.parse(release.releaseAt))
+      && Date.parse(release.releaseAt) <= at.getTime()
+    ))
+    .sort((left, right) => Date.parse(right.releaseAt!) - Date.parse(left.releaseAt!))[0]
+    ?.gameVersion;
 }
 
 const PROFESSION_NAMES: Record<number, string> = {
@@ -766,6 +788,7 @@ export async function optimizeLiveRosterPortraits(
     ...update,
     operators,
     contentHash: createLiveCatalogContentHash({
+      gameVersion: update.gameVersion,
       operators,
       promotionOverrides: update.promotionOverrides,
       recipes: update.recipes,
@@ -830,6 +853,20 @@ async function main(): Promise<void> {
         );
       }
     }
+  }
+  const gameVersion = await readCurrentGameVersion();
+  if (gameVersion) {
+    update = {
+      ...update,
+      gameVersion,
+      contentHash: createLiveCatalogContentHash({
+        gameVersion,
+        operators: update.operators,
+        promotionOverrides: update.promotionOverrides,
+        recipes: update.recipes,
+        assets: update.assets,
+      }),
+    };
   }
   update = await optimizeLiveRosterPortraits(update, outputPath);
   await fs.mkdir(path.dirname(outputPath), { recursive: true });

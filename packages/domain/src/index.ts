@@ -309,6 +309,7 @@ export interface LiveRosterUpdateDocument {
   schemaVersion: 1;
   generatedAt: string;
   sourceUpdatedAt?: string;
+  gameVersion?: string;
   contentHash: string;
   source: SourceRef;
   operators: OperatorDefinition[];

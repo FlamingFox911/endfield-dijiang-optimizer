@@ -75,6 +75,7 @@ function createTestLiveRosterUpdate(): LiveRosterUpdateDocument {
     schemaVersion: 1,
     generatedAt: "2026-08-06T12:00:00.000Z",
     sourceUpdatedAt: "2026-08-05T10:00:00.000Z",
+    gameVersion: "Test Version",
     contentHash: "a".repeat(64),
     source,
     operators: [{
@@ -188,6 +189,12 @@ describe("App", () => {
 
   it("announces unchanged catalog sync content only once across rebuild timestamps", async () => {
     const update = createTestLiveRosterUpdate();
+    localStorage.setItem("endfield-dijiang-optimizer:catalog-sync-seen", JSON.stringify({
+      schemaVersion: 1,
+      contentHash: "0".repeat(64),
+      operatorIds: [],
+      recipeIds: [],
+    }));
     responses.set("/roster/latest.json", update);
 
     const firstRender = render(<App />);
@@ -202,6 +209,45 @@ describe("App", () => {
     await screen.findByText("Endfield Dijiang Optimizer");
 
     expect(screen.queryByText("Catalog sync added 1 operator: Sync Test.")).not.toBeInTheDocument();
+  });
+
+  it("announces only entries added since the previous live overlay", async () => {
+    const firstUpdate = createTestLiveRosterUpdate();
+    responses.set("/roster/latest.json", firstUpdate);
+
+    const firstRender = render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+    expect(screen.queryByText(/Catalog sync added/)).not.toBeInTheDocument();
+    firstRender.unmount();
+
+    const secondOperator = {
+      ...firstUpdate.operators[0]!,
+      id: "second-sync-test",
+      name: "Second Sync Test",
+    };
+    responses.set("/roster/latest.json", {
+      ...firstUpdate,
+      contentHash: "b".repeat(64),
+      operators: [...firstUpdate.operators, secondOperator],
+    });
+    render(<App />);
+
+    expect(await screen.findByText("Catalog sync added 1 operator: Second Sync Test.")).toBeInTheDocument();
+    expect(screen.queryByText(/Catalog sync added 2 operators/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Expanded the draft with/)).not.toBeInTheDocument();
+  });
+
+  it("uses an existing draft to avoid replaying legacy sync additions", async () => {
+    const update = createTestLiveRosterUpdate();
+    seedDraft(["sync-test"]);
+    localStorage.setItem("endfield-dijiang-optimizer:catalog-sync-seen", "0".repeat(64));
+    responses.set("/roster/latest.json", update);
+
+    render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+
+    expect(screen.queryByText(/Catalog sync added/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Expanded the draft with/)).not.toBeInTheDocument();
   });
 
   it("loads the bundled catalog and runs optimize from the UI", async () => {
@@ -402,6 +448,7 @@ describe("App", () => {
   });
 
   it("uses clearer workspace and catalog labels", async () => {
+    responses.set("/roster/latest.json", createTestLiveRosterUpdate());
     render(<App />);
 
     await screen.findByText("Endfield Dijiang Optimizer");
@@ -410,9 +457,23 @@ describe("App", () => {
     expect(screen.getByRole("tab", { name: /Plan base/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /View results/i })).toBeInTheDocument();
     expect(screen.getAllByText("Owned operators").length).toBeGreaterThan(0);
-    expect(screen.getByText("Source refs")).toBeInTheDocument();
-    expect(screen.getByText("Known data gaps")).toBeInTheDocument();
+    expect(screen.getByText("Catalog sync")).toBeInTheDocument();
+    expect(screen.getByText("Game version")).toBeInTheDocument();
+    expect(screen.getByText("Test Version")).toBeInTheDocument();
+    expect(screen.getByText("Operators")).toBeInTheDocument();
+    expect(screen.getByText("Roster import")).toBeInTheDocument();
+    expect(screen.getByText("Recipes")).toBeInTheDocument();
+    expect(screen.queryByText("Catalog")).not.toBeInTheDocument();
+    expect(screen.queryByText("Snapshot")).not.toBeInTheDocument();
+    expect(screen.queryByText("Source refs")).not.toBeInTheDocument();
+    expect(screen.queryByText("Known data gaps")).not.toBeInTheDocument();
     expect(screen.getByText("Search depth")).toBeInTheDocument();
+
+    const headerStats = screen.getByText("Catalog sync").closest(".heroStats");
+    expect(headerStats).not.toBeNull();
+    expect(headerStats).toHaveTextContent("Owned operators");
+    expect(headerStats).toHaveTextContent("Recipes");
+    expect(headerStats?.children).toHaveLength(6);
   });
 
   it("filters the roster by owned state, facility focus, and search text", async () => {

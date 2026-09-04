@@ -127,7 +127,7 @@ select:focus-visible,
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.95fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   padding: 24px;
 }
@@ -200,7 +200,6 @@ select:focus-visible,
   color: #7c5a42;
 }
 
-.heroPanel,
 .heroCopy,
 .roomStack,
 .resultStack,
@@ -212,10 +211,6 @@ select:focus-visible,
 .plannerGrid {
   display: grid;
   gap: 14px;
-}
-
-.heroPanel {
-  align-content: start;
 }
 
 .heroCopy {

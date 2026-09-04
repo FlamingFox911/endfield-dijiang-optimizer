@@ -2663,6 +2663,12 @@ export function parseLiveRosterUpdate(value: unknown): LiveRosterUpdateDocument 
       "sourceUpdatedAt must be an ISO timestamp when present.",
     );
   }
+  if (value.gameVersion !== undefined) {
+    requireLiveRoster(
+      typeof value.gameVersion === "string" && value.gameVersion.length > 0,
+      "gameVersion must be a non-empty string when present.",
+    );
+  }
   requireLiveRoster(
     typeof value.contentHash === "string" && /^[a-f0-9]{64}$/.test(value.contentHash),
     "contentHash must be a lowercase SHA-256 digest.",

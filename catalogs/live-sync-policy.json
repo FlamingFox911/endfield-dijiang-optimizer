@@ -12,6 +12,7 @@
     {
       "operatorId": "arcane",
       "releaseAt": "2026-07-17T04:00:00.000Z",
+      "gameVersion": "Homecoming",
       "sourceUrl": "https://endfield.gryphline.com/en-us/news/5200"
     },
     {
@@ -22,6 +23,7 @@
     {
       "operatorId": "typhoeus",
       "releaseAt": "2026-09-02T04:00:00.000Z",
+      "gameVersion": "Dreamscape of Wind and Snow",
       "sourceUrl": "https://endfield.gryphline.com/en-us/news/5209"
     }
   ]
