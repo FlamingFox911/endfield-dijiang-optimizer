@@ -22,7 +22,7 @@
           "ranks": [
             {
               "rank": 1,
-              "label": "beta",
+              "label": "alpha",
               "modifiers": [
                 {
                   "metric": "production_efficiency",
@@ -45,6 +45,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523674",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-chen-qianyu",
+                  "label": "Chen Qianyu Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/chen-qianyu/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -73,6 +81,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523674",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-chen-qianyu",
+                  "label": "Chen Qianyu Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/chen-qianyu/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -91,6 +107,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523674",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-chen-qianyu",
+              "label": "Chen Qianyu Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/chen-qianyu/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-chen-qianyu-blade-critique-icon"
@@ -125,6 +149,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523674",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-chen-qianyu",
+                  "label": "Chen Qianyu Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/chen-qianyu/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -153,6 +185,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523674",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-chen-qianyu",
+                  "label": "Chen Qianyu Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/chen-qianyu/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -171,6 +211,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523674",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-chen-qianyu",
+              "label": "Chen Qianyu Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/chen-qianyu/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-chen-qianyu-jadeworking-icon"
@@ -214,7 +262,7 @@
           "ranks": [
             {
               "rank": 1,
-              "label": "beta",
+              "label": "alpha",
               "modifiers": [
                 {
                   "metric": "production_efficiency",
@@ -237,6 +285,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523669",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-xaihi",
+                  "label": "Xaihi Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/xaihi/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -265,6 +321,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523669",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-xaihi",
+                  "label": "Xaihi Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/xaihi/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -283,6 +347,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523669",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-xaihi",
+              "label": "Xaihi Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/xaihi/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-xaihi-standardized-scripting-icon"
@@ -299,8 +371,8 @@
                 {
                   "metric": "clue_rate_up",
                   "appliesTo": "clue_5",
-                  "value": 8,
-                  "unit": "percent"
+                  "value": 1,
+                  "unit": "tier"
                 }
               ],
               "sourceRefs": [
@@ -317,6 +389,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523669",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-xaihi",
+                  "label": "Xaihi Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/xaihi/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -327,8 +407,8 @@
                 {
                   "metric": "clue_rate_up",
                   "appliesTo": "clue_5",
-                  "value": 12,
-                  "unit": "percent"
+                  "value": 2,
+                  "unit": "tier"
                 }
               ],
               "sourceRefs": [
@@ -345,6 +425,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523669",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-xaihi",
+                  "label": "Xaihi Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/xaihi/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -363,6 +451,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523669",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-xaihi",
+              "label": "Xaihi Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/xaihi/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-xaihi-murmuring-session-icon"
@@ -429,6 +525,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523666",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-snowshine",
+                  "label": "Snowshine Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/snowshine/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -457,6 +561,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523666",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-snowshine",
+                  "label": "Snowshine Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/snowshine/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -475,6 +587,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523666",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-snowshine",
+              "label": "Snowshine Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/snowshine/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-snowshine-rescuers-perseverance-icon"
@@ -509,6 +629,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523666",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-snowshine",
+                  "label": "Snowshine Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/snowshine/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -537,6 +665,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523666",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-snowshine",
+                  "label": "Snowshine Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/snowshine/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -555,6 +691,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523666",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-snowshine",
+              "label": "Snowshine Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/snowshine/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-snowshine-happy-go-lucky-icon"
@@ -614,6 +758,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523672",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-da-pan",
+                  "label": "Da Pan Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/da-pan/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -635,6 +787,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523672",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-da-pan",
+                  "label": "Da Pan Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/da-pan/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -646,6 +806,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523672",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-da-pan",
+              "label": "Da Pan Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/da-pan/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-da-pan-chef-of-forage-and-game-icon"
@@ -673,6 +841,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523672",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-da-pan",
+                  "label": "Da Pan Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/da-pan/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -694,6 +870,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523672",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-da-pan",
+                  "label": "Da Pan Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/da-pan/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -705,6 +889,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523672",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-da-pan",
+              "label": "Da Pan Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/da-pan/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-da-pan-worldly-wisdom-icon"
@@ -757,6 +949,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562199",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-ardelia",
+                  "label": "Ardelia Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/ardelia/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -778,6 +978,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562199",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-ardelia",
+                  "label": "Ardelia Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/ardelia/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -789,6 +997,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562199",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-ardelia",
+              "label": "Ardelia Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/ardelia/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-ardelia-tales-of-the-land-icon"
@@ -816,6 +1032,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562199",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-ardelia",
+                  "label": "Ardelia Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/ardelia/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -837,6 +1061,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562199",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-ardelia",
+                  "label": "Ardelia Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/ardelia/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -848,6 +1080,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562199",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-ardelia",
+              "label": "Ardelia Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/ardelia/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-ardelia-mr-dollys-game-icon"
@@ -900,6 +1140,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562341",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-akekuri",
+                  "label": "Akekuri Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/akekuri/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -921,6 +1169,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562341",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-akekuri",
+                  "label": "Akekuri Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/akekuri/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -932,6 +1188,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562341",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-akekuri",
+              "label": "Akekuri Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/akekuri/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-akekuri-coffee-or-tea-icon"
@@ -959,6 +1223,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562341",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-akekuri",
+                  "label": "Akekuri Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/akekuri/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -980,6 +1252,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562341",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-akekuri",
+                  "label": "Akekuri Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/akekuri/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -991,6 +1271,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562341",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-akekuri",
+              "label": "Akekuri Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/akekuri/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-akekuri-icebreaker-icon"
@@ -1043,6 +1331,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562203",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-fluorite",
+                  "label": "Fluorite Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/fluorite/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -1064,6 +1360,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562203",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-fluorite",
+                  "label": "Fluorite Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/fluorite/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -1075,6 +1379,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562203",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-fluorite",
+              "label": "Fluorite Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/fluorite/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-fluorite-wildlands-trekker-icon"
@@ -1102,6 +1414,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562203",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-fluorite",
+                  "label": "Fluorite Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/fluorite/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -1123,6 +1443,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562203",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-fluorite",
+                  "label": "Fluorite Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/fluorite/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -1134,6 +1462,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562203",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-fluorite",
+              "label": "Fluorite Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/fluorite/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-fluorite-reader-of-emotions-icon"
@@ -1186,6 +1522,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562210",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-estella",
+                  "label": "Estella Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/estella/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -1207,6 +1551,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562210",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-estella",
+                  "label": "Estella Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/estella/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -1218,6 +1570,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562210",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-estella",
+              "label": "Estella Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/estella/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-estella-fragmented-rest-icon"
@@ -1245,6 +1605,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562210",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-estella",
+                  "label": "Estella Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/estella/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -1266,6 +1634,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562210",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-estella",
+                  "label": "Estella Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/estella/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -1277,6 +1653,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562210",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-estella",
+              "label": "Estella Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/estella/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-estella-frequency-monitoring-icon"
@@ -1329,6 +1713,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523675",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-perlica",
+                  "label": "Perlica Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/perlica/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -1350,6 +1742,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523675",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-perlica",
+                  "label": "Perlica Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/perlica/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -1361,6 +1761,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523675",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-perlica",
+              "label": "Perlica Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/perlica/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-perlica-supervisor-icon"
@@ -1388,6 +1796,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523675",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-perlica",
+                  "label": "Perlica Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/perlica/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -1409,6 +1825,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523675",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-perlica",
+                  "label": "Perlica Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/perlica/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -1420,6 +1844,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523675",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-perlica",
+              "label": "Perlica Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/perlica/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-perlica-protocol-redistribution-icon"
@@ -1472,6 +1904,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523664",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-yvonne",
+                  "label": "Yvonne Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/yvonne/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -1493,6 +1933,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523664",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-yvonne",
+                  "label": "Yvonne Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/yvonne/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -1504,6 +1952,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523664",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-yvonne",
+              "label": "Yvonne Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/yvonne/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-yvonne-fungal-pigment-extraction-icon"
@@ -1531,6 +1987,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523664",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-yvonne",
+                  "label": "Yvonne Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/yvonne/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -1552,6 +2016,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523664",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-yvonne",
+                  "label": "Yvonne Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/yvonne/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -1563,6 +2035,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523664",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-yvonne",
+              "label": "Yvonne Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/yvonne/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-yvonne-fashionista-icon"
@@ -1615,6 +2095,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562340",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-antal",
+                  "label": "Antal Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/antal/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -1636,6 +2124,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562340",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-antal",
+                  "label": "Antal Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/antal/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -1647,6 +2143,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562340",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-antal",
+              "label": "Antal Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/antal/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-antal-experimental-arts-unit-icon"
@@ -1674,6 +2178,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562340",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-antal",
+                  "label": "Antal Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/antal/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -1695,6 +2207,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562340",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-antal",
+                  "label": "Antal Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/antal/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -1706,6 +2226,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562340",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-antal",
+              "label": "Antal Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/antal/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-antal-pun-isher-studies-icon"
@@ -1758,6 +2286,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523673",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-wulfgard",
+                  "label": "Wulfgard Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/wulfgard/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -1779,6 +2315,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523673",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-wulfgard",
+                  "label": "Wulfgard Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/wulfgard/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -1790,6 +2334,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523673",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-wulfgard",
+              "label": "Wulfgard Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/wulfgard/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-wulfgard-pack-techniques-icon"
@@ -1817,6 +2369,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523673",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-wulfgard",
+                  "label": "Wulfgard Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/wulfgard/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -1838,6 +2398,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523673",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-wulfgard",
+                  "label": "Wulfgard Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/wulfgard/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -1849,6 +2417,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523673",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-wulfgard",
+              "label": "Wulfgard Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/wulfgard/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-wulfgard-knack-for-the-wildlands-icon"
@@ -1901,6 +2477,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523665",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-laevatain",
+                  "label": "Laevatain Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/laevatain/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -1922,6 +2506,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523665",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-laevatain",
+                  "label": "Laevatain Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/laevatain/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -1933,6 +2525,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523665",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-laevatain",
+              "label": "Laevatain Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/laevatain/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-laevatain-memory-crucible-icon"
@@ -1960,6 +2560,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523665",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-laevatain",
+                  "label": "Laevatain Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/laevatain/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -1981,6 +2589,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523665",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-laevatain",
+                  "label": "Laevatain Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/laevatain/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -1992,6 +2608,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523665",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-laevatain",
+              "label": "Laevatain Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/laevatain/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-laevatain-undying-flames-icon"
@@ -2044,6 +2668,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562308",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-last-rite",
+                  "label": "Last Rite Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/last-rite/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -2065,6 +2697,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562308",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-last-rite",
+                  "label": "Last Rite Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/last-rite/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -2076,6 +2716,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562308",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-last-rite",
+              "label": "Last Rite Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/last-rite/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-last-rite-cemetery-gardening-icon"
@@ -2092,8 +2740,8 @@
                 {
                   "metric": "clue_rate_up",
                   "appliesTo": "clue_7",
-                  "value": 8,
-                  "unit": "percent"
+                  "value": 1,
+                  "unit": "tier"
                 }
               ],
               "sourceRefs": [
@@ -2103,6 +2751,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562308",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-last-rite",
+                  "label": "Last Rite Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/last-rite/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -2113,8 +2769,8 @@
                 {
                   "metric": "clue_rate_up",
                   "appliesTo": "clue_7",
-                  "value": 12,
-                  "unit": "percent"
+                  "value": 2,
+                  "unit": "tier"
                 }
               ],
               "sourceRefs": [
@@ -2124,6 +2780,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562308",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-last-rite",
+                  "label": "Last Rite Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/last-rite/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -2135,6 +2799,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562308",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-last-rite",
+              "label": "Last Rite Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/last-rite/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-last-rite-fame-of-the-royal-courts-icon"
@@ -2187,6 +2859,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562205",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-pogranichnik",
+                  "label": "Pogranichnik Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/pogranichnik/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -2208,6 +2888,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562205",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-pogranichnik",
+                  "label": "Pogranichnik Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/pogranichnik/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -2219,6 +2907,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562205",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-pogranichnik",
+              "label": "Pogranichnik Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/pogranichnik/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-pogranichnik-hone-the-weapons-icon"
@@ -2246,6 +2942,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562205",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-pogranichnik",
+                  "label": "Pogranichnik Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/pogranichnik/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -2267,6 +2971,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562205",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-pogranichnik",
+                  "label": "Pogranichnik Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/pogranichnik/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -2278,6 +2990,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562205",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-pogranichnik",
+              "label": "Pogranichnik Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/pogranichnik/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-pogranichnik-morale-boost-icon"
@@ -2330,6 +3050,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523668",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-gilberta",
+                  "label": "Gilberta Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/gilberta/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -2351,6 +3079,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523668",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-gilberta",
+                  "label": "Gilberta Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/gilberta/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -2362,6 +3098,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523668",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-gilberta",
+              "label": "Gilberta Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/gilberta/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-gilberta-messengerial-processing-icon"
@@ -2389,6 +3133,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523668",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-gilberta",
+                  "label": "Gilberta Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/gilberta/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -2410,6 +3162,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523668",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-gilberta",
+                  "label": "Gilberta Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/gilberta/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -2421,6 +3181,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523668",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-gilberta",
+              "label": "Gilberta Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/gilberta/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-gilberta-messengerial-arms-mastery-icon"
@@ -2473,6 +3241,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523667",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-lifeng",
+                  "label": "Lifeng Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/lifeng/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -2494,6 +3270,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523667",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-lifeng",
+                  "label": "Lifeng Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/lifeng/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -2505,6 +3289,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523667",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-lifeng",
+              "label": "Lifeng Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/lifeng/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-lifeng-youthful-ambition-icon"
@@ -2521,8 +3313,8 @@
                 {
                   "metric": "clue_rate_up",
                   "appliesTo": "clue_3",
-                  "value": 8,
-                  "unit": "percent"
+                  "value": 1,
+                  "unit": "tier"
                 }
               ],
               "sourceRefs": [
@@ -2532,6 +3324,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523667",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-lifeng",
+                  "label": "Lifeng Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/lifeng/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -2542,8 +3342,8 @@
                 {
                   "metric": "clue_rate_up",
                   "appliesTo": "clue_3",
-                  "value": 12,
-                  "unit": "percent"
+                  "value": 2,
+                  "unit": "tier"
                 }
               ],
               "sourceRefs": [
@@ -2553,6 +3353,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523667",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-lifeng",
+                  "label": "Lifeng Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/lifeng/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -2564,6 +3372,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523667",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-lifeng",
+              "label": "Lifeng Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/lifeng/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-lifeng-laddie-reliable-icon"
@@ -2616,6 +3432,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562315",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-alesh",
+                  "label": "Alesh Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/alesh/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -2637,6 +3461,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562315",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-alesh",
+                  "label": "Alesh Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/alesh/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -2648,6 +3480,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562315",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-alesh",
+              "label": "Alesh Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/alesh/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-alesh-casual-angling-icon"
@@ -2664,8 +3504,8 @@
                 {
                   "metric": "clue_rate_up",
                   "appliesTo": "clue_1",
-                  "value": 8,
-                  "unit": "percent"
+                  "value": 1,
+                  "unit": "tier"
                 }
               ],
               "sourceRefs": [
@@ -2675,6 +3515,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562315",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-alesh",
+                  "label": "Alesh Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/alesh/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -2685,8 +3533,8 @@
                 {
                   "metric": "clue_rate_up",
                   "appliesTo": "clue_1",
-                  "value": 12,
-                  "unit": "percent"
+                  "value": 2,
+                  "unit": "tier"
                 }
               ],
               "sourceRefs": [
@@ -2696,6 +3544,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562315",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-alesh",
+                  "label": "Alesh Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/alesh/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -2707,6 +3563,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562315",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-alesh",
+              "label": "Alesh Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/alesh/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-alesh-anglers-intel-network-icon"
@@ -2759,6 +3623,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523663",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-arclight",
+                  "label": "Arclight Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/arclight/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -2780,6 +3652,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523663",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-arclight",
+                  "label": "Arclight Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/arclight/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -2791,6 +3671,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523663",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-arclight",
+              "label": "Arclight Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/arclight/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-arclight-blade-of-the-wildlands-icon"
@@ -2807,8 +3695,8 @@
                 {
                   "metric": "clue_rate_up",
                   "appliesTo": "clue_6",
-                  "value": 8,
-                  "unit": "percent"
+                  "value": 1,
+                  "unit": "tier"
                 }
               ],
               "sourceRefs": [
@@ -2818,6 +3706,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523663",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-arclight",
+                  "label": "Arclight Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/arclight/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -2828,8 +3724,8 @@
                 {
                   "metric": "clue_rate_up",
                   "appliesTo": "clue_6",
-                  "value": 12,
-                  "unit": "percent"
+                  "value": 2,
+                  "unit": "tier"
                 }
               ],
               "sourceRefs": [
@@ -2839,6 +3735,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523663",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-arclight",
+                  "label": "Arclight Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/arclight/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -2850,6 +3754,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523663",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-arclight",
+              "label": "Arclight Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/arclight/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-arclight-hanna-traditions-icon"
@@ -2902,6 +3814,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523670",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-avywenna",
+                  "label": "Avywenna Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/avywenna/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -2923,6 +3843,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523670",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-avywenna",
+                  "label": "Avywenna Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/avywenna/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -2934,6 +3862,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523670",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-avywenna",
+              "label": "Avywenna Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/avywenna/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-avywenna-residence-advisor-icon"
@@ -2950,8 +3886,8 @@
                 {
                   "metric": "clue_rate_up",
                   "appliesTo": "clue_2",
-                  "value": 8,
-                  "unit": "percent"
+                  "value": 1,
+                  "unit": "tier"
                 }
               ],
               "sourceRefs": [
@@ -2961,6 +3897,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523670",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-avywenna",
+                  "label": "Avywenna Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/avywenna/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -2971,8 +3915,8 @@
                 {
                   "metric": "clue_rate_up",
                   "appliesTo": "clue_2",
-                  "value": 12,
-                  "unit": "percent"
+                  "value": 2,
+                  "unit": "tier"
                 }
               ],
               "sourceRefs": [
@@ -2982,6 +3926,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523670",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-avywenna",
+                  "label": "Avywenna Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/avywenna/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -2993,6 +3945,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523670",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-avywenna",
+              "label": "Avywenna Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/avywenna/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-avywenna-messengers-secret-icon"
@@ -3045,6 +4005,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562317",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-catcher",
+                  "label": "Catcher Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/catcher/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -3066,6 +4034,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562317",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-catcher",
+                  "label": "Catcher Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/catcher/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -3077,6 +4053,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562317",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-catcher",
+              "label": "Catcher Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/catcher/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-catcher-silent-caretaker-icon"
@@ -3104,6 +4088,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562317",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-catcher",
+                  "label": "Catcher Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/catcher/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -3125,6 +4117,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/562317",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-catcher",
+                  "label": "Catcher Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/catcher/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -3136,6 +4136,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/562317",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-catcher",
+              "label": "Catcher Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/catcher/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-catcher-grounded-approach-icon"
@@ -3188,6 +4196,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523671",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-ember",
+                  "label": "Ember Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/ember/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -3209,6 +4225,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523671",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-ember",
+                  "label": "Ember Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/ember/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -3220,6 +4244,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523671",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-ember",
+              "label": "Ember Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/ember/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-ember-special-northern-training-icon"
@@ -3236,8 +4268,8 @@
                 {
                   "metric": "clue_rate_up",
                   "appliesTo": "clue_4",
-                  "value": 8,
-                  "unit": "percent"
+                  "value": 1,
+                  "unit": "tier"
                 }
               ],
               "sourceRefs": [
@@ -3247,6 +4279,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523671",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-ember",
+                  "label": "Ember Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/ember/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -3257,8 +4297,8 @@
                 {
                   "metric": "clue_rate_up",
                   "appliesTo": "clue_4",
-                  "value": 12,
-                  "unit": "percent"
+                  "value": 2,
+                  "unit": "tier"
                 }
               ],
               "sourceRefs": [
@@ -3268,6 +4308,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/523671",
                   "retrievedOn": "2026-03-20",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-ember",
+                  "label": "Ember Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/ember/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -3279,6 +4327,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/523671",
               "retrievedOn": "2026-03-20",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-ember",
+              "label": "Ember Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/ember/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-ember-keepers-of-the-banner-icon"
@@ -3332,6 +4388,14 @@
                   "retrievedOn": "2026-03-21",
                   "confidence": "community",
                   "notes": "Base skill section supplied from page source because direct fetch was unavailable."
+                },
+                {
+                  "id": "base-skill-audit-tangtang",
+                  "label": "Tangtang Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/tangtang/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -3354,6 +4418,14 @@
                   "retrievedOn": "2026-03-21",
                   "confidence": "community",
                   "notes": "Base skill section supplied from page source because direct fetch was unavailable."
+                },
+                {
+                  "id": "base-skill-audit-tangtang",
+                  "label": "Tangtang Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/tangtang/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -3366,6 +4438,14 @@
               "retrievedOn": "2026-03-21",
               "confidence": "community",
               "notes": "Base skill section supplied from page source because direct fetch was unavailable."
+            },
+            {
+              "id": "base-skill-audit-tangtang",
+              "label": "Tangtang Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/tangtang/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-tangtang-supreme-chief-icon"
@@ -3394,6 +4474,14 @@
                   "retrievedOn": "2026-03-21",
                   "confidence": "community",
                   "notes": "Base skill section supplied from page source because direct fetch was unavailable."
+                },
+                {
+                  "id": "base-skill-audit-tangtang",
+                  "label": "Tangtang Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/tangtang/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -3416,6 +4504,14 @@
                   "retrievedOn": "2026-03-21",
                   "confidence": "community",
                   "notes": "Base skill section supplied from page source because direct fetch was unavailable."
+                },
+                {
+                  "id": "base-skill-audit-tangtang",
+                  "label": "Tangtang Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/tangtang/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -3428,6 +4524,14 @@
               "retrievedOn": "2026-03-21",
               "confidence": "community",
               "notes": "Base skill section supplied from page source because direct fetch was unavailable."
+            },
+            {
+              "id": "base-skill-audit-tangtang",
+              "label": "Tangtang Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/tangtang/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-tangtang-rivers-daughter-icon"
@@ -3490,6 +4594,14 @@
                   "retrievedOn": "2026-04-03",
                   "confidence": "community",
                   "notes": "Used to verify Rossi Base Skill rank suffixes from the factory skill postfix fields in chr_0028_wulfa.json."
+                },
+                {
+                  "id": "base-skill-audit-rossi",
+                  "label": "Rossi Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/rossi/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -3520,6 +4632,14 @@
                   "retrievedOn": "2026-04-03",
                   "confidence": "community",
                   "notes": "Used to verify Rossi Base Skill rank suffixes from the factory skill postfix fields in chr_0028_wulfa.json."
+                },
+                {
+                  "id": "base-skill-audit-rossi",
+                  "label": "Rossi Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/rossi/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -3540,6 +4660,14 @@
               "retrievedOn": "2026-04-03",
               "confidence": "community",
               "notes": "Used to verify Rossi Base Skill rank suffixes from the factory skill postfix fields in chr_0028_wulfa.json."
+            },
+            {
+              "id": "base-skill-audit-rossi",
+              "label": "Rossi Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/rossi/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-rossi-clan-etiquette-icon"
@@ -3576,6 +4704,14 @@
                   "retrievedOn": "2026-04-03",
                   "confidence": "community",
                   "notes": "Used to verify Rossi Base Skill rank suffixes from the factory skill postfix fields in chr_0028_wulfa.json."
+                },
+                {
+                  "id": "base-skill-audit-rossi",
+                  "label": "Rossi Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/rossi/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -3606,6 +4742,14 @@
                   "retrievedOn": "2026-04-03",
                   "confidence": "community",
                   "notes": "Used to verify Rossi Base Skill rank suffixes from the factory skill postfix fields in chr_0028_wulfa.json."
+                },
+                {
+                  "id": "base-skill-audit-rossi",
+                  "label": "Rossi Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/rossi/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -3626,6 +4770,14 @@
               "retrievedOn": "2026-04-03",
               "confidence": "community",
               "notes": "Used to verify Rossi Base Skill rank suffixes from the factory skill postfix fields in chr_0028_wulfa.json."
+            },
+            {
+              "id": "base-skill-audit-rossi",
+              "label": "Rossi Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/rossi/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-rossi-scent-of-the-hunt-icon"
@@ -3703,6 +4855,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/574945",
                   "retrievedOn": "2026-04-18",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-zhuang-fangyi",
+                  "label": "Zhuang Fangyi Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/zhuang-fangyi/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -3732,6 +4892,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/574945",
                   "retrievedOn": "2026-04-18",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-zhuang-fangyi",
+                  "label": "Zhuang Fangyi Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/zhuang-fangyi/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -3751,6 +4919,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/574945",
               "retrievedOn": "2026-04-18",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-zhuang-fangyi",
+              "label": "Zhuang Fangyi Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/zhuang-fangyi/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-zhuang-fangyi-viceroy-experience-icon"
@@ -3786,6 +4962,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/574945",
                   "retrievedOn": "2026-04-18",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-zhuang-fangyi",
+                  "label": "Zhuang Fangyi Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/zhuang-fangyi/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             },
@@ -3815,6 +4999,14 @@
                   "url": "https://game8.co/games/Arknights-Endfield/archives/574945",
                   "retrievedOn": "2026-04-18",
                   "confidence": "guide_site"
+                },
+                {
+                  "id": "base-skill-audit-zhuang-fangyi",
+                  "label": "Zhuang Fangyi Base Skill audit",
+                  "url": "https://endfieldtools.dev/characters/zhuang-fangyi/",
+                  "retrievedOn": "2026-09-13",
+                  "confidence": "community",
+                  "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
                 }
               ]
             }
@@ -3834,6 +5026,14 @@
               "url": "https://game8.co/games/Arknights-Endfield/archives/574945",
               "retrievedOn": "2026-04-18",
               "confidence": "guide_site"
+            },
+            {
+              "id": "base-skill-audit-zhuang-fangyi",
+              "label": "Zhuang Fangyi Base Skill audit",
+              "url": "https://endfieldtools.dev/characters/zhuang-fangyi/",
+              "retrievedOn": "2026-09-13",
+              "confidence": "community",
+              "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
             }
           ],
           "iconAssetId": "skill-zhuang-fangyi-tianshi-chi-meditation-icon"

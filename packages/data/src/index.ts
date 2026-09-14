@@ -23,6 +23,7 @@ import type {
   PromotionTierProgression,
   RecipeDefinition,
   SourceRef,
+  SkillRank,
   UpgradeRankingMode,
   ValidationIssue,
   ValidationResult,
@@ -1413,6 +1414,24 @@ export function hydrateScenarioForCatalog(
       return createRosterEntryForOperator(operator);
     }
 
+    // Earlier SKPORT overlays used the misspelling as a new skill ID. Retain
+    // those unlocks when returning to the stable bundled/game-data ID.
+    if (operator.id === "da-pan" && operator.baseSkills.some((skill) => skill.id === "worldly-wisdom")) {
+      const legacy = existing.baseSkillStates.find((state) => state.skillId === "wordly-wisdom");
+      if (legacy) {
+        const canonical = existing.baseSkillStates.find((state) => state.skillId === "worldly-wisdom");
+        if (canonical) {
+          canonical.unlockedRank = Math.max(canonical.unlockedRank, legacy.unlockedRank) as SkillRank;
+          existing.baseSkillStates = existing.baseSkillStates.filter((state) => state !== legacy);
+        } else {
+          legacy.skillId = "worldly-wisdom";
+        }
+        changes.push({
+          path: "roster.da-pan.baseSkillStates.worldly-wisdom",
+          message: "Preserved Da Pan's Worldly Wisdom unlock after correcting its former SKPORT spelling.",
+        });
+      }
+    }
     const skillStateById = new Map(existing.baseSkillStates.map((state) => [state.skillId, state]));
     const extraSkillStates = existing.baseSkillStates.filter(
       (state) => !operator.baseSkills.some((skill) => skill.id === state.skillId),
@@ -2727,7 +2746,11 @@ export function parseLiveRosterUpdate(value: unknown): LiveRosterUpdateDocument 
           requireLiveRoster(LIVE_ROSTER_EFFECT_METRICS.has(String(modifier.metric)), `${rankPath} contains an unsupported metric.`);
           requireLiveRoster(LIVE_ROSTER_MODIFIER_TARGETS.has(String(modifier.appliesTo)), `${rankPath} contains an unsupported target.`);
           requireLiveRoster(typeof modifier.value === "number" && Number.isFinite(modifier.value) && modifier.value >= 0, `${rankPath} contains an invalid value.`);
-          requireLiveRoster(modifier.unit === "percent", `${rankPath} modifiers must use percent units.`);
+          requireLiveRoster(
+            modifier.unit === "percent" || (modifier.metric === "clue_rate_up" && modifier.unit === "tier"
+              && (modifier.value === 1 || modifier.value === 2)),
+            `${rankPath} modifiers must use percent units or clue strength tiers 1 and 2.`,
+          );
         }
       }
     }

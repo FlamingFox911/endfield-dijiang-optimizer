@@ -20,13 +20,14 @@
     "operators": 25,
     "facilities": 4,
     "recipes": 23,
-    "sources": 66,
+    "sources": 91,
     "gaps": 0,
     "assets": 101
   },
   "notes": [
     "This bundle covers the full released assignable operator roster for the 2026-04-17 v1.2 snapshot; Endministrator remains intentionally excluded. Zhuang Fangyi is included from [Thunder of Renewal], which became available after the [At the Wake of Spring] version release.",
     "Exact in-game Greek-letter Base Skill labels are recorded from in-game screenshots and guide pages; clue-target Reception Room skills are preserved for manual hard-assignment use but treated as score-neutral in optimization.",
-    "Shared Base Skill node costs, shared promotion tiers, and operator-specific Promotion IV material overrides are sourced from the Operator overview page and per-operator raw wiki pages."
+    "Shared Base Skill node costs, shared promotion tiers, and operator-specific Promotion IV material overrides are sourced from the Operator overview page and per-operator raw wiki pages.",
+    "Base Skill lettering, effects and values audited on 2026-09-13; see docs/base-skill-audit.md. Clue Rate-UP uses qualitative strength tiers instead of unsupported percentages."
   ]
 }

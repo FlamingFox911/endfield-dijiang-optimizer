@@ -81,7 +81,9 @@ export interface EffectModifier {
   metric: EffectMetric;
   appliesTo: ModifierTarget;
   value: number;
-  unit: "percent";
+  // Clue targeting has qualitative strength tiers (1 = small, 2 = normal),
+  // not a published percentage. Other effects use percent.
+  unit: "percent" | "tier";
   dataConfidence?: DataConfidence;
 }
 

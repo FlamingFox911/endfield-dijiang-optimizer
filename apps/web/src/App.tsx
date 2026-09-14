@@ -945,7 +945,9 @@ function summarizeHydration(
 
 function describeSkill(skill: GameCatalog["operators"][number]["baseSkills"][number]): string {
   return skill.ranks.map((rank) => {
-    const modifiers = rank.modifiers.map((modifier) => `${formatLabel(modifier.metric)} +${modifier.value}% (${formatLabel(modifier.appliesTo)})`);
+    const modifiers = rank.modifiers.map((modifier) => modifier.metric === "clue_rate_up"
+      ? `${(modifier.unit === "tier" ? modifier.value === 1 : rank.label === "alpha") ? "Small Clue Rate Up" : "Clue Rate Up"} (${formatLabel(modifier.appliesTo)}; same-type effects do not stack)`
+      : `${formatLabel(modifier.metric)} +${modifier.value}% (${formatLabel(modifier.appliesTo)})`);
     return `${rank.label.toUpperCase()}: ${modifiers.join(", ") || "No active modifier"}`;
   }).join(" / ");
 }

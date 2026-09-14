@@ -116,8 +116,8 @@ describe("automatic live roster updates", () => {
     })).toEqual({
       metric: "clue_rate_up",
       appliesTo: "clue_5",
-      value: 12,
-      unit: "percent",
+      value: 2,
+      unit: "tier",
     });
   });
 
@@ -326,5 +326,16 @@ describe("automatic live roster updates", () => {
     const update = buildLiveRosterUpdate(sourceData(), generatedAt) as any;
     update.operators[0].baseSkills[0].ranks[0].modifiers[0].metric = "mystery_effect";
     expect(() => parseLiveRosterUpdate(update)).toThrow("unsupported metric");
+  });
+
+  it("accepts qualitative clue strengths but rejects tiers on percentage effects", () => {
+    const update = buildLiveRosterUpdate(sourceData(), generatedAt) as any;
+    const modifier = update.operators[0].baseSkills[0].ranks[0].modifiers[0];
+    Object.assign(modifier, { metric: "clue_rate_up", appliesTo: "clue_2", value: 1, unit: "tier" });
+    expect(parseLiveRosterUpdate(update)).toBe(update);
+    modifier.value = 3;
+    expect(() => parseLiveRosterUpdate(update)).toThrow("clue strength tiers 1 and 2");
+    Object.assign(modifier, { metric: "production_efficiency", appliesTo: "operator_exp", value: 1 });
+    expect(() => parseLiveRosterUpdate(update)).toThrow("clue strength tiers 1 and 2");
   });
 });

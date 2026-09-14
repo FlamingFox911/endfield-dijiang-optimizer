@@ -47,6 +47,8 @@ schemas/
 
 ## Operators file
 
+Effect modifiers use `unit: "percent"` for numeric bonuses. Targeted `clue_rate_up` modifiers use `unit: "tier"` with `value: 1` (small Rate-UP) or `value: 2` (normal Rate-UP); these are qualitative strengths, not percentage probabilities. Older percent-form clue modifiers remain accepted for compatibility. See the [2026-09-13 Base Skill audit](base-skill-audit.md).
+
 `operators.json` contains:
 
 - `catalogVersion`

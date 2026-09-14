@@ -1,4 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { mergeLiveRosterUpdate, parseLiveRosterUpdate } from "@endfield/data";
+import { loadDefaultCatalog } from "@endfield/data/node";
+import audit from "./fixtures/base-skill-audit.json";
+import { buildOfficialPrimaryLiveRosterUpdate } from "../scripts/sync-live-roster";
+import { correctSkportBaseSkill } from "../scripts/skport-skill-corrections";
 
 import {
   buildSkportRoster,
@@ -156,8 +161,8 @@ describe("official SKPORT roster source", () => {
     )).toEqual({
       metric: "clue_rate_up",
       appliesTo: "clue_3",
-      value: 8,
-      unit: "percent",
+      value: 1,
+      unit: "tier",
     });
     expect(parseSkportModifier(
       "Assign to Control Nexus to grant all operators' Mood Regen +16%",
@@ -234,5 +239,42 @@ describe("official SKPORT roster source", () => {
     expect(result.warnings).toEqual([
       "Official operator 'Released Without Details' has no detail payload.",
     ]);
+  });
+
+  it("matches all 60 audited skills after parsing and merging the captured official rows", async () => {
+    const catalog = await loadDefaultCatalog();
+    expect(audit.operators).toHaveLength(30);
+    for (const operator of audit.operators) {
+      const data = officialSourceData();
+      data.operatorItems[0]!.name = operator.name;
+      const documents = data.details[0]!.document.documentMap;
+      const [first, second] = operator.officialRows;
+      documents.reception = skillDocument("reception", first![0] as [string, string, string], first![1] as [string, string, string]);
+      documents.nexus = skillDocument("nexus", second![0] as [string, string, string], second![1] as [string, string, string]);
+      const update = buildOfficialPrimaryLiveRosterUpdate(data, undefined, `${audit.retrievedOn}T12:00:00.000Z`);
+      expect(update.warnings, operator.name).toEqual([]);
+      expect(parseLiveRosterUpdate(update)).toBe(update);
+      const merged = mergeLiveRosterUpdate(catalog, update).catalog;
+      const actual = merged.operators.find((entry) => entry.id === operator.id)!;
+      expect(actual.baseSkills, operator.name).toMatchObject(operator.expectedSkills);
+      actual.baseSkills.forEach((skill, slot) => skill.ranks.forEach((rank, index) => {
+        expect(rank.rank).toBe(index + 1);
+        expect(rank.unlockHint).toContain(`Elite ${slot + 1 + index * 2}`);
+      }));
+      // The offline bundle must match the same reference for every bundled operator.
+      const bundled = catalog.operators.find((entry) => entry.id === operator.id);
+      if (bundled) expect(bundled.baseSkills, `${operator.name} offline`).toMatchObject(operator.expectedSkills);
+    }
+  });
+
+  it("leaves corrected upstream ranks and future balance changes intact", async () => {
+    const ember = (await loadDefaultCatalog()).operators.find((operator) => operator.id === "ember")!;
+    const skill = ember.baseSkills[0]!;
+    expect(correctSkportBaseSkill(ember.id, skill)).toBe(skill);
+    const changed = structuredClone(skill);
+    changed.ranks[0]!.label = "alpha";
+    changed.ranks[1]!.label = "beta";
+    changed.ranks[0]!.modifiers[0]!.value = 25;
+    expect(correctSkportBaseSkill(ember.id, changed)).toBe(changed);
   });
 });

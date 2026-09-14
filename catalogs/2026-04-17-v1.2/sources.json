@@ -495,6 +495,206 @@
       "retrievedOn": "2026-04-18",
       "confidence": "community",
       "notes": "Used for operator Promotion IV material requirements from raw wiki page source."
+    },
+    {
+      "id": "base-skill-audit-chen-qianyu",
+      "label": "Chen Qianyu Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/chen-qianyu/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-xaihi",
+      "label": "Xaihi Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/xaihi/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-snowshine",
+      "label": "Snowshine Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/snowshine/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-da-pan",
+      "label": "Da Pan Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/da-pan/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-ardelia",
+      "label": "Ardelia Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/ardelia/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-akekuri",
+      "label": "Akekuri Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/akekuri/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-fluorite",
+      "label": "Fluorite Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/fluorite/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-estella",
+      "label": "Estella Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/estella/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-perlica",
+      "label": "Perlica Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/perlica/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-yvonne",
+      "label": "Yvonne Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/yvonne/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-antal",
+      "label": "Antal Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/antal/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-wulfgard",
+      "label": "Wulfgard Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/wulfgard/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-laevatain",
+      "label": "Laevatain Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/laevatain/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-last-rite",
+      "label": "Last Rite Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/last-rite/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-pogranichnik",
+      "label": "Pogranichnik Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/pogranichnik/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-gilberta",
+      "label": "Gilberta Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/gilberta/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-lifeng",
+      "label": "Lifeng Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/lifeng/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-alesh",
+      "label": "Alesh Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/alesh/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-arclight",
+      "label": "Arclight Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/arclight/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-avywenna",
+      "label": "Avywenna Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/avywenna/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-catcher",
+      "label": "Catcher Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/catcher/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-ember",
+      "label": "Ember Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/ember/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-tangtang",
+      "label": "Tangtang Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/tangtang/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-rossi",
+      "label": "Rossi Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/rossi/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "base-skill-audit-zhuang-fangyi",
+      "label": "Zhuang Fangyi Base Skill audit",
+      "url": "https://endfieldtools.dev/characters/zhuang-fangyi/",
+      "retrievedOn": "2026-09-13",
+      "confidence": "community",
+      "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
     }
   ]
 }

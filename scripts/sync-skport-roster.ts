@@ -1,4 +1,5 @@
 import { createHash, createHmac } from "node:crypto";
+import { correctSkportBaseSkill } from "./skport-skill-corrections";
 
 import type {
   BaseSkillDefinition,
@@ -16,8 +17,9 @@ const OPERATOR_NAME_OVERRIDES: Record<string, string> = {
   "Mi Fu": "Mifu",
 };
 const SKILL_ID_OVERRIDES: Record<string, string> = {
-  // Preserve saved scenario state after the earlier community source mislabeled this slot.
+  // Preserve stable IDs while correcting stale official names.
   "avywenna:factory-pioneer": "messengers-secret",
+  "da-pan:wordly-wisdom": "worldly-wisdom",
 };
 
 interface SkportResponse<T> {
@@ -393,8 +395,8 @@ export function parseSkportModifier(description: string): EffectModifier {
     return {
       metric: "clue_rate_up",
       appliesTo: `clue_${clueNumber}` as EffectModifier["appliesTo"],
-      value: /\ba small\b/i.test(normalized) ? 8 : 12,
-      unit: "percent",
+      value: /\ba small\b/i.test(normalized) ? 1 : 2,
+      unit: "tier",
     };
   }
   const value = percentFromDescription(normalized);
@@ -528,7 +530,7 @@ function createSkportOperator(
   if (uniqueSkills.length !== 2) {
     throw new Error(`Official operator '${name}' did not expose two supported Base Skill tables.`);
   }
-  const baseSkills = stabilizeSkills(uniqueSkills);
+  const baseSkills = stabilizeSkills(uniqueSkills).map((skill) => correctSkportBaseSkill(operatorId, skill));
   return {
     id: operatorId,
     name,

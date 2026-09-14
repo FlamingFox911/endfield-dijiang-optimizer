@@ -295,11 +295,15 @@ export function mapFactorySkillModifier(skill: RemoteFactorySkill): EffectModifi
       if (!Number.isInteger(clueNumber) || clueNumber < 1 || clueNumber > 7) {
         throw new Error(`Factory skill '${skill.id}' has an unsupported clue target.`);
       }
+      const strength = getParameterNumber(skill, 1);
+      if (strength !== 1 && strength !== 2) {
+        throw new Error(`Factory skill '${skill.id}' has an unsupported clue strength.`);
+      }
       return {
         metric: "clue_rate_up",
         appliesTo: `clue_${clueNumber}` as EffectModifier["appliesTo"],
-        value: skill.level === 1 ? 8 : 12,
-        unit: "percent",
+        value: strength,
+        unit: "tier",
       };
     }
     case 7: {

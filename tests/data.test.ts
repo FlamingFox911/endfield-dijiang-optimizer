@@ -17,6 +17,18 @@ import {
 import { loadCatalogBundle, loadDefaultCatalog, loadScenarioFile, resolveRepoPath } from "@endfield/data/node";
 
 describe("data services", () => {
+  it("preserves Da Pan's unlocks from the former SKPORT misspelling", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    const entry = scenario.roster.find((operator) => operator.operatorId === "da-pan")!;
+    entry.baseSkillStates.push({ skillId: "wordly-wisdom", unlockedRank: 2 });
+    const hydrated = hydrateScenarioForCatalog(catalog, scenario);
+    const states = hydrated.scenario.roster.find((operator) => operator.operatorId === "da-pan")!.baseSkillStates;
+    expect(states.find((state) => state.skillId === "worldly-wisdom")?.unlockedRank).toBe(2);
+    expect(states.some((state) => state.skillId === "wordly-wisdom")).toBe(false);
+    expect(entry.baseSkillStates.some((state) => state.skillId === "wordly-wisdom")).toBe(true);
+  });
+
   it("creates a starter scenario with the current format defaults", async () => {
     const catalog = await loadDefaultCatalog();
     const scenario = createStarterScenario(catalog);

@@ -550,8 +550,8 @@ function evaluateRankModifiers(
         supportScore += modifier.value * SUPPORT_WEIGHTS.receptionClueRateWeight * receptionWeight;
         reasons.push(
           isClueKind(modifier.appliesTo)
-            ? `clue ${modifier.appliesTo.split("_")[1]} targeting recorded (+${modifier.value}%) but treated as score-neutral; use hard assignments if you want that exact clue.`
-            : `clue targeting recorded (+${modifier.value}%) but treated as score-neutral; use hard assignments if you want a specific clue number.`,
+            ? `clue ${modifier.appliesTo.split("_")[1]} targeting recorded but treated as score-neutral; use hard assignments if you want that exact clue.`
+            : "clue targeting recorded but treated as score-neutral; use hard assignments if you want a specific clue number.",
         );
         break;
     }

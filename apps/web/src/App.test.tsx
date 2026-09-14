@@ -786,8 +786,9 @@ describe("App", () => {
     await screen.findByText("Endfield Dijiang Optimizer");
     await userEvent.click(getPortraitTile("Lifeng"));
 
-    expect(screen.getByText(/Clue Rate Up \+8% \(Clue 3\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/Clue Rate Up \+12% \(Clue 3\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/ALPHA: Small Clue Rate Up \(Clue 3; same-type effects do not stack\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/BETA: Clue Rate Up \(Clue 3; same-type effects do not stack\)/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Clue Rate Up \+\d+%/i)).not.toBeInTheDocument();
   });
 
   it("removes the redundant Control Nexus current level summary", async () => {

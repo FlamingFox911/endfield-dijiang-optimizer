@@ -1,0 +1,425 @@
+{
+  "retrievedOn": "2026-09-13",
+  "operators": [
+    {
+      "id": "ember",
+      "name": "Ember",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=15&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/ember/",
+      "officialRows": [
+        [["Special Northern Training \nα","Assign to Manufacturing Cabin to grant operator EXP material production efficiency +20%","Promote to E1 to unlock"],["Special Northern Training \nβ","Assign to Manufacturing Cabin to grant operator EXP material production efficiency +30%","Promote to E3 to unlock"]],
+        [["Keepers of the Banner \nα","Assign to Reception Room to grant operators a small Clue 4 Rate-UP: Order of Steel Oath (activates upon assignment; effects of the same type cannot stack)","Promote to E2 to unlock"],["Keepers of the Banner \nβ","Assign to Reception Room to grant operators Clue 4 Rate-UP: Order of Steel Oath (activates upon assignment; effects of the same type cannot stack)","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"special-northern-training","name":"Special Northern Training","facilityKind":"manufacturing_cabin","ranks":[{"label":"beta","modifiers":[{"metric":"production_efficiency","appliesTo":"operator_exp","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"production_efficiency","appliesTo":"operator_exp","value":30,"unit":"percent"}]}]},
+        {"id":"keepers-of-the-banner","name":"Keepers of the Banner","facilityKind":"reception_room","ranks":[{"label":"alpha","modifiers":[{"metric":"clue_rate_up","appliesTo":"clue_4","value":1,"unit":"tier"}]},{"label":"beta","modifiers":[{"metric":"clue_rate_up","appliesTo":"clue_4","value":2,"unit":"tier"}]}]}
+      ]
+    },
+    {
+      "id": "gilberta",
+      "name": "Gilberta",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=9&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/gilberta/",
+      "officialRows": [
+        [["Messengerial Processing β","Assign to Manufacturing Cabin to slow Mood Drop of all operators in it by 14%","Promote to E1 to unlock"],["Messengerial Processing γ","Assign to Manufacturing Cabin to slow Mood Drop of all operators in it by 18%","Promote to E3 to unlock"]],
+        [["Messengerial Arms Mastery β","Assign to Manufacturing Cabin to grant weapon EXP material production efficiency +20%","Promote to E2 to unlock"],["Messengerial Arms Mastery γ","Assign to Manufacturing Cabin to grant weapon EXP material production efficiency +30%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"messengerial-processing","name":"Messengerial Processing","facilityKind":"manufacturing_cabin","ranks":[{"label":"beta","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":14,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":18,"unit":"percent"}]}]},
+        {"id":"messengerial-arms-mastery","name":"Messengerial Arms Mastery","facilityKind":"manufacturing_cabin","ranks":[{"label":"beta","modifiers":[{"metric":"production_efficiency","appliesTo":"weapon_exp","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"production_efficiency","appliesTo":"weapon_exp","value":30,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "perlica",
+      "name": "Perlica",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=1&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/perlica/",
+      "officialRows": [
+        [["Supervisor α","Assign to Control Nexus to grant all operators' Mood Regen +8%","Promote to E1 to unlock"],["Supervisor β","Assign to Control Nexus to grant all operators' Mood Regen +12%","Promote to E3 to unlock"]],
+        [["Protocol Redistribution β","Assign to Manufacturing Cabin to grant weapon EXP material production efficiency +20%","Promote to E2 to unlock"],["Protocol Redistribution γ","Assign to Manufacturing Cabin to grant weapon EXP material production efficiency +30%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"supervisor","name":"Supervisor","facilityKind":"control_nexus","ranks":[{"label":"alpha","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":8,"unit":"percent"}]},{"label":"beta","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":12,"unit":"percent"}]}]},
+        {"id":"protocol-redistribution","name":"Protocol Redistribution","facilityKind":"manufacturing_cabin","ranks":[{"label":"beta","modifiers":[{"metric":"production_efficiency","appliesTo":"weapon_exp","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"production_efficiency","appliesTo":"weapon_exp","value":30,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "chen-qianyu",
+      "name": "Chen Qianyu",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=4&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/chen-qianyu/",
+      "officialRows": [
+        [["Blade Critique α","Assign to Manufacturing Cabin to grant weapon EXP material production efficiency +10%","Promote to E1 to unlock"],["Blade Critique β","Assign to Manufacturing Cabin to grant weapon EXP material production efficiency +20%","Promote to E3 to unlock"]],
+        [["Jadeworking α","Assign to Growth Chamber to grant rare mineral growth rate +20%","Promote to E2 to unlock"],["Jadeworking β","Assign to Growth Chamber to grant rare mineral growth rate +30%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"blade-critique","name":"Blade Critique","facilityKind":"manufacturing_cabin","ranks":[{"label":"alpha","modifiers":[{"metric":"production_efficiency","appliesTo":"weapon_exp","value":10,"unit":"percent"}]},{"label":"beta","modifiers":[{"metric":"production_efficiency","appliesTo":"weapon_exp","value":20,"unit":"percent"}]}]},
+        {"id":"jadeworking","name":"Jadeworking","facilityKind":"growth_chamber","ranks":[{"label":"beta","modifiers":[{"metric":"growth_rate","appliesTo":"rare_mineral","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"growth_rate","appliesTo":"rare_mineral","value":30,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "wulfgard",
+      "name": "Wulfgard",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=6&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/wulfgard/",
+      "officialRows": [
+        [["Pack Techniques α","Assign to Manufacturing Cabin to grant operator EXP material production efficiency +10%","Promote to E1 to unlock"],["Pack Techniques β","Assign to Manufacturing Cabin to grant operator EXP material production efficiency +20%","Promote to E3 to unlock"]],
+        [["Knack for the Wildlands β","Assign to Growth Chamber to grant rare mineral growth rate +20%","Promote to E2 to unlock"],["Knack for the Wildlands γ","Assign to Growth Chamber to grant rare mineral growth rate +30%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"pack-techniques","name":"Pack Techniques","facilityKind":"manufacturing_cabin","ranks":[{"label":"alpha","modifiers":[{"metric":"production_efficiency","appliesTo":"operator_exp","value":10,"unit":"percent"}]},{"label":"beta","modifiers":[{"metric":"production_efficiency","appliesTo":"operator_exp","value":20,"unit":"percent"}]}]},
+        {"id":"knack-for-the-wildlands","name":"Knack for the Wildlands","facilityKind":"growth_chamber","ranks":[{"label":"beta","modifiers":[{"metric":"growth_rate","appliesTo":"rare_mineral","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"growth_rate","appliesTo":"rare_mineral","value":30,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "arclight",
+      "name": "Arclight",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=7&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/arclight/",
+      "officialRows": [
+        [["Blade of the Wildlands α","Assign to Manufacturing Cabin to grant weapon EXP material production efficiency +10%","Promote to E1 to unlock"],["Blade of the Wildlands β","Assign to Manufacturing Cabin to grant weapon EXP material production efficiency +20%","Promote to E3 to unlock"]],
+        [["Hanna Traditions\n α","Assign to Reception Room to grant operators a small Clue 6 Rate-UP: Hannabit Circuit (activates upon assignment; effects of the same type cannot stack)","Promote to E2 to unlock"],["Hanna Traditions \nβ","Assign to Reception Room to grant operators Clue 6 Rate-UP: Hannabit Circuit (activates upon assignment; effects of the same type cannot stack)","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"blade-of-the-wildlands","name":"Blade of the Wildlands","facilityKind":"manufacturing_cabin","ranks":[{"label":"alpha","modifiers":[{"metric":"production_efficiency","appliesTo":"weapon_exp","value":10,"unit":"percent"}]},{"label":"beta","modifiers":[{"metric":"production_efficiency","appliesTo":"weapon_exp","value":20,"unit":"percent"}]}]},
+        {"id":"hanna-traditions","name":"Hanna Traditions","facilityKind":"reception_room","ranks":[{"label":"alpha","modifiers":[{"metric":"clue_rate_up","appliesTo":"clue_6","value":1,"unit":"tier"}]},{"label":"beta","modifiers":[{"metric":"clue_rate_up","appliesTo":"clue_6","value":2,"unit":"tier"}]}]}
+      ]
+    },
+    {
+      "id": "typhoeus",
+      "name": "Typhoeus",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=1173&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/typhoeus/",
+      "officialRows": [
+        [["Lithic Murmurs β","Assign to Growth Chamber to grant rare mineral growth rate +20%","Promote to E1 to unlock"],["Lithic Murmurs γ","Assign to Growth Chamber to grant rare mineral growth rate +30%","Promote to E3 to unlock"]],
+        [["Life in the Spores β","Assign to Growth Chamber to grant fungal matter growth rate +20%","Promote to E2 to unlock"],["Life in the Spores γ","Assign to Growth Chamber to grant fungal matter growth rate +30%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"lithic-murmurs","name":"Lithic Murmurs","facilityKind":"growth_chamber","ranks":[{"label":"beta","modifiers":[{"metric":"growth_rate","appliesTo":"rare_mineral","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"growth_rate","appliesTo":"rare_mineral","value":30,"unit":"percent"}]}]},
+        {"id":"life-in-the-spores","name":"Life in the Spores","facilityKind":"growth_chamber","ranks":[{"label":"beta","modifiers":[{"metric":"growth_rate","appliesTo":"fungal","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"growth_rate","appliesTo":"fungal","value":30,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "liino",
+      "name": "Liino",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=1041&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/liino/",
+      "officialRows": [
+        [["Idol Passion β","Assign to Reception Room to slow Mood Drop of all operators in it by 14%","Promote to E1 to unlock"],["Idol Passion γ","Assign to Reception Room to slow Mood Drop of all operators in it by 18%","Promote to E3 to unlock"]],
+        [["Stage Vibe That Lingers β","Assign to Control Nexus to grant all operators' Mood Regen +12%","Promote to E2 to unlock"],["Stage Vibe That Lingers γ","Assign to Control Nexus to grant all operators' Mood Regen +16%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"idol-passion","name":"Idol Passion","facilityKind":"reception_room","ranks":[{"label":"beta","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":14,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":18,"unit":"percent"}]}]},
+        {"id":"stage-vibe-that-lingers","name":"Stage Vibe That Lingers","facilityKind":"control_nexus","ranks":[{"label":"beta","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":12,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":16,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "xaihi",
+      "name": "Xaihi",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=13&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/xaihi/",
+      "officialRows": [
+        [["Standardized Scripting α","Assign to Manufacturing Cabin to grant operator EXP material production efficiency +10%","Promote to E1 to unlock"],["Standardized Scripting β","Assign to Manufacturing Cabin to grant operator EXP material production efficiency +20%","Promote to E3 to unlock"]],
+        [["Murmuring Session α","Assign to Reception Room to grant operators a small Clue 5 Rate-UP: Cabal of Tranquility (activates upon assignment; effects of the same type cannot stack)","Promote to E2 to unlock"],["Murmuring Session β","Assign to Reception Room to grant operators Clue 5 Rate-UP: Cabal of Tranquility (activates upon assignment; effects of the same type cannot stack)","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"standardized-scripting","name":"Standardized Scripting","facilityKind":"manufacturing_cabin","ranks":[{"label":"alpha","modifiers":[{"metric":"production_efficiency","appliesTo":"operator_exp","value":10,"unit":"percent"}]},{"label":"beta","modifiers":[{"metric":"production_efficiency","appliesTo":"operator_exp","value":20,"unit":"percent"}]}]},
+        {"id":"murmuring-session","name":"Murmuring Session","facilityKind":"reception_room","ranks":[{"label":"alpha","modifiers":[{"metric":"clue_rate_up","appliesTo":"clue_5","value":1,"unit":"tier"}]},{"label":"beta","modifiers":[{"metric":"clue_rate_up","appliesTo":"clue_5","value":2,"unit":"tier"}]}]}
+      ]
+    },
+    {
+      "id": "pogranichnik",
+      "name": "Pogranichnik",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=20&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/pogranichnik/",
+      "officialRows": [
+        [["Hone the Weapons β","Assign to Manufacturing Cabin to grant weapon EXP material production efficiency +20%","Promote to E1 to unlock"],["Hone the Weapons γ","Assign to Manufacturing Cabin to grant weapon EXP material production efficiency +30%","Promote to E3 to unlock"]],
+        [["Morale Boost β","Assign to Manufacturing Cabin to slow Mood Drop of all operators in it by 14%","Promote to E2 to unlock"],["Morale Boost γ","Assign to Manufacturing Cabin to slow Mood Drop of all operators in it by 18%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"hone-the-weapons","name":"Hone the Weapons","facilityKind":"manufacturing_cabin","ranks":[{"label":"beta","modifiers":[{"metric":"production_efficiency","appliesTo":"weapon_exp","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"production_efficiency","appliesTo":"weapon_exp","value":30,"unit":"percent"}]}]},
+        {"id":"morale-boost","name":"Morale Boost","facilityKind":"manufacturing_cabin","ranks":[{"label":"beta","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":14,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":18,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "avywenna",
+      "name": "Avywenna",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=10&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/avywenna/",
+      "officialRows": [
+        [["Residence Advisor α","Assign to Control Nexus to grant all operators' Mood Regen +8%","Promote to E1 to unlock"],["Residence Advisor β","Assign to Control Nexus to grant all operators' Mood Regen +12%","Promote to E3 to unlock"]],
+        [["Factory Pioneer α","Assign to Manufacturing Cabin to grant weapon EXP material production efficiency +10%","Promote to E2 to unlock"],["Factory Pioneer β","Assign to Manufacturing Cabin to grant weapon EXP material production efficiency +20%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"residence-advisor","name":"Residence Advisor","facilityKind":"control_nexus","ranks":[{"label":"alpha","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":8,"unit":"percent"}]},{"label":"beta","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":12,"unit":"percent"}]}]},
+        {"id":"messengers-secret","name":"Messenger's Secret","facilityKind":"reception_room","ranks":[{"label":"alpha","modifiers":[{"metric":"clue_rate_up","appliesTo":"clue_2","value":1,"unit":"tier"}]},{"label":"beta","modifiers":[{"metric":"clue_rate_up","appliesTo":"clue_2","value":2,"unit":"tier"}]}]}
+      ]
+    },
+    {
+      "id": "snowshine",
+      "name": "Snowshine",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=16&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/snowshine/",
+      "officialRows": [
+        [["Rescuer's Perseverance α","Assign to Manufacturing Cabin to slow Mood Drop of all operators in it by 10%","Promote to E1 to unlock"],["Rescuer's Perseverance β","Assign to Manufacturing Cabin to slow Mood Drop of all operators in it by 14%","Promote to E3 to unlock"]],
+        [["Happy-Go-Lucky β","Assign to Control Nexus to grant all operators' Mood Regen +12%","Promote to E2 to unlock"],["Happy-Go-Lucky γ","Assign to Control Nexus to grant all operators' Mood Regen +16%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"rescuers-perseverance","name":"Rescuer's Perseverance","facilityKind":"manufacturing_cabin","ranks":[{"label":"alpha","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":10,"unit":"percent"}]},{"label":"beta","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":14,"unit":"percent"}]}]},
+        {"id":"happy-go-lucky","name":"Happy-Go-Lucky","facilityKind":"control_nexus","ranks":[{"label":"beta","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":12,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":16,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "lifeng",
+      "name": "Lifeng",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=12&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/lifeng/",
+      "officialRows": [
+        [["Youthful Ambition α","Assign to Control Nexus to grant all operators' Mood Regen +12%.","Promote to E1 to unlock"],["Youthful Ambition β","Assign to Control Nexus to grant all operators' Mood Regen +16%.","Promote to E3 to unlock"]],
+        [["Laddie Reliable α","Assign to Reception Room to grant operators a small Clue 3 Rate-UP: HAS (activates upon assignment; effects of the same type cannot stack)","Promote to E2 to unlock"],["Laddie Reliable β","Assign to Reception Room to grant operators Clue 3 Rate-UP: HAS (activates upon assignment; effects of the same type cannot stack)","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"youthful-ambition","name":"Youthful Ambition","facilityKind":"control_nexus","ranks":[{"label":"beta","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":12,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":16,"unit":"percent"}]}]},
+        {"id":"laddie-reliable","name":"Laddie Reliable","facilityKind":"reception_room","ranks":[{"label":"alpha","modifiers":[{"metric":"clue_rate_up","appliesTo":"clue_3","value":1,"unit":"tier"}]},{"label":"beta","modifiers":[{"metric":"clue_rate_up","appliesTo":"clue_3","value":2,"unit":"tier"}]}]}
+      ]
+    },
+    {
+      "id": "antal",
+      "name": "Antal",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=22&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/antal/",
+      "officialRows": [
+        [["Experimental Arts Unit α","Assign to Manufacturing Cabin to grant weapon EXP material production efficiency +10%","Promote to E1 to unlock"],["Experimental Arts Unit β","Assign to Manufacturing Cabin to grant weapon EXP material production efficiency +20%","Promote to E3 to unlock"]],
+        [["Pun-isher Studies β","Assign to Growth Chamber to slow Mood Drop of all operators in it by 14%","Promote to E2 to unlock"],["Pun-isher Studies γ","Assign to Growth Chamber to slow Mood Drop of all operators in it by 18%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"experimental-arts-unit","name":"Experimental Arts Unit","facilityKind":"manufacturing_cabin","ranks":[{"label":"alpha","modifiers":[{"metric":"production_efficiency","appliesTo":"weapon_exp","value":10,"unit":"percent"}]},{"label":"beta","modifiers":[{"metric":"production_efficiency","appliesTo":"weapon_exp","value":20,"unit":"percent"}]}]},
+        {"id":"pun-isher-studies","name":"Pun-isher Studies","facilityKind":"growth_chamber","ranks":[{"label":"beta","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":14,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":18,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "laevatain",
+      "name": "Laevatain",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=11&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/laevatain/",
+      "officialRows": [
+        [["Memory Crucible β","Assign to Manufacturing Cabin to grant operator EXP material production efficiency +20%","Promote to E1 to unlock"],["Memory Crucible γ","Assign to Manufacturing Cabin to grant operator EXP material production efficiency +30%","Promote to E3 to unlock"]],
+        [["Undying Flames β","Assign to Manufacturing Cabin to slow Mood Drop of all operators in it by 14%","Promote to E2 to unlock"],["Undying Flames γ","Assign to Manufacturing Cabin to slow Mood Drop of all operators in it by 18%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"memory-crucible","name":"Memory Crucible","facilityKind":"manufacturing_cabin","ranks":[{"label":"beta","modifiers":[{"metric":"production_efficiency","appliesTo":"operator_exp","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"production_efficiency","appliesTo":"operator_exp","value":30,"unit":"percent"}]}]},
+        {"id":"undying-flames","name":"Undying Flames","facilityKind":"manufacturing_cabin","ranks":[{"label":"beta","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":14,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":18,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "camille",
+      "name": "Camille",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=996&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/camille/",
+      "officialRows": [
+        [["Hemo-Vitreography β","Assign to Growth Chamber to grant vitrified plant growth rate +20%","Promote to E1 to unlock"],["Hemo-Vitreography γ","Assign to Growth Chamber to grant vitrified plant growth rate +30%","Promote to E3 to unlock"]],
+        [["Agaš'mekanaz's Manual β","Assign to Manufacturing Cabin to grant operator EXP material production efficiency +20%","Promote to E2 to unlock"],["Agaš'mekanaz's Manual γ","Assign to Manufacturing Cabin to grant operator EXP material production efficiency +30%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"hemo-vitreography","name":"Hemo-Vitreography","facilityKind":"growth_chamber","ranks":[{"label":"beta","modifiers":[{"metric":"growth_rate","appliesTo":"vitrified_plant","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"growth_rate","appliesTo":"vitrified_plant","value":30,"unit":"percent"}]}]},
+        {"id":"aga-mekanazs-manual","name":"Agaš'mekanaz's Manual","facilityKind":"manufacturing_cabin","ranks":[{"label":"beta","modifiers":[{"metric":"production_efficiency","appliesTo":"operator_exp","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"production_efficiency","appliesTo":"operator_exp","value":30,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "yvonne",
+      "name": "Yvonne",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=14&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/yvonne/",
+      "officialRows": [
+        [["Fungal Pigment Extraction α","Assign to Growth Chamber to grant fungal matter growth rate +20%.","Promote to E1 to unlock"],["Fungal Pigment Extraction β","Assign to Growth Chamber to grant fungal matter growth rate +30%.","Promote to E3 to unlock"]],
+        [["Fashionista α","Assign to Growth Chamber to slow Mood Drop of all operators in it by 14%","Promote to E2 to unlock"],["Fashionista β","Assign to Growth Chamber to slow Mood Drop of all operators in it by 18%.","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"fungal-pigment-extraction","name":"Fungal Pigment Extraction","facilityKind":"growth_chamber","ranks":[{"label":"beta","modifiers":[{"metric":"growth_rate","appliesTo":"fungal","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"growth_rate","appliesTo":"fungal","value":30,"unit":"percent"}]}]},
+        {"id":"fashionista","name":"Fashionista","facilityKind":"growth_chamber","ranks":[{"label":"beta","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":14,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":18,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "ardelia",
+      "name": "Ardelia",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=19&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/ardelia/",
+      "officialRows": [
+        [["Tales of the Land \nβ","Assign to Reception Room to grant operator clue collecting efficiency +20%","E1"],["Tales of the Land \nγ","Assign to Reception Room to grant operator clue collecting efficiency +30%","E3"]],
+        [["Mr. Dolly's Game β","Assign to Reception Room to slow Mood Drop of all operators in it by 14%","E2"],["Mr. Dolly's Game γ","Assign to Reception Room to slow Mood Drop of all operators in it by 18%","E4"]]
+      ],
+      "expectedSkills": [
+        {"id":"tales-of-the-land","name":"Tales of the Land","facilityKind":"reception_room","ranks":[{"label":"beta","modifiers":[{"metric":"clue_collection_efficiency","appliesTo":"all","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"clue_collection_efficiency","appliesTo":"all","value":30,"unit":"percent"}]}]},
+        {"id":"mr-dollys-game","name":"Mr. Dolly's Game","facilityKind":"reception_room","ranks":[{"label":"beta","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":14,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":18,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "da-pan",
+      "name": "Da Pan",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=8&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/da-pan/",
+      "officialRows": [
+        [["Chef of Forage and Game α","Assign to Growth Chamber to grant fungal matter growth rate +10%.","Promote to E1 to unlock"],["Chef of Forage and Game β","Assign to Growth Chamber to grant fungal matter growth rate +20%.","Promote to E3 to unlock"]],
+        [["Wordly Wisdom α","Assign to Control Nexus to grant all operators' Mood Regen +12%.","Promote to E2 to unlock"],["Wordly Wisdom β","Assign to Control Nexus to grant all operators' Mood Regen +16%.","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"chef-of-forage-and-game","name":"Chef of Forage and Game","facilityKind":"growth_chamber","ranks":[{"label":"alpha","modifiers":[{"metric":"growth_rate","appliesTo":"fungal","value":10,"unit":"percent"}]},{"label":"beta","modifiers":[{"metric":"growth_rate","appliesTo":"fungal","value":20,"unit":"percent"}]}]},
+        {"id":"worldly-wisdom","name":"Worldly Wisdom","facilityKind":"control_nexus","ranks":[{"label":"beta","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":12,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":16,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "akekuri",
+      "name": "Akekuri",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=5&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/akekuri/",
+      "officialRows": [
+        [["Coffee or Tea α","Assign to Manufacturing Cabin to slow Mood Drop of all operators in it by 10%","Promote to E1 to unlock"],["Coffee or Tea β","Assign to Manufacturing Cabin to slow Mood Drop of all operators in it by 14%","Promote to E3 to unlock"]],
+        [["Icebreaker β","Assign to Reception Room to slow Mood Drop of all operators in it by 14%","Promote to E2 to unlock"],["Icebreaker γ","Assign to Reception Room to slow Mood Drop of all operators in it by 18%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"coffee-or-tea","name":"Coffee or Tea","facilityKind":"manufacturing_cabin","ranks":[{"label":"alpha","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":10,"unit":"percent"}]},{"label":"beta","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":14,"unit":"percent"}]}]},
+        {"id":"icebreaker","name":"Icebreaker","facilityKind":"reception_room","ranks":[{"label":"beta","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":14,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":18,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "catcher",
+      "name": "Catcher",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=23&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/catcher/",
+      "officialRows": [
+        [["Silent Caretaker α","Assign to Control Nexus to grant all operators' Mood Regen +8%","Promote to E1 to unlock"],["Silent Caretaker β","Assign to Control Nexus to grant all operators' Mood Regen +12%","Promote to E3 to unlock"]],
+        [["Grounded Approach β","Assign to Growth Chamber to slow Mood Drop of all operators in it by +14%","Promote to E2 to unlock"],["Grounded Approach γ","Assign to Growth Chamber to slow Mood Drop of all operators in it by +18%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"silent-caretaker","name":"Silent Caretaker","facilityKind":"control_nexus","ranks":[{"label":"alpha","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":8,"unit":"percent"}]},{"label":"beta","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":12,"unit":"percent"}]}]},
+        {"id":"grounded-approach","name":"Grounded Approach","facilityKind":"growth_chamber","ranks":[{"label":"beta","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":14,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":18,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "estella",
+      "name": "Estella",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=21&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/estella/",
+      "officialRows": [
+        [["Fragmented Rest α","Assign to Control Nexus to grant all Operators' Mood Regen \n+8%","Promote to E1 to unlock"],["Fragmented Rest β","Assign to Control Nexus to grant all Operators' Mood Regen \n+12%","Promote to E3 to unlock"]],
+        [["Frequency Monitoring β","Assign to Reception Room to grant operator clue collecting efficiency +20%","Promote to E2 to unlock"],["Frequency Monitoring γ","Assign to Reception Room to grant operator clue collecting efficiency +30%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"fragmented-rest","name":"Fragmented Rest","facilityKind":"control_nexus","ranks":[{"label":"alpha","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":8,"unit":"percent"}]},{"label":"beta","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":12,"unit":"percent"}]}]},
+        {"id":"frequency-monitoring","name":"Frequency Monitoring","facilityKind":"reception_room","ranks":[{"label":"beta","modifiers":[{"metric":"clue_collection_efficiency","appliesTo":"all","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"clue_collection_efficiency","appliesTo":"all","value":30,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "fluorite",
+      "name": "Fluorite",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=24&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/fluorite/",
+      "officialRows": [
+        [["Wildlands Trekker α","Assign to Growth Chamber to grant rare mineral growth rate +10%.","Promote to E1 to unlock"],["Wildlands Trekker β","Assign to Growth Chamber to grant rare mineral growth rate +20%.","Promote to E3 to unlock"]],
+        [["Reader of Emotions β","Assign to Control Nexus to grant all operators' Mood Regen +12%","Promote to E2 to unlock"],["Reader of Emotions γ","Assign to Control Nexus to grant all operators' Mood Regen +16%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"wildlands-trekker","name":"Wildlands Trekker","facilityKind":"growth_chamber","ranks":[{"label":"alpha","modifiers":[{"metric":"growth_rate","appliesTo":"rare_mineral","value":10,"unit":"percent"}]},{"label":"beta","modifiers":[{"metric":"growth_rate","appliesTo":"rare_mineral","value":20,"unit":"percent"}]}]},
+        {"id":"reader-of-emotions","name":"Reader of Emotions","facilityKind":"control_nexus","ranks":[{"label":"beta","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":12,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":16,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "alesh",
+      "name": "Alesh",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=18&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/alesh/",
+      "officialRows": [
+        [["Casual Angling α","Assign to Control Nexus to grant all operators' Mood Regen +8%","Promote to E1 to unlock"],["Casual Angling β","Assign to Control Nexus to grant all operators' Mood Regen +12%","Promote to E3 to unlock"]],
+        [["Anglers' Intel Network α","Assign to Reception Room to grant operators a small Clue 1 Rate-UP: UWST (activates upon assignment; effects of the same type cannot stack)","Promote to E2 to unlock"],["Anglers' Intel Network  β","Assign to Reception Room to grant operators Clue 1 Rate-UP: UWST (activates upon assignment; effects of the same type cannot stack)","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"casual-angling","name":"Casual Angling","facilityKind":"control_nexus","ranks":[{"label":"alpha","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":8,"unit":"percent"}]},{"label":"beta","modifiers":[{"metric":"mood_regen","appliesTo":"all","value":12,"unit":"percent"}]}]},
+        {"id":"anglers-intel-network","name":"Anglers' Intel Network","facilityKind":"reception_room","ranks":[{"label":"alpha","modifiers":[{"metric":"clue_rate_up","appliesTo":"clue_1","value":1,"unit":"tier"}]},{"label":"beta","modifiers":[{"metric":"clue_rate_up","appliesTo":"clue_1","value":2,"unit":"tier"}]}]}
+      ]
+    },
+    {
+      "id": "last-rite",
+      "name": "Last Rite",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=17&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/last-rite/",
+      "officialRows": [
+        [["Cemetery Gardening α","Assign to Growth Chamber to grant vitrified plant growth rate +20%","Promote to E1 to unlock"],["Cemetery Gardening β","Assign to Growth Chamber to grant vitrified plant growth rate +30%","Promote to E3 to unlock"]],
+        [["Fame of the Royal Courts α","Assign to Reception Room to grant operators a small Clue 7 Rate-UP: Seš'qa (activates upon assignment; effects of the same type cannot stack)","Promote to E2 to unlock"],["Fame of the Royal Courts β","Assign to Reception Room to grant operators Clue 7 Rate-UP: Seš'qa (activates upon assignment; effects of the same type cannot stack)","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"cemetery-gardening","name":"Cemetery Gardening","facilityKind":"growth_chamber","ranks":[{"label":"beta","modifiers":[{"metric":"growth_rate","appliesTo":"vitrified_plant","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"growth_rate","appliesTo":"vitrified_plant","value":30,"unit":"percent"}]}]},
+        {"id":"fame-of-the-royal-courts","name":"Fame of the Royal Courts","facilityKind":"reception_room","ranks":[{"label":"alpha","modifiers":[{"metric":"clue_rate_up","appliesTo":"clue_7","value":1,"unit":"tier"}]},{"label":"beta","modifiers":[{"metric":"clue_rate_up","appliesTo":"clue_7","value":2,"unit":"tier"}]}]}
+      ]
+    },
+    {
+      "id": "zhuang-fangyi",
+      "name": "Zhuang Fangyi",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=838&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/zhuang-fangyi/",
+      "officialRows": [
+        [["Viceroy Experience β","Assign to Manufacturing Cabin to slow Mood Drop of all operators in it by 14%","Promote to E1 to unlock"],["Viceroy Experience γ","Assign to Manufacturing Cabin to slow Mood Drop of all operators in it by 18%","Promote to E3 to unlock"]],
+        [["Tianshi Chi Meditation β","Assign to Manufacturing Cabin to grant operator EXP material production efficiency +20%","Promote to E2 to unlock"],["Tianshi Chi Meditation γ","Assign to Manufacturing Cabin to grant operator EXP material production efficiency +30%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"viceroy-experience","name":"Viceroy Experience","facilityKind":"manufacturing_cabin","ranks":[{"label":"beta","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":14,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":18,"unit":"percent"}]}]},
+        {"id":"tianshi-chi-meditation","name":"Tianshi Chi Meditation","facilityKind":"manufacturing_cabin","ranks":[{"label":"beta","modifiers":[{"metric":"production_efficiency","appliesTo":"operator_exp","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"production_efficiency","appliesTo":"operator_exp","value":30,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "tangtang",
+      "name": "Tangtang",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=25&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/tangtang/",
+      "officialRows": [
+        [["Supreme Chief β","Assign to Growth Chamber to slow Mood Drop of all operators in it by 14%","Promote to E1 to unlock"],["Supreme Chief γ","Assign to Growth Chamber to slow Mood Drop of all operators in it by 18%","Promote to E3 to unlock"]],
+        [["River's Daughter β","Assign to Growth Chamber to grant vitrified plant growth rate +20%","Promote to E2 to unlock"],["River's Daughter γ","Assign to Growth Chamber to grant vitrified plant growth rate +30%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"supreme-chief","name":"Supreme Chief","facilityKind":"growth_chamber","ranks":[{"label":"beta","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":14,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":18,"unit":"percent"}]}]},
+        {"id":"rivers-daughter","name":"River's Daughter","facilityKind":"growth_chamber","ranks":[{"label":"beta","modifiers":[{"metric":"growth_rate","appliesTo":"vitrified_plant","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"growth_rate","appliesTo":"vitrified_plant","value":30,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "rossi",
+      "name": "Rossi",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=615&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/rossi/",
+      "officialRows": [
+        [["Clan Etiquette β","Assign to Reception Room to slow Mood Drop of all operators in it by 14%","Promote to E1 to unlock"],["Clan Etiquette γ","Assign to Reception Room to slow Mood Drop of all operators in it by 18%","Promote to E3 to unlock"]],
+        [["Scent of the Hunt β","Assign to Reception Room to grant operator clue collecting efficiency +20%","Promote to E2 to unlock"],["Scent of the Hunt γ","Assign to Reception Room to grant operator clue collecting efficiency +30%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"clan-etiquette","name":"Clan Etiquette","facilityKind":"reception_room","ranks":[{"label":"beta","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":14,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"mood_drop_reduction","appliesTo":"all","value":18,"unit":"percent"}]}]},
+        {"id":"scent-of-the-hunt","name":"Scent of the Hunt","facilityKind":"reception_room","ranks":[{"label":"beta","modifiers":[{"metric":"clue_collection_efficiency","appliesTo":"all","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"clue_collection_efficiency","appliesTo":"all","value":30,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "mifu",
+      "name": "Mifu",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=995&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/mifu/",
+      "officialRows": [
+        [["Secret Informants α","Assign to Reception Room to grant operators a small Clue 3 Rate-UP: HAS \n(activates upon assignment; effects of the same type cannot stack)","Promote to E1 to unlock"],["Secret Informants β","Assign to Reception Room to grant operators Clue 3 Rate-UP: HAS \n(activates upon assignment; effects of the same type cannot stack)","Promote to E3 to unlock"]],
+        [["Esoteric Tisane β","Assign to Growth Chamber to grant fungal matter growth rate +20%","Promote to E2 to unlock"],["Esoteric Tisane γ","Assign to Growth Chamber to grant fungal matter growth rate +30%","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"secret-informants","name":"Secret Informants","facilityKind":"reception_room","ranks":[{"label":"alpha","modifiers":[{"metric":"clue_rate_up","appliesTo":"clue_3","value":1,"unit":"tier"}]},{"label":"beta","modifiers":[{"metric":"clue_rate_up","appliesTo":"clue_3","value":2,"unit":"tier"}]}]},
+        {"id":"esoteric-tisane","name":"Esoteric Tisane","facilityKind":"growth_chamber","ranks":[{"label":"beta","modifiers":[{"metric":"growth_rate","appliesTo":"fungal","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"growth_rate","appliesTo":"fungal","value":30,"unit":"percent"}]}]}
+      ]
+    },
+    {
+      "id": "arcane",
+      "name": "Arcane",
+      "officialUrl": "https://wiki.skport.com/endfield/detail?mainTypeId=1&subTypeId=1&gameEntryId=1040&header=0",
+      "gameDataUrl": "https://endfieldtools.dev/characters/arcane/",
+      "officialRows": [
+        [["Pluck the Mountain, Boil the Sea β","Assign to Growth Chamber to grant rare mineral growth rate +20%.","Promote to E1 to unlock"],["Pluck the Mountain, Boil the Sea γ","Assign to Growth Chamber to grant rare mineral growth rate +30%.","Promote to E3 to unlock"]],
+        [["Botanophile β","Assign to Growth Chamber to grant vitrified plant growth rate +20%.","Promote to E2 to unlock"],["Botanophile γ","Assign to Growth Chamber to grant vitrified plant growth rate +30%.","Promote to E4 to unlock"]]
+      ],
+      "expectedSkills": [
+        {"id":"pluck-the-mountain-boil-the-sea","name":"Pluck the Mountain, Boil the Sea","facilityKind":"growth_chamber","ranks":[{"label":"beta","modifiers":[{"metric":"growth_rate","appliesTo":"rare_mineral","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"growth_rate","appliesTo":"rare_mineral","value":30,"unit":"percent"}]}]},
+        {"id":"botanophile","name":"Botanophile","facilityKind":"growth_chamber","ranks":[{"label":"beta","modifiers":[{"metric":"growth_rate","appliesTo":"vitrified_plant","value":20,"unit":"percent"}]},{"label":"gamma","modifiers":[{"metric":"growth_rate","appliesTo":"vitrified_plant","value":30,"unit":"percent"}]}]}
+      ]
+    }
+  ]
+}
