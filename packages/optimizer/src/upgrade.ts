@@ -3,6 +3,7 @@ import type {
   MaterialCost,
   OptimizationResult,
   OptimizationScenario,
+  ProductKind,
   UpgradeAction,
   UpgradeRankingMode,
   UpgradeRecommendation,
@@ -268,8 +269,15 @@ export function recommendUpgrades(
     .map((action) => {
       maybeCancel();
       const upgradedScenario = applyUpgradeActionToScenario(scenario, action);
-      const upgradedResult = solveScenario(catalog, upgradedScenario, { shouldCancel });
+      const upgradedResult = solveScenario(catalog, upgradedScenario, { shouldCancel, initialAssignments: baseline.roomPlans });
       const scoreDelta = upgradedResult.totalScore - baseline.totalScore;
+      const projectedOutputChanges = (Object.keys(baseline.projectedOutputs) as ProductKind[])
+        .map((productKind) => ({
+          productKind,
+          before: baseline.projectedOutputs[productKind],
+          after: upgradedResult.projectedOutputs[productKind],
+        }))
+        .filter(({ before, after }) => Math.abs(after - before) > 1e-9 * Math.max(1, Math.abs(before), Math.abs(after)));
       const effortScore = scoreUpgradeEffort(action);
       const operatorDef = operatorDefs.get(action.operatorId);
       const estimatedDaysToUnlock = effortScore / SUPPORT_WEIGHTS.estimatedEffortPerDay;
@@ -323,6 +331,7 @@ export function recommendUpgrades(
       return {
         action,
         scoreDelta,
+        projectedOutputChanges,
         roi: effortScore > 0 ? scoreDelta / effortScore : scoreDelta,
         estimatedDaysToUnlock,
         notes,

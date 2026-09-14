@@ -560,6 +560,7 @@ export interface UpgradeRecommendation {
   action: UpgradeAction;
   scoreDelta: number;
   roi: number;
+  projectedOutputChanges?: Array<{ productKind: ProductKind; before: number; after: number }>;
   estimatedDaysToUnlock?: number;
   notes: string[];
 }

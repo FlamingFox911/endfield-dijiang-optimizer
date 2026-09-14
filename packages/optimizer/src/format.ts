@@ -1,5 +1,14 @@
 import type { GameCatalog, OptimizationResult, UpgradeRecommendationResult } from "@endfield/domain";
 
+import { formatScorePoints } from "./score-format.js";
+
+export function formatProjectedOutputChange(change: { productKind: string; before: number; after: number }): string {
+  const delta = change.after - change.before;
+  const magnitude = Math.abs(delta);
+  const gain = magnitude > 0 && magnitude < 0.01 ? "<0.01" : magnitude.toFixed(2);
+  return `${formatProductKind(change.productKind)}: ${change.before.toFixed(2)} → ${change.after.toFixed(2)} units/hr (${delta < 0 ? "-" : delta > 0 ? "+" : ""}${gain}/hr)`;
+}
+
 function formatRoomKind(roomKind: string): string {
   return roomKind
     .split("_")
@@ -40,7 +49,7 @@ export function formatOptimizationResultText(
   const { operatorsById, recipesById } = buildCatalogLookups(catalog);
   const lines = [
     `Catalog: ${result.catalogVersion}`,
-    `Total score: ${result.totalScore.toFixed(2)}`,
+    `Total score (pts): ${formatScorePoints(result.totalScore)}`,
     `Score model: ${result.supportWeightsVersion}`,
     "",
     "Room plans",
@@ -55,7 +64,7 @@ export function formatOptimizationResultText(
     );
 
     lines.push(
-      `- ${room.roomId} (${formatRoomKind(room.roomKind)} Lv${room.roomLevel}) score ${room.projectedScore.toFixed(2)} | direct ${room.scoreBreakdown.directProductionScore.toFixed(2)} | support ${room.scoreBreakdown.supportRoomScore.toFixed(2)} | cross-room ${room.scoreBreakdown.crossRoomBonusContribution.toFixed(2)} | confidence ${room.dataConfidence}`,
+      `- ${room.roomId} (${formatRoomKind(room.roomKind)} Lv${room.roomLevel}) score ${formatScorePoints(room.projectedScore)} pts | direct ${formatScorePoints(room.scoreBreakdown.directProductionScore)} pts | support ${formatScorePoints(room.scoreBreakdown.supportRoomScore)} pts | cross-room ${formatScorePoints(room.scoreBreakdown.crossRoomBonusContribution)} pts | confidence ${room.dataConfidence}`,
     );
     if ((room.chosenRecipeIds ?? []).length > 0) {
       lines.push(`  recipe: ${recipeNames.join(", ")}`);
@@ -100,7 +109,7 @@ export function formatUpgradeRecommendationsText(
   const lines = [
     `Catalog: ${result.catalogVersion}`,
     `Ranking mode: ${result.rankingMode}`,
-    `Baseline score: ${result.baselineScore.toFixed(2)}`,
+    `Baseline score (pts): ${formatScorePoints(result.baselineScore)}`,
     "",
     "Recommendations",
   ];
@@ -123,7 +132,7 @@ export function formatUpgradeRecommendationsText(
     );
 
     lines.push(
-      `- ${operatorName} / ${skillName} -> rank ${recommendation.action.targetRank} | delta ${recommendation.scoreDelta.toFixed(2)} | roi ${recommendation.roi.toFixed(4)} | est days ${(recommendation.estimatedDaysToUnlock ?? 0).toFixed(1)}`,
+      `- ${operatorName} / ${skillName} -> rank ${recommendation.action.targetRank} | score gain ${formatScorePoints(recommendation.scoreDelta, true)} pts | roi ${formatScorePoints(recommendation.roi)} pts/effort | est days ${(recommendation.estimatedDaysToUnlock ?? 0).toFixed(1)}`,
     );
     lines.push(`  gate: ${gateParts.join(" | ")}`);
     lines.push(`  level costs: ${formatMaterialCosts(recommendation.action.levelMaterialCosts)}`);
@@ -131,6 +140,9 @@ export function formatUpgradeRecommendationsText(
     lines.push(`  skill costs: ${formatMaterialCosts(recommendation.action.skillMaterialCosts)}`);
     if (recommendation.action.unlockHint) {
       lines.push(`  unlock: ${recommendation.action.unlockHint}`);
+    }
+    for (const change of recommendation.projectedOutputChanges ?? []) {
+      lines.push(`  output: ${formatProjectedOutputChange(change)}`);
     }
     lines.push(`  notes: ${recommendation.notes.join(" | ")}`);
   }

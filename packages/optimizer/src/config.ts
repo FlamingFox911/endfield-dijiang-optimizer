@@ -3,9 +3,7 @@ import type { OptimizationProfile } from "@endfield/domain";
 import type { OptimizationSearchConfig } from "./types.js";
 
 export const SUPPORT_WEIGHTS = {
-  version: "v3",
-  controlNexusMoodRegenWeight: 0.55,
-  controlNexusMoodDropReductionWeight: 0.45,
+  version: "v4",
   assignedOperatorProductionEfficiencyPercent: 40,
   baselineMoodDrainPerHour: 3_600,
   baselineMoodRegenPerHour: 6_000,
@@ -14,10 +12,6 @@ export const SUPPORT_WEIGHTS = {
   // them below steady production once social-loop and store RNG variance are accounted for.
   receptionClueCollectionWeight: 0.01,
   receptionClueRateWeight: 0,
-  receptionBaselineSupportScorePerSeat: 1,
-  offRoomClueWeight: 0.003,
-  fallbackProductionPercentPerRank: 10,
-  fallbackSupportPercentPerRank: 0.2,
   priorityRecipeFocusMultiplier: 2.5,
   estimatedEffortPerDay: 18,
 } as const;
@@ -58,21 +52,21 @@ export function getOptimizationSearchConfig(profile: OptimizationProfile, effort
 
 export const DEFAULT_SOLVER_STRATEGY = {
   name: "assignment enumeration + branch and bound",
-  guarantee: "exact",
+  guarantee: "approximate",
   summary:
-    "Use the user-selected room recipe plan, then search operator assignments with upper-bound pruning.",
+    "Compare assignment sets using estimated working/resting cycles and recipe-specific output, with upper-bound pruning and a search budget.",
   steps: [
     "Normalize the scenario and apply the max-facilities overlay if requested.",
     "Reserve hard assignments before searching other rooms.",
     "Use the scenario's fixed recipe selection for each production room.",
     "Branch on remaining operator-slot choices while pruning with an optimistic bound.",
-    "Re-score the best feasible plan and return per-room explanations and score breakdowns.",
+    "Use the same whole-assignment score for search and results, and return per-room marginal explanations.",
   ],
 } as const;
 
 export const DEFAULT_UPGRADE_STRATEGY = {
   name: "counterfactual next-unlock evaluation",
-  guarantee: "exact",
+  guarantee: "approximate",
   summary:
     "Generate every next unlock candidate, re-solve the scenario, and rank by impact and effort.",
   steps: [

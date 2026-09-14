@@ -43,6 +43,8 @@ import {
   OPTIMIZATION_PROFILE_EFFORTS,
   clampOptimizationEffort,
   getOptimizationSearchConfig,
+  formatScorePoints,
+  formatProjectedOutputChange,
 } from "@endfield/optimizer";
 
 import { createOptimizerWorker } from "./optimizer.worker.client";
@@ -2194,7 +2196,7 @@ function App() {
             <p className="status">{optimizationRun.progress.phase}</p>
             <div className="heroMetaGrid modalStats">
               <div><span>Visited nodes</span><strong>{optimizationRun.progress.visitedNodes}</strong></div>
-              <div><span>Best score</span><strong>{optimizationRun.progress.bestScore.toFixed(2)}</strong></div>
+              <div><span>Best score (pts)</span><strong>{formatScorePoints(optimizationRun.progress.bestScore)}</strong></div>
               <div><span>Depth</span><strong>{optimizationRun.progress.currentDepth} / {Math.max(optimizationRun.progress.totalSlots, 0)}</strong></div>
               <div><span>Branch cap</span><strong>{optimizationRun.progress.maxBranchCandidatesPerSlot}</strong></div>
               <div><span>Node budget</span><strong>{optimizationRun.progress.maxVisitedNodes}</strong></div>
@@ -2219,8 +2221,8 @@ function App() {
             <p className="status">{recommendationRun.progress.phase}</p>
             <div className="heroMetaGrid modalStats">
               <div><span>Candidates</span><strong>{recommendationRun.progress.completedCandidates} / {recommendationRun.progress.totalCandidates}</strong></div>
-              <div><span>Baseline score</span><strong>{recommendationRun.progress.baselineScore.toFixed(2)}</strong></div>
-              <div><span>Best delta</span><strong>{recommendationRun.progress.bestScoreDelta.toFixed(2)}</strong></div>
+              <div><span>Baseline score (pts)</span><strong>{formatScorePoints(recommendationRun.progress.baselineScore)}</strong></div>
+              <div><span>Best score gain (pts)</span><strong>{formatScorePoints(recommendationRun.progress.bestScoreDelta, true)}</strong></div>
             </div>
             <button type="button" onClick={cancelOptimization}>Cancel</button>
           </div>
@@ -3148,7 +3150,7 @@ function App() {
                         <p className="eyebrow">Optimization</p>
                         <h3>Search stopped</h3>
                       </div>
-                      <span className="miniStat">{result.totalScore.toFixed(2)} score</span>
+                      <span className="miniStat">{formatScorePoints(result.totalScore)} pts</span>
                     </div>
                     <div className="resultNotesGrid">
                       <p className="warningText resultNoteCell">{optimizationSearchWarning}</p>
@@ -3218,20 +3220,20 @@ function App() {
                         )}
                         <div className="resultMetricGrid resultMetricGridSecondary">
                           <div className="resultMetric">
-                            <span>Total</span>
-                            <strong>{room.projectedScore.toFixed(2)}</strong>
+                            <span>Total (pts)</span>
+                            <strong>{formatScorePoints(room.projectedScore)}</strong>
                           </div>
                           <div className="resultMetric">
-                            <span>Direct</span>
-                            <strong>{room.scoreBreakdown.directProductionScore.toFixed(2)}</strong>
+                            <span>Direct (pts)</span>
+                            <strong>{formatScorePoints(room.scoreBreakdown.directProductionScore)}</strong>
                           </div>
                           <div className="resultMetric">
-                            <span>Support</span>
-                            <strong>{room.scoreBreakdown.supportRoomScore.toFixed(2)}</strong>
+                            <span>Support (pts)</span>
+                            <strong>{formatScorePoints(room.scoreBreakdown.supportRoomScore)}</strong>
                           </div>
                           <div className="resultMetric">
-                            <span>Cross-room</span>
-                            <strong>{room.scoreBreakdown.crossRoomBonusContribution.toFixed(2)}</strong>
+                            <span>Cross-room (pts)</span>
+                            <strong>{formatScorePoints(room.scoreBreakdown.crossRoomBonusContribution)}</strong>
                           </div>
                         </div>
                         {(room.usedFallbackHeuristics || roomWarnings.length > 0) && (
@@ -3255,8 +3257,8 @@ function App() {
                   </div>
                   <div className="resultSummaryGrid">
                     <div className="resultMetric resultMetricHighlight">
-                      <span>Total score</span>
-                      <strong>{result.totalScore.toFixed(2)}</strong>
+                      <span>Total score (pts)</span>
+                      <strong>{formatScorePoints(result.totalScore)}</strong>
                     </div>
                     <div className="resultMetric">
                       <span>Score model</span>
@@ -3296,8 +3298,8 @@ function App() {
                 </div>
                 <div className="resultSummaryGrid recommendationSummaryGrid">
                   <div className="resultMetric">
-                    <span>Baseline score</span>
-                    <strong>{recommendations.baselineScore.toFixed(2)}</strong>
+                    <span>Baseline score (pts)</span>
+                    <strong>{formatScorePoints(recommendations.baselineScore)}</strong>
                   </div>
                   <div className="resultMetric">
                     <span>Ranking mode</span>
@@ -3332,22 +3334,29 @@ function App() {
                               : recommendation.action.skillId}
                           />
                         </div>
-                        <span className="miniStat">{recommendation.scoreDelta.toFixed(2)} delta</span>
+                        <span className="miniStat">{formatScorePoints(recommendation.scoreDelta, true)} pts</span>
                       </div>
                       <div className="resultMetricGrid">
                         <div className="resultMetric">
-                          <span>Delta</span>
-                          <strong>{recommendation.scoreDelta.toFixed(2)}</strong>
+                          <span>Score gain (pts)</span>
+                          <strong>{formatScorePoints(recommendation.scoreDelta, true)}</strong>
                         </div>
                         <div className="resultMetric">
-                          <span>ROI</span>
-                          <strong>{recommendation.roi.toFixed(2)}</strong>
+                          <span>ROI (pts/effort)</span>
+                          <strong>{formatScorePoints(recommendation.roi)}</strong>
                         </div>
                         <div className="resultMetric">
                           <span>ETA</span>
                           <strong>{formatEstimatedDays(recommendation.estimatedDaysToUnlock)}</strong>
                         </div>
                       </div>
+                      {(recommendation.projectedOutputChanges?.length ?? 0) > 0 && (
+                        <div className="resultNotesGrid">
+                          {recommendation.projectedOutputChanges?.map((change) => (
+                            <p className="resultLine resultNoteCell" key={change.productKind}>{formatProjectedOutputChange(change)}</p>
+                          ))}
+                        </div>
+                      )}
                       {recommendation.action.unlockHint && (
                         <div className="resultNotesGrid recommendationInfoGrid">
                           <p className="resultLine resultNoteCell">{recommendation.action.unlockHint}</p>

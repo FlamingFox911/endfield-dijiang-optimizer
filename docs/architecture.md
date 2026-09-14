@@ -1,5 +1,7 @@
 # Application Architecture
 
+The current scoring specification is [model v4](scoring-model-2026-09-13.md), with a separate [material valuation review](scoring-economics-2026-09-13.md). Both include sources and distinguish mechanics from user preference weights.
+
 ## Scope
 
 The application solves one thing well: given a user-controlled roster, current base-skill unlocks, current Dijiang room levels, global hard assignments, and exact per-room recipe selections, it recommends the best assignments and the next best Base Skill unlocks to chase.
@@ -120,7 +122,7 @@ For each room, the solver chooses:
 The score for a room is modeled from:
 
 - Base output for the chosen recipe and room level.
-- Baseline occupancy efficiency in production rooms, currently modeled as `40%` extra base output per assigned operator seat in Manufacturing Cabin and Growth Chamber rooms.
+- Active staffing efficiency: `1 + 0.40 * activeWorkers`, multiplied by matching skill efficiency. A room with no working operators produces zero.
 - Matching production or growth bonuses from assigned operators.
 - Mood sustain effects such as room mood regen, room mood-drop reduction, and Control Nexus ship-wide sustain.
 - Reception Room and Control Nexus effects that improve clue or facility-wide value when applicable.
@@ -130,8 +132,9 @@ V1 still does not run a full time-based Mood simulation with current Mood state,
 - baseline Mood drain while working is treated as `3,600` per hour
 - baseline Mood recovery while resting is treated as `6,000` per hour
 - the implied baseline long-run working uptime is `62.5%`
-- production-room Mood effects preserve the staffed-seat `+40%` value and the operator's own direct production bonus over the long run
-- Control Nexus Mood effects are treated as ship-wide sustain that improves the long-run uptime of production-room operator value
+- room-wide Mood effects change all workers' estimated uptime; a provider's own reduction applies during work, while its own regeneration skill is inactive during rest
+- production averages joint worker/skill activity, including all-resting intervals; phase independence and average peer support are explicit approximations
+- Control Nexus Mood effects improve production and Reception through average provider activity, and receive the resulting marginal ship-wide utility once
 
 The optimization objective is still total score, not raw projected output totals. Projected outputs are derived after scoring, but they are now kept aligned with the production-side effects of the Mood model, including ship-wide Control Nexus Mood support.
 
@@ -151,7 +154,7 @@ The long-run Dijiang objective is not a single universal weight table. Different
 - Weapon EXP
 - Growth Chamber materials by family or exact recipe
   Examples: `Pink Bolete` at operator level `20`, `Red Bolete` at `40`, `Ruby Bolete` at `60`, `Bloodcap` at `80`, and weapon minerals such as `Kalkonyx` `20 → 40`, `Auronyx` `40 → 60`, `Umbronyx` `60 → 80`, and `Wulingstone` `80 → 90`
-- Reception Room clue throughput or specific clue targeting
+- Reception Room general clue throughput; specific clues and Trust remain Hard Assignment preferences with zero objective weight
 - Credit-oriented support value derived from clue loops and related systems
 
 The optimizer should therefore move toward a demand-aware score model rather than a static global priority order.
@@ -170,11 +173,11 @@ That means future weighting work should be user-configurable and constraint-awar
 - compare Dijiang production against external procurement paths instead of treating every produced unit as equally valuable
 - retain explainability so the UI can show why a room or operator combination won under the active objective
 
-The current solver only partially satisfies that direction. It now values Manufacturing recipes by item value instead of raw unit count, and the data layer can estimate a full Dijiang base-build path, but the final objective is still not yet driven by a user-selected long-run demand profile.
+The current solver supports demand-profile and recipe-priority preferences. Manufacturing values use checked endgame EXP replacement ratios, including Cognitive Carriers' 2.5-times value per EXP. Growth and Reception retain explicit preference weights. Exact upgrade targets, inventory, external acquisitions, and a finite-horizon demand cap are not yet modeled.
 
 ## Why not start with CP-SAT
 
-The problem is small enough to solve exactly without introducing a heavy native dependency on day one. An exact branch-and-bound search over room slot assignments keeps the core portable across CLI and browser builds.
+Branch-and-bound search keeps the core portable across CLI and browser builds. Whole-assignment scoring captures room and Control synergies; full-active room bounds safely overestimate potential output. Candidate and node limits make large searches approximate and are disclosed in results. Search exactness within a small fully explored scenario is separate from the approximate work/rest model.
 
 The solver interface is still abstracted so a future CP-SAT backend can replace the search strategy if Endfield adds more complex cross-room synergies.
 

@@ -2,6 +2,8 @@
 
 Snapshot date: March 23, 2026.
 
+Current scoring review: [model v4 and aspect matrix](scoring-model-2026-09-13.md), [material economics and external sources](scoring-economics-2026-09-13.md), checked September 13, 2026. These supersede the implementation descriptions below where the historical snapshot differs.
+
 This document records the source-backed facts that shaped the application architecture, plus the gaps that still need manual validation or in-game verification.
 Operational retrieval notes for each source domain live in `docs/source-tactics.md`.
 

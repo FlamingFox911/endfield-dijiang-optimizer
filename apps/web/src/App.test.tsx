@@ -1024,7 +1024,7 @@ describe("App", () => {
     ]);
   });
 
-  it("runs recommendations from the UI", async () => {
+  it.each([[0.003, "+3"], [0.0001, "+<1"], [0, "0"], [-0.003, "-3"]] as const)("shows a score gain of %s accurately on unlock cards", async (scoreDelta, displayedGain) => {
     render(<App />);
 
     await screen.findByText("Endfield Dijiang Optimizer");
@@ -1063,7 +1063,8 @@ describe("App", () => {
                 materialCosts: [],
                 unlockHint: "test",
               },
-              scoreDelta: 1,
+              scoreDelta,
+              projectedOutputChanges: [{ productKind: "operator_exp", before: 1.6, after: 1.7 }],
               roi: 1,
               estimatedDaysToUnlock: 1,
               notes: [],
@@ -1076,6 +1077,13 @@ describe("App", () => {
     await waitFor(() => {
       expect(screen.getByText("Next unlocks")).toBeInTheDocument();
     });
+    const card = requireHtmlElement(screen.getByText("Blade Critique").closest(".resultCard"));
+    expect(within(card).getByText("Score gain (pts)")).toBeInTheDocument();
+    expect(within(card).getByText(displayedGain)).toBeInTheDocument();
+    expect(within(card).getByText(`${displayedGain} pts`)).toBeInTheDocument();
+    expect(within(card).getByText("Operator Exp: 1.60 → 1.70 units/hr (+0.10/hr)")).toBeInTheDocument();
+    const baselineMetric = requireHtmlElement(screen.getByText("Baseline score (pts)").closest(".resultMetric"));
+    expect(within(baselineMetric).getByText("1,000")).toBeInTheDocument();
   });
 
   it("falls back to a greek-only badge when a Base Skill icon fails to load", async () => {
@@ -1563,7 +1571,7 @@ describe("App", () => {
       });
     });
 
-    await screen.findByText("77.00");
+    await screen.findByText("77,000");
 
     await userEvent.click(screen.getByRole("button", { name: "Optimize" }));
     await screen.findByRole("dialog", { name: "Optimization progress" });
@@ -1573,7 +1581,7 @@ describe("App", () => {
       expect(workerInstances[1]!.terminate).toHaveBeenCalledTimes(1);
       expect(screen.queryByRole("dialog", { name: "Optimization progress" })).not.toBeInTheDocument();
       expect(screen.getByText("Optimization canceled.")).toBeInTheDocument();
-      expect(screen.getByText("77.00")).toBeInTheDocument();
+      expect(screen.getByText("77,000")).toBeInTheDocument();
     });
   });
 });

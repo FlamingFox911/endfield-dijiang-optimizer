@@ -90,6 +90,7 @@ The repo now contains:
 - shared catalog and scenario validation/migration services
 - a branch-and-bound assignment solver with room score breakdowns
 - a long-run Mood-aware scoring model for production rooms and Control Nexus ship-wide support, with projected outputs aligned to those production-side gains
+- [sourced v4 scoring rules and aspect scores](docs/scoring-model-2026-09-13.md), with a [material-value and acquisition matrix](docs/scoring-economics-2026-09-13.md)
 - a next-unlock recommender that includes level gating, Elite promotions, and Base Skill node costs
 - a packaged CLI and browser app using the same shared runtime
 - tests covering data services, optimizer behavior, CLI packaging, and the web app

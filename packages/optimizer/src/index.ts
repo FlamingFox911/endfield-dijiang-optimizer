@@ -10,7 +10,8 @@ export {
   clampOptimizationEffort,
   getOptimizationSearchConfig,
 } from "./config.js";
-export { formatOptimizationResultText, formatUpgradeRecommendationsText } from "./format.js";
+export { formatOptimizationResultText, formatUpgradeRecommendationsText, formatProjectedOutputChange } from "./format.js";
+export { formatScorePoints, SCORE_POINTS_PER_UNIT } from "./score-format.js";
 export {
   applyMaxFacilitiesOverlay,
   OptimizationCancelledError,

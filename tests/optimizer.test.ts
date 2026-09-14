@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { createStarterScenario } from "@endfield/data";
 import { loadDefaultCatalog, loadScenarioFile, resolveRepoPath } from "@endfield/data/node";
+import { createAssignmentScorer } from "../packages/optimizer/src/assignment-scoring.js";
 import {
   DEFAULT_OPTIMIZATION_EFFORT,
   DEFAULT_OPTIMIZATION_PROFILE,
@@ -11,6 +12,7 @@ import {
   getOptimizationSearchConfig,
   formatOptimizationResultText,
   formatUpgradeRecommendationsText,
+  formatScorePoints,
   normalizeScenario,
   recommendUpgrades,
   solveScenario,
@@ -52,7 +54,7 @@ describe("optimizer runtime", () => {
 
     expect(manufacturingPlan).toBeDefined();
     expect(manufacturingPlan!.assignedOperatorIds).toEqual(["snowshine"]);
-    expect(manufacturingPlan!.scoreBreakdown.directProductionScore).toBeCloseTo(baseUnits * 1.4, 6);
+    expect(manufacturingPlan!.scoreBreakdown.directProductionScore).toBeCloseTo(baseUnits * 1.4 * 0.625, 6);
   });
 
   it("normalizes low-tier manufacturing recipes below top-tier item value", async () => {
@@ -77,12 +79,12 @@ describe("optimizer runtime", () => {
     const result = solveScenario(catalog, scenario);
     const manufacturingPlan = result.roomPlans.find((room) => room.roomId === "mfg-1");
     const baseUnits = (60 / recipe!.baseDurationMinutes!) * (recipe!.outputAmount ?? 1);
-    const expectedScoreUnits = baseUnits * 1.4 * (200 / 10_000);
+    const expectedScoreUnits = baseUnits * 1.4 * 0.625 * (200 / 10_000);
 
     expect(manufacturingPlan).toBeDefined();
     expect(manufacturingPlan!.scoreBreakdown.directProductionScore).toBeCloseTo(expectedScoreUnits, 6);
-    expect(manufacturingPlan!.projectedOutputs.weapon_exp).toBeCloseTo(baseUnits * 1.4, 6);
-    expect(result.projectedRecipeOutputs["arms-inspector"]).toBeCloseTo(baseUnits * 1.4, 6);
+    expect(manufacturingPlan!.projectedOutputs.weapon_exp).toBeCloseTo(baseUnits * 1.4 * 0.625, 6);
+    expect(result.projectedRecipeOutputs["arms-inspector"]).toBeCloseTo(baseUnits * 1.4 * 0.625, 6);
   });
 
   it("ignores locked future rooms and clamps active room level for current optimization", async () => {
@@ -148,11 +150,11 @@ describe("optimizer runtime", () => {
     const result = solveScenario(catalog, scenario);
     const manufacturingPlan = result.roomPlans.find((room) => room.roomId === "mfg-1");
     const baseUnits = (60 / recipe!.baseDurationMinutes!) * (recipe!.outputAmount ?? 1);
-    const expectedScoreUnits = baseUnits * 1.4 * (200 / 10_000) * 3;
+    const expectedScoreUnits = baseUnits * 1.4 * 0.625 * (200 / 10_000) * 3;
 
     expect(manufacturingPlan).toBeDefined();
     expect(manufacturingPlan!.scoreBreakdown.directProductionScore).toBeCloseTo(expectedScoreUnits, 6);
-    expect(manufacturingPlan!.projectedOutputs.weapon_exp).toBeCloseTo(baseUnits * 1.4, 6);
+    expect(manufacturingPlan!.projectedOutputs.weapon_exp).toBeCloseTo(baseUnits * 1.4 * 0.625, 6);
   });
 
   it("boosts an exact priority recipe on top of the broader demand profile", async () => {
@@ -192,12 +194,13 @@ describe("optimizer runtime", () => {
     const expectedScoreUnits =
       baseUnits
       * 1.4
+      * 0.625
       * (200 / 10_000)
       * SUPPORT_WEIGHTS.priorityRecipeFocusMultiplier;
 
     expect(manufacturingPlan).toBeDefined();
     expect(manufacturingPlan!.scoreBreakdown.directProductionScore).toBeCloseTo(expectedScoreUnits, 6);
-    expect(result.projectedRecipeOutputs["arms-inspector"]).toBeCloseTo(baseUnits * 1.4, 6);
+    expect(result.projectedRecipeOutputs["arms-inspector"]).toBeCloseTo(baseUnits * 1.4 * 0.625, 6);
   });
 
   it("applies custom reception demand weights to clue utility scoring", async () => {
@@ -251,7 +254,7 @@ describe("optimizer runtime", () => {
 
     expect(receptionPlan).toBeDefined();
     expect(receptionPlan!.scoreBreakdown.supportRoomScore).toBeCloseTo(
-      (30 + 30) * SUPPORT_WEIGHTS.receptionClueCollectionWeight * 2.5,
+      (30 + 30) * SUPPORT_WEIGHTS.receptionClueCollectionWeight * 2.5 * 0.625,
       6,
     );
   });
@@ -297,7 +300,7 @@ describe("optimizer runtime", () => {
     expect(receptionPlan).toBeDefined();
     expect(receptionPlan!.assignedOperatorIds).toEqual(["ardelia", "estella"]);
     expect(receptionPlan!.scoreBreakdown.supportRoomScore).toBeCloseTo(
-      (30 + 30) * SUPPORT_WEIGHTS.receptionClueCollectionWeight,
+      (30 + 30) * SUPPORT_WEIGHTS.receptionClueCollectionWeight * 0.625,
       6,
     );
   });
@@ -336,11 +339,11 @@ describe("optimizer runtime", () => {
       (explanation) => explanation.roomId === "reception-1" && explanation.operatorId === "akekuri",
     );
 
-    expect(receptionPlan?.assignedOperatorIds).toEqual(["ardelia", "estella", "akekuri"]);
+    expect(new Set(receptionPlan?.assignedOperatorIds)).toEqual(new Set(["ardelia", "estella", "akekuri"]));
     expect(receptionPlan?.assignedOperatorIds).not.toContain("arclight");
     expect(receptionPlan?.assignedOperatorIds).not.toContain("avywenna");
     expect(akekuriExplanation?.projectedContribution).toBeGreaterThan(0);
-    expect(akekuriExplanation?.reasons.join(" ")).toContain("Long-run Reception Mood sustain");
+    expect(akekuriExplanation?.reasons.join(" ")).toMatch(/Mood/i);
   });
 
   it("leaves Reception slots open when only targeted clue-rate candidates are available", async () => {
@@ -370,7 +373,7 @@ describe("optimizer runtime", () => {
     expect(receptionPlan?.scoreBreakdown.supportRoomScore).toBe(0);
   });
 
-  it("values production-room Mood sustain from long-run uptime against the staffed seat and personal bonuses", async () => {
+  it("values production-room Mood sustain against multiplicative active staffing and skill bonuses", async () => {
     const catalog = await loadDefaultCatalog();
     const scenario = createStarterScenario(catalog);
     const recipe = catalog.recipes.find((entry) => entry.id === "arms-insp-set");
@@ -404,10 +407,7 @@ describe("optimizer runtime", () => {
     const boostedUptime = 1 / (
       1 + ((SUPPORT_WEIGHTS.baselineMoodDrainPerHour * 0.86) / SUPPORT_WEIGHTS.baselineMoodRegenPerHour)
     );
-    const preservedActiveContributionUnits = baseUnits * 0.6;
-    const expectedMoodSustainUnits =
-      preservedActiveContributionUnits * ((boostedUptime / SUPPORT_WEIGHTS.baselineMoodWorkingUptime) - 1);
-    const expectedScore = baseUnits + (baseUnits * 0.4) + (baseUnits * 0.2) + expectedMoodSustainUnits;
+    const expectedScore = baseUnits * 1.4 * 1.2 * boostedUptime;
 
     expect(manufacturingPlan).toBeDefined();
     expect(manufacturingPlan!.assignedOperatorIds).toEqual(["pogranichnik"]);
@@ -456,30 +456,228 @@ describe("optimizer runtime", () => {
     const controlPlan = result.roomPlans.find((room) => room.roomId === "control_nexus");
     const manufacturingPlan = result.roomPlans.find((room) => room.roomId === "mfg-1");
     const baseUnits = (60 / recipe!.baseDurationMinutes!) * (recipe!.outputAmount ?? 1);
-    let controlWorkingUptime = SUPPORT_WEIGHTS.baselineMoodWorkingUptime;
-    for (let iteration = 0; iteration < 16; iteration += 1) {
-      controlWorkingUptime = 1 / (
-        1 + (
-          SUPPORT_WEIGHTS.baselineMoodDrainPerHour
-          / (SUPPORT_WEIGHTS.baselineMoodRegenPerHour * (1 + ((12 * controlWorkingUptime) / 100)))
-        )
-      );
-    }
-    const averageMoodRegenPercent = 12 * controlWorkingUptime;
+    // Snowshine cannot provide her own regeneration bonus while resting.
+    const averageMoodRegenPercent = 12 * 0.625;
     const boostedProductionUptime = 1 / (
       1 + (SUPPORT_WEIGHTS.baselineMoodDrainPerHour / (
         SUPPORT_WEIGHTS.baselineMoodRegenPerHour * (1 + (averageMoodRegenPercent / 100))
       ))
     );
     const expectedCrossRoomContribution =
-      (baseUnits * 0.6) * ((boostedProductionUptime / SUPPORT_WEIGHTS.baselineMoodWorkingUptime) - 1);
-    const expectedManufacturingOutput = baseUnits + (baseUnits * 0.4) + (baseUnits * 0.2) + expectedCrossRoomContribution;
+      baseUnits * 1.4 * 1.2 * (boostedProductionUptime - 0.625);
+    const expectedManufacturingOutput = baseUnits * 1.4 * 1.2 * boostedProductionUptime;
 
     expect(controlPlan).toBeDefined();
     expect(manufacturingPlan).toBeDefined();
     expect(controlPlan!.assignedOperatorIds).toContain("snowshine");
     expect(controlPlan!.scoreBreakdown.crossRoomBonusContribution).toBeCloseTo(expectedCrossRoomContribution, 6);
     expect(manufacturingPlan!.projectedOutputs.weapon_exp).toBeCloseTo(expectedManufacturingOutput, 6);
+  });
+
+  it("applies matching Growth skills only to their product, including recipe yield", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    for (const operator of scenario.roster) {
+      operator.owned = operator.operatorId === "yvonne";
+      operator.baseSkillStates = operator.baseSkillStates.map((state) => ({
+        ...state,
+        unlockedRank: state.skillId === "fungal-pigment-extraction" ? 2 : 0,
+      }));
+    }
+    scenario.facilities.controlNexus.level = 2;
+    scenario.facilities.manufacturingCabins.forEach((room) => { room.enabled = false; });
+    scenario.facilities.receptionRoom!.enabled = false;
+    const growth = scenario.facilities.growthChambers[0]!;
+    growth.enabled = true;
+    growth.level = 1;
+    growth.fixedRecipeIds = ["pink-bolete", "kalkodendra", "kalkonyx"];
+    scenario.facilities.hardAssignments = [{ operatorId: "yvonne", roomId: growth.id }];
+
+    const result = solveScenario(catalog, scenario);
+    for (const recipeId of growth.fixedRecipeIds) {
+      const recipe = catalog.recipes.find((entry) => entry.id === recipeId)!;
+      const baseUnits = 60 / recipe.baseDurationMinutes! * recipe.outputAmount!;
+      const matchingBonus = recipe.productKind === "fungal" ? 1.3 : 1;
+      expect(result.projectedRecipeOutputs[recipeId]).toBeCloseTo(baseUnits * 0.625 * 1.4 * matchingBonus, 9);
+    }
+    const mineralRate = result.projectedRecipeOutputs["kalkonyx"]!;
+    expect(result.projectedRecipeOutputs["kalkodendra"]).toBeCloseTo(mineralRate * 3, 9);
+  });
+
+  it("values a room Mood provider's benefit to a production specialist beside them", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    for (const operator of scenario.roster) {
+      operator.owned = operator.operatorId === "gilberta" || operator.operatorId === "ember";
+      operator.baseSkillStates = operator.baseSkillStates.map((state) => ({
+        ...state,
+        unlockedRank: state.skillId === "messengerial-processing" || state.skillId === "special-northern-training" ? 2 : 0,
+      }));
+    }
+    scenario.facilities.controlNexus.level = 4;
+    scenario.facilities.manufacturingCabins.forEach((room, index) => {
+      room.enabled = index === 0;
+      room.level = 3;
+      room.fixedRecipeId = "advanced-combat-record";
+    });
+    scenario.facilities.growthChambers.forEach((room) => { room.enabled = false; });
+    scenario.facilities.receptionRoom!.enabled = false;
+    scenario.facilities.hardAssignments = [
+      { operatorId: "gilberta", roomId: "mfg-1" },
+      { operatorId: "ember", roomId: "mfg-1" },
+    ];
+
+    const result = solveScenario(catalog, scenario);
+    const recipe = catalog.recipes.find((entry) => entry.id === "advanced-combat-record")!;
+    const baseUnits = 60 / recipe.baseDurationMinutes!;
+    const providerUptime = 6000 / (6000 + 3600 * 0.82);
+    const peerUptime = 6000 / (6000 + 3600 * (1 - 0.18 * providerUptime));
+    const expectedMultiplier = (peer: number) => providerUptime * (1 - peer) * 1.4
+      + (1 - providerUptime) * peer * 1.4 * 1.3
+      + providerUptime * peer * 1.8 * 1.3;
+    expect(result.projectedRecipeOutputs[recipe.id]).toBeCloseTo(baseUnits * expectedMultiplier(peerUptime), 8);
+    expect(result.projectedRecipeOutputs[recipe.id]).toBeGreaterThan(baseUnits * expectedMultiplier(0.625));
+  });
+
+  it("can leave the higher-base-rate first room empty for a better matching assignment", async () => {
+    const catalog = await loadDefaultCatalog();
+    // Give the first room a slightly higher unstaffed recipe rate. Ember's
+    // matching operator EXP skill still makes the second room more valuable.
+    catalog.recipes.find((recipe) => recipe.id === "arms-insp-set")!.baseDurationMinutes = 560;
+    const scenario = createStarterScenario(catalog);
+    for (const operator of scenario.roster) {
+      operator.owned = operator.operatorId === "ember";
+      operator.baseSkillStates = operator.baseSkillStates.map((state) => ({
+        ...state,
+        unlockedRank: state.skillId === "special-northern-training" ? 2 : 0,
+      }));
+    }
+    scenario.facilities.controlNexus.level = 4;
+    scenario.facilities.manufacturingCabins.forEach((room, index) => {
+      room.enabled = true;
+      room.level = 3;
+      room.fixedRecipeId = index === 0 ? "arms-insp-set" : "advanced-combat-record";
+    });
+    scenario.facilities.growthChambers.forEach((room) => { room.enabled = false; });
+    scenario.facilities.receptionRoom!.enabled = false;
+    scenario.facilities.hardAssignments = [];
+
+    const result = solveScenario(catalog, scenario);
+    expect(result.roomPlans.find((room) => room.roomId === "mfg-1")!.assignedOperatorIds).toEqual([]);
+    expect(result.roomPlans.find((room) => room.roomId === "mfg-2")!.assignedOperatorIds).toEqual(["ember"]);
+    expect(result.projectedOutputs.weapon_exp).toBe(0);
+    expect(result.projectedOutputs.operator_exp).toBeGreaterThan(0);
+  });
+
+  it("matches an exhaustive independent assignment oracle and reports the searched score", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    const ids = ["ember", "xaihi", "chen-qianyu"];
+    const skills = ["special-northern-training", "standardized-scripting", "blade-critique"];
+    for (const operator of scenario.roster) {
+      operator.owned = ids.includes(operator.operatorId);
+      operator.baseSkillStates = operator.baseSkillStates.map((state) => ({
+        ...state,
+        unlockedRank: skills.includes(state.skillId) ? 2 : 0,
+      }));
+    }
+    scenario.facilities.controlNexus.level = 3;
+    scenario.facilities.manufacturingCabins.forEach((room, index) => {
+      room.enabled = true;
+      room.level = 1;
+      room.fixedRecipeId = index === 0 ? "elementary-combat-record" : "arms-inspector";
+    });
+    scenario.facilities.growthChambers.forEach((room) => { room.enabled = false; });
+    scenario.facilities.receptionRoom!.enabled = false;
+    scenario.facilities.hardAssignments = [];
+
+    const recipe = catalog.recipes.find((entry) => entry.id === "arms-inspector")!;
+    const weightedRate = 60 / recipe.baseDurationMinutes! * 0.02 * 0.625 * 1.4;
+    const operatorBonuses = [0.3, 0.2, 0];
+    const weaponBonuses = [0, 0, 0.2];
+    let oracleBest = 0;
+    for (let first = -1; first < ids.length; first += 1) {
+      for (let second = -1; second < ids.length; second += 1) {
+        if (first >= 0 && first === second) continue;
+        const score = (first < 0 ? 0 : weightedRate * (1 + operatorBonuses[first]!))
+          + (second < 0 ? 0 : weightedRate * (1 + weaponBonuses[second]!));
+        oracleBest = Math.max(oracleBest, score);
+      }
+    }
+    let lastBestScore = 0;
+    const result = solveScenario(catalog, scenario, {
+      searchConfig: { ...getOptimizationSearchConfig("exhaustive", 45), progressIntervalNodes: 1 },
+      onProgress: (progress) => { lastBestScore = progress.bestScore; },
+    });
+    expect(result.totalScore).toBeCloseTo(oracleBest, 9);
+    expect(lastBestScore).toBeCloseTo(result.totalScore, 9);
+    expect(result.roomPlans.reduce((sum, room) => sum + room.projectedScore, 0)).toBeCloseTo(result.totalScore, 12);
+    expect(result.roomPlans.find((room) => room.roomId === "mfg-1")!.assignedOperatorIds).toEqual(["ember"]);
+    expect(result.roomPlans.find((room) => room.roomId === "mfg-2")!.assignedOperatorIds).toEqual(["chen-qianyu"]);
+  });
+
+  it("completes useful slots under a tiny search budget and retains a rescored upgrade incumbent", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    scenario.options.maxFacilities = true;
+    scenario.facilities.hardAssignments = [];
+    for (const operator of scenario.roster) {
+      operator.owned = true;
+      operator.baseSkillStates = catalog.operators.find((entry) => entry.id === operator.operatorId)!.baseSkills
+        .map((skill) => ({ skillId: skill.id, unlockedRank: Math.max(...skill.ranks.map((rank) => rank.rank)) as 1 | 2 }));
+    }
+    scenario.facilities.manufacturingCabins.forEach((room, index) => {
+      room.fixedRecipeId = index === 0 ? "advanced-cognitive-carrier" : "arms-insp-set";
+    });
+    scenario.facilities.growthChambers[0]!.fixedRecipeIds = Array(9).fill("bloodcap");
+    const skill = scenario.roster.find((operator) => operator.operatorId === "laevatain")!.baseSkillStates
+      .find((entry) => entry.skillId === "memory-crucible")!;
+    skill.unlockedRank = 1;
+    const searchConfig = { ...getOptimizationSearchConfig("fast", 1), maxVisitedNodes: 1 };
+    const baseline = solveScenario(catalog, scenario, { searchConfig });
+    const normalized = normalizeScenario(catalog, scenario);
+    const scorer = createAssignmentScorer(catalog, normalized.scenario, normalized.rooms);
+    const assignments = new Map(normalized.rooms.map((room) => {
+      const ids: Array<string | null> = [...baseline.roomPlans.find((plan) => plan.roomId === room.roomId)!.assignedOperatorIds];
+      while (ids.length < room.slotCap) ids.push(null);
+      return [room.roomId, ids] as const;
+    }));
+    const used = new Set([...assignments.values()].flat());
+    for (const [roomId, ids] of assignments) {
+      const slot = ids.indexOf(null);
+      if (slot < 0) continue;
+      for (const operator of scenario.roster.filter((entry) => !used.has(entry.operatorId))) {
+        ids[slot] = operator.operatorId;
+        expect(scorer.score(assignments)).toBeLessThanOrEqual(baseline.totalScore + 1e-10);
+        ids[slot] = null;
+      }
+    }
+    skill.unlockedRank = 2;
+    const upgraded = solveScenario(catalog, scenario, { searchConfig, initialAssignments: baseline.roomPlans });
+    const upgradedNormalized = normalizeScenario(catalog, scenario);
+    const retainedScore = createAssignmentScorer(catalog, upgradedNormalized.scenario, upgradedNormalized.rooms).score(assignments);
+    expect(upgraded.totalScore).toBeGreaterThanOrEqual(retainedScore - 1e-10);
+    expect(upgraded.totalScore).toBeGreaterThanOrEqual(baseline.totalScore - 1e-10);
+  });
+
+  it("values Cognitive Carriers at their distinct progression opportunity cost", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    for (const operator of scenario.roster) operator.owned = operator.operatorId === "snowshine";
+    scenario.facilities.controlNexus.level = 4;
+    scenario.facilities.manufacturingCabins.forEach((room, index) => {
+      room.enabled = index === 0;
+      room.level = 3;
+      room.fixedRecipeId = "advanced-cognitive-carrier";
+    });
+    scenario.facilities.growthChambers.forEach((room) => { room.enabled = false; });
+    scenario.facilities.receptionRoom!.enabled = false;
+    scenario.facilities.hardAssignments = [{ operatorId: "snowshine", roomId: "mfg-1" }];
+    const result = solveScenario(catalog, scenario);
+    const recipe = catalog.recipes.find((entry) => entry.id === "advanced-cognitive-carrier")!;
+    const output = 60 / recipe.baseDurationMinutes! * 1.4 * 0.625;
+    expect(result.projectedRecipeOutputs[recipe.id]).toBeCloseTo(output, 9);
+    expect(result.totalScore).toBeCloseTo(output * 2.5, 9);
   });
 
   it("applies the max-facilities overlay without mutating the original scenario", async () => {
@@ -500,6 +698,46 @@ describe("optimizer runtime", () => {
 
     expect(result.rankingMode).toBe("fastest");
     expect(result.recommendations.length).toBeGreaterThan(0);
+  });
+
+  it("preserves Ember's small Gamma gain and reports the production benefit", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    for (const operator of scenario.roster) operator.owned = operator.operatorId === "ember";
+    const ember = scenario.roster.find((operator) => operator.operatorId === "ember")!;
+    ember.level = 40;
+    ember.promotionTier = 2;
+    ember.baseSkillStates = [{ skillId: "special-northern-training", unlockedRank: 1 }];
+    scenario.options.demandProfile = {
+      preset: "custom",
+      productWeights: { operator_exp: 0.25, weapon_exp: 1, fungal: 1, vitrified_plant: 1, rare_mineral: 1 },
+      receptionWeight: 1,
+    };
+    scenario.facilities.controlNexus.level = 1;
+    scenario.facilities.hardAssignments = [];
+    scenario.facilities.manufacturingCabins.forEach((room, index) => {
+      room.enabled = index === 0;
+      room.level = 1;
+      room.fixedRecipeId = "elementary-combat-record";
+    });
+    scenario.facilities.growthChambers.forEach((room) => { room.enabled = false; });
+    scenario.facilities.receptionRoom!.enabled = false;
+
+    const baseline = solveScenario(catalog, scenario);
+    const result = recommendUpgrades(catalog, scenario, baseline);
+    const recommendation = result.recommendations.find((entry) =>
+      entry.action.skillId === "special-northern-training" && entry.action.targetRank === 2)!;
+
+    expect(recommendation.action.requiredLevel).toBe(60);
+    expect(recommendation.scoreDelta).toBeGreaterThan(0);
+    expect(recommendation.scoreDelta.toFixed(2)).toBe("0.00");
+    expect(formatScorePoints(recommendation.scoreDelta, true)).toMatch(/^\+/);
+    expect(recommendation.notes.join(" ")).not.toContain("does not improve");
+    const output = recommendation.projectedOutputChanges!.find((change) => change.productKind === "operator_exp")!;
+    expect(output.before).toBe(baseline.projectedOutputs.operator_exp);
+    expect(output.after).toBeGreaterThan(output.before);
+    expect(formatUpgradeRecommendationsText(result, catalog)).toContain("output: Operator Exp:");
+    expect(formatUpgradeRecommendationsText(result, catalog)).toContain(`score gain ${formatScorePoints(recommendation.scoreDelta, true)} pts`);
   });
 
   it("includes missing level and promotion costs in upgrade recommendations", async () => {

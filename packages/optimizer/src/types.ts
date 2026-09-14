@@ -54,6 +54,8 @@ export interface UpgradeRecommendationProgressSnapshot {
 }
 
 export interface SolveScenarioOptions {
+  /** Feasible assignment hints are rescored under the current scenario, never trusted as scores. */
+  initialAssignments?: OptimizationResult["roomPlans"];
   searchConfig?: OptimizationSearchConfig;
   onProgress?: (progress: OptimizationProgressSnapshot) => void;
   shouldCancel?: () => boolean;
