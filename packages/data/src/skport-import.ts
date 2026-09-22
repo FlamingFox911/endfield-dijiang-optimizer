@@ -1,5 +1,6 @@
 import type {
   GameCatalog,
+  OwnedBaseSkillState,
   OptimizationScenario,
   SkportInventorySnapshot,
   SkportOwnedOperatorSnapshot,
@@ -50,6 +51,7 @@ export interface SkportRosterImportCharacter {
   level: number;
   promotionTier: 0 | 1 | 2 | 3 | 4;
   snapshot: SkportOwnedOperatorSnapshot;
+  baseSkillStates?: OwnedBaseSkillState[];
 }
 
 export interface SkportRosterImportPreview {
@@ -274,11 +276,35 @@ function itemNamesFromCatalog(value: unknown, collectionKey: string): Map<string
   return new Map();
 }
 
+function calculatorMaterials(value: unknown): Map<string, string> {
+  if (!isRecord(value)) return new Map();
+  const names = new Map<string, string>();
+  for (const key of ["materials", "charExpMaterials", "weaponExpMaterials"]) {
+    if (!isRecord(value[key])) continue;
+    for (const entry of Object.values(value[key])) {
+      if (isRecord(entry) && asString(entry.id) && asString(entry.name)) names.set(entry.id as string, entry.name as string);
+    }
+  }
+  if (names.size) return names;
+  return calculatorMaterials(value.data ?? value.materialCatalog);
+}
+
+function cultivationNodes(value: unknown): Map<string, string[]> {
+  if (!isRecord(value)) return new Map();
+  if (Array.isArray(value.chars)) {
+    return new Map(value.chars.flatMap((entry) => isRecord(entry) && asString(entry.id) && Array.isArray(entry.cultivationTalents)
+      ? [[entry.id as string, entry.cultivationTalents.flatMap((talent) => isRecord(talent) && asString(talent.id) ? [talent.id as string] : [])] as const] : []));
+  }
+  return cultivationNodes(value.data ?? value.characterCatalog);
+}
+
 interface TeamReferenceNames {
   characters: Map<string, string>;
   weapons: Map<string, string>;
   gear: Map<string, string>;
   tacticalItems: Map<string, string>;
+  materials?: Map<string, string>;
+  cultivationNodes?: Map<string, string[]>;
 }
 
 function teamUserGameDataToCardDetail(
@@ -305,13 +331,17 @@ function teamUserGameDataToCardDetail(
     return [{
       ...entry,
       ...operatorDetail,
+      level: entry.level,
+      evolvePhase: entry.evolvePhase,
+      talent: entry.talent,
+      cultivationNodes: referenceNames.cultivationNodes?.get(charId),
       id: charId,
       charData: detailCharData ?? { id: charId, name: referenceNames.characters.get(charId) ?? charId },
     }];
   });
   const inventory: SkportInventorySnapshot = {
     weapons: Object.values(isRecord(userGameData.userWeapons) ? userGameData.userWeapons : {}).flatMap((entry) => {
-      if (!isRecord(entry) || entry.owned !== true) {
+      if (!isRecord(entry) || (entry.owned !== true && !(isRecord(userGameData.itemCount) && entry.owned == null))) {
         return [];
       }
       const id = asString(entry.weaponId);
@@ -333,6 +363,15 @@ function teamUserGameDataToCardDetail(
       const ownedCount = clampInteger(entry.ownedCount, 0, Number.MAX_SAFE_INTEGER, 0);
       return id && ownedCount > 0 ? [{ id, name: referenceNames.tacticalItems.get(id), ownedCount }] : [];
     }),
+    materials: isRecord(userGameData.itemCount) ? Object.entries(userGameData.itemCount).map(([sourceId, count]) => {
+      const ownedCount = asFiniteNumber(count);
+      if (ownedCount == null || !Number.isSafeInteger(ownedCount) || ownedCount < 0) {
+        throw new Error("The calculator capture contains an invalid material quantity.");
+      }
+      const name = referenceNames.materials?.get(sourceId);
+      const itemId = name?.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      return { id: itemId || `skport:${sourceId}`, name, ownedCount };
+    }) : undefined,
   };
   return {
     base: {
@@ -359,6 +398,8 @@ function extractCardDetail(value: unknown): JsonRecord {
       weapons: itemNamesFromCatalog(value, "weapons"),
       gear: itemNamesFromCatalog(value, "equips"),
       tacticalItems: itemNamesFromCatalog(value, "tacticalItems"),
+      materials: calculatorMaterials(value),
+      cultivationNodes: cultivationNodes(value),
     }, operatorDetailsFromCapture(value));
   }
 
@@ -375,7 +416,7 @@ function extractCardDetail(value: unknown): JsonRecord {
     for (const entry of entries) {
       const request = nestedRecord(entry, "request");
       const url = asString(request?.url);
-      if (!url || !/\/game\/endfield\/search-(?:chars|weapons|equipments|tactical-items)(?:[/?#]|$)/i.test(url)) {
+      if (!url || !/\/game\/endfield\/(?:search-(?:chars|weapons|equipments|tactical-items)|calculate\/material-list)(?:[/?#]|$)/i.test(url)) {
         continue;
       }
       const response = nestedRecord(entry, "response");
@@ -394,6 +435,10 @@ function extractCardDetail(value: unknown): JsonRecord {
         if (weaponNames.size > 0) harReferenceNames.weapons = weaponNames;
         if (gearNames.size > 0) harReferenceNames.gear = gearNames;
         if (tacticalItemNames.size > 0) harReferenceNames.tacticalItems = tacticalItemNames;
+        const materials = calculatorMaterials(parsed);
+        if (materials.size > 0) harReferenceNames.materials = materials;
+        const nodes = cultivationNodes(parsed);
+        if (nodes.size > 0) harReferenceNames.cultivationNodes = nodes;
       } catch {
         // Continue without the optional catalog-name response.
       }
@@ -424,7 +469,7 @@ function extractCardDetail(value: unknown): JsonRecord {
       const entry = entries[index];
       const request = nestedRecord(entry, "request");
       const url = asString(request?.url);
-      if (!url || !/(?:\/game\/endfield\/card\/detail|\/game\/endfield\/team\/user-game-data)(?:[/?#]|$)/i.test(url)) {
+      if (!url || !/(?:\/game\/endfield\/card\/detail|\/game\/endfield\/(?:team|calculate)\/user-game-data)(?:[/?#]|$)/i.test(url)) {
         continue;
       }
       const response = nestedRecord(entry, "response");
@@ -433,18 +478,20 @@ function extractCardDetail(value: unknown): JsonRecord {
       if (!responseText) {
         continue;
       }
+      let parsed: unknown;
       try {
-        const parsed = JSON.parse(decodeHarContent(responseText, content?.encoding));
-        const detail = unwrapCardDetail(parsed);
-        if (detail) {
-          return detail;
-        }
-        const teamData = unwrapTeamUserGameData(parsed);
-        if (teamData) {
-          return teamUserGameDataToCardDetail(teamData, harReferenceNames, harOperatorDetails);
-        }
+        parsed = JSON.parse(decodeHarContent(responseText, content?.encoding));
       } catch {
-        // Continue looking for another successful card-detail response in the capture.
+        // Ignore empty/undecodable responses, but do not silently accept invalid account data.
+        continue;
+      }
+      const detail = unwrapCardDetail(parsed);
+      if (detail) {
+        return detail;
+      }
+      const teamData = unwrapTeamUserGameData(parsed);
+      if (teamData) {
+        return teamUserGameDataToCardDetail(teamData, harReferenceNames, harOperatorDetails);
       }
     }
   }
@@ -590,6 +637,19 @@ export function parseSkportRosterImport(input: unknown, catalog: GameCatalog): S
       tacticalItem: parseTacticalItem(rawCharacter.tacticalItem),
       combatSkills: parseCombatSkills(rawCharacter.userSkills),
     };
+    const unlockedNodes = nestedRecord(rawCharacter, "talent")?.latestSpaceshipSkillNodes;
+    const nodeDefinitions = rawCharacter.cultivationNodes;
+    const operator = catalog.operators.find((entry) => entry.id === uniqueCatalogOperatorId);
+    const baseSkillStates = operator && Array.isArray(unlockedNodes) && Array.isArray(nodeDefinitions)
+      && unlockedNodes.every((node) => typeof node === "string" && nodeDefinitions.includes(node) && /_([12])_([12])$/.test(node))
+      && operator.baseSkills.every((_, slot) => nodeDefinitions.some((node) => typeof node === "string" && node.endsWith(`_${slot + 1}_1`)))
+      ? operator.baseSkills.map((skill, index): OwnedBaseSkillState => ({
+        skillId: skill.id,
+        unlockedRank: unlockedNodes.reduce((rank, node) => {
+          const match = /_([12])_([12])$/.exec(node as string)!;
+          return Number(match[1]) === index + 1 ? Math.max(rank, Number(match[2])) : rank;
+        }, 0) as 0 | 1 | 2,
+      })) : undefined;
     return [{
       sourceOperatorId,
       sourceName,
@@ -597,6 +657,7 @@ export function parseSkportRosterImport(input: unknown, catalog: GameCatalog): S
       level: clampInteger(rawCharacter.level, 1, 90, 1),
       promotionTier: clampInteger(rawCharacter.evolvePhase, 0, 4, 0) as 0 | 1 | 2 | 3 | 4,
       snapshot,
+      baseSkillStates,
     }];
   });
 
@@ -634,11 +695,20 @@ export function parseSkportRosterImport(input: unknown, catalog: GameCatalog): S
   if (unmatchedOperatorNames.length > 0) {
     warnings.push(`No catalog match was found for: ${unmatchedOperatorNames.join(", ")}.`);
   }
-  warnings.push("SKPort does not expose Dijiang Base Skill unlocks in this payload, so existing Base Skill selections will be preserved.");
+  const syncedSkillCount = characters.filter((character) => character.baseSkillStates).length;
+  warnings.push(syncedSkillCount > 0
+    ? `Dijiang Base Skill unlocks will be updated for ${syncedSkillCount} operators from calculator talent data. Other Base Skill selections will be preserved.`
+    : "SKPort does not expose recognizable Dijiang Base Skill unlocks in this payload, so existing Base Skill selections will be preserved.");
+  if (inventorySnapshot?.materials) {
+    warnings.push("Calculator materials will be used for remaining upgrade costs. Each recommendation uses the same inventory independently; partial EXP within a level is not reported.");
+    if (inventorySnapshot.materials.some((entry) => entry.id.startsWith("skport:"))) {
+      warnings.push("Some materials could not be named. Include the calculator material-list response to use them in cost estimates.");
+    }
+  }
   if (isTeamUserGameData && loadoutOperatorCount < matchedOperatorCount) {
     warnings.push(loadoutOperatorCount > 0
       ? `Equipped loadouts were captured for ${loadoutOperatorCount} of ${matchedOperatorCount} matched operators. Operators without a detail response contain combat-skill progression only.`
-      : "This Team Picks capture contains account inventory but no per-operator loadout details. Existing equipped-loadout snapshots are replaced with the reported combat-skill levels.");
+      : "This capture contains account inventory but no per-operator loadout details. Only equipment and combat progression present in the response will be saved.");
   }
   if (!isTeamUserGameData) {
     warnings.push("Only equipped weapons, gear, and tactical items are present; unequipped inventory and essences are not available in this payload.");
@@ -694,6 +764,7 @@ export function applySkportRosterImport(
         level: imported.level,
         promotionTier: imported.promotionTier,
         skportSnapshot: imported.snapshot,
+        baseSkillStates: imported.baseSkillStates ?? entry.baseSkillStates,
       };
     }
     if (preview.completeRoster) {

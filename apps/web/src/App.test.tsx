@@ -642,6 +642,7 @@ describe("App", () => {
               },
               scoreDelta: 1,
               roi: 1,
+              effortScore: 12,
               estimatedDaysToUnlock: 1,
               notes: [
                 "Operator: Chen Qianyu",
@@ -651,7 +652,6 @@ describe("App", () => {
                 "Leveling materials: 3x advanced-combat-record.",
                 "Includes promotion materials: 2x protodisk.",
                 "Includes Base Skill node materials: 1x protoprism.",
-                "Approximate effort score 12.0 derived from bundled promotion costs, Base Skill costs, and level gating.",
               ],
             },
           ],
@@ -671,7 +671,9 @@ describe("App", () => {
     expect(within(recommendationCard).getByAltText("Protodisk icon")).toBeInTheDocument();
     expect(within(recommendationCard).getByText("Protoprism")).toBeInTheDocument();
     expect(within(recommendationCard).queryByText("100 Operator EXP and 200 T-Creds for leveling.")).not.toBeInTheDocument();
-    expect(within(recommendationCard).getByText("Approximate effort score 12.0 derived from bundled promotion costs, Base Skill costs, and level gating.")).toBeInTheDocument();
+    expect(within(recommendationCard).queryByText(/Approximate effort score/)).not.toBeInTheDocument();
+    const effortMetric = requireHtmlElement(within(recommendationCard).getByText("Effort score").closest(".resultMetric"));
+    expect(within(effortMetric).getByText("12.0")).toBeInTheDocument();
   });
 
   it("orders facilities like the in-game layout and operators by rarity then name", async () => {

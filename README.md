@@ -68,9 +68,11 @@ The web app can perform a one-time, local import from SKPort's official Team Pic
 - A complete capture replaces operator ownership, level, promotion, and saved equipped-loadout snapshots. Operators absent from it are marked unowned.
 - A partial capture updates matched operators but preserves operators that are absent, because their ownership cannot be inferred safely.
 - Team Picks weapon ownership, gear and tactical-item quantities, combat-skill levels, and per-operator equipped loadouts are preserved in scenario JSON for reference, but do not affect Dijiang scoring.
-- Base Skill unlocks, essences, weapon progression, and item enhancement rolls are not exposed by these Team Picks responses and are not guessed. Existing Base Skill selections are preserved.
+- Calculator captures additionally import material stock and verified Dijiang Base Skill unlocks. The capture helper requests these alongside Team Picks data when available. Existing Base Skill selections are preserved when the response does not report recognizable unlocks. Essences, partial level EXP, and item enhancement rolls are not guessed.
 - The bookmarklet reuses SKPort's already-loaded request client; it does not recreate request signing or read/export headers, cookies, passwords, or tokens.
 - HAR request headers, cookies, and tokens are ignored. Only the matching response body is parsed, entirely in the browser.
+
+The [calculator integration notes](docs/skport-calculator-2026-09-22.md) document the official per-level EXP/T-Cred table and response fields. Upgrade recommendations subtract imported material stock, allow EXP-item substitution within each level band, and show remaining acquisition costs. Each recommendation considers inventory independently; the effort estimate remains approximate.
 
 Scheduled checks generate and validate a candidate before the Pages deployment job can start. An unchanged hash, a source warning, or a reduction in live operators or Growth Chamber recipes produces no deployment. Pushes and manual workflow runs still deploy immediately so application changes are not held behind the catalog cadence. Official release dates control check frequency and expected coverage; the official wiki supplies all operator values, while the extracted data source is limited to discovery of newly released rarity-5 Growth Chamber cultivation items.
 
@@ -95,4 +97,4 @@ The repo now contains:
 - a packaged CLI and browser app using the same shared runtime
 - tests covering data services, optimizer behavior, CLI packaging, and the web app
 
-The current repo verify path should pass after normal install and build steps. The stricter catalog release gate remains intentionally blocked by one declared Growth Chamber demand-modeling gap in [`catalogs/2026-03-29-v1.1-phase2/gaps.json`](catalogs/2026-03-29-v1.1-phase2/gaps.json). The main remaining work is future-facing refinement: more golden scenarios, future catalog refreshes for new game snapshots, and better exactness if a full per-level EXP table becomes source-backed.
+The current repo verify path should pass after normal install and build steps. Official calculator data now supplies the full operator per-level EXP and T-Cred table. Remaining estimation gaps include partial EXP within the current level and a shared inventory budget across multiple planned upgrades.

@@ -15,6 +15,7 @@ import {
   getBaseSkillRankRequirement,
   getPromotionTierRequirement,
   resolveRankingMode,
+  remainingUpgradeMaterials,
 } from "@endfield/data";
 
 import { SUPPORT_WEIGHTS } from "./config.js";
@@ -138,6 +139,9 @@ function getUpgradeActions(
           promotionMaterialCosts,
           skillMaterialCosts,
           materialCosts,
+          remainingMaterialCosts: scenario.rosterImport?.inventory?.materials
+            ? remainingUpgradeMaterials(catalog, materialCosts, scenario.rosterImport.inventory.materials)
+            : undefined,
           unlockHint: targetRank.unlockHint,
         });
       }
@@ -180,7 +184,13 @@ function applyUpgradeActionToScenario(
   return nextScenario;
 }
 
-function scoreUpgradeEffort(action: UpgradeAction) {
+function scoreUpgradeEffort(action: UpgradeAction, catalog: GameCatalog) {
+  if (action.remainingMaterialCosts) {
+    const expValues = new Map(catalog.progression.expItems.map((item) => [item.itemId, item.expValue]));
+    return action.remainingMaterialCosts.reduce((sum, cost) => sum + (cost.itemId === "t-creds"
+      ? cost.quantity / 1000
+      : expValues.has(cost.itemId) ? cost.quantity * expValues.get(cost.itemId)! / 10000 : cost.quantity * 2), 0);
+  }
   if (
     action.materialCosts.length === 0 &&
     action.levelExpCost === 0 &&
@@ -278,7 +288,7 @@ export function recommendUpgrades(
           after: upgradedResult.projectedOutputs[productKind],
         }))
         .filter(({ before, after }) => Math.abs(after - before) > 1e-9 * Math.max(1, Math.abs(before), Math.abs(after)));
-      const effortScore = scoreUpgradeEffort(action);
+      const effortScore = scoreUpgradeEffort(action, catalog);
       const operatorDef = operatorDefs.get(action.operatorId);
       const estimatedDaysToUnlock = effortScore / SUPPORT_WEIGHTS.estimatedEffortPerDay;
       const notes = operatorDef ? [`Operator: ${operatorDef.name}`] : [];
@@ -309,11 +319,8 @@ export function recommendUpgrades(
       if (action.skillMaterialCosts.length > 0) {
         notes.push(`Includes Base Skill node materials: ${formatMaterialCosts(action.skillMaterialCosts)}.`);
       }
-      if (action.materialCosts.length > 0 || action.levelsToGain > 0) {
-        notes.push(
-          `Approximate effort score ${effortScore.toFixed(1)} derived from bundled promotion costs, Base Skill costs, and level gating.`,
-        );
-      } else {
+      const hasEffortEstimate = action.materialCosts.length > 0 || action.levelsToGain > 0;
+      if (!hasEffortEstimate) {
         notes.push("No bundled upgrade cost data exists yet; ROI falls back to score delta.");
       }
       if (scoreDelta <= 0) {
@@ -333,6 +340,7 @@ export function recommendUpgrades(
         scoreDelta,
         projectedOutputChanges,
         roi: effortScore > 0 ? scoreDelta / effortScore : scoreDelta,
+        effortScore: hasEffortEstimate ? effortScore : undefined,
         estimatedDaysToUnlock,
         notes,
       } satisfies UpgradeRecommendation;

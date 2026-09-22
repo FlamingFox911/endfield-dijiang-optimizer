@@ -144,6 +144,19 @@
             "tacticalItems": {
               "type": "array",
               "items": { "$ref": "#/$defs/skportInventoryEntry" }
+            },
+            "materials": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["id", "ownedCount"],
+                "properties": {
+                  "id": { "type": "string", "minLength": 1 },
+                  "name": { "type": "string", "minLength": 1 },
+                  "ownedCount": { "type": "integer", "minimum": 0 }
+                },
+                "additionalProperties": false
+              }
             }
           },
           "additionalProperties": false

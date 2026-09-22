@@ -47,9 +47,6 @@ const CACHE_LIMIT = 20_000;
 // Endgame farm rewards replace 10,000 Cognitive EXP at 2.5 times the Sanity
 // needed for 10,000 Combat EXP; see docs/scoring-economics-2026-09-13.md.
 const COGNITIVE_REPLACEMENT_MULTIPLIER = 2.5;
-const PHASE_WARNING = "Production and Mood scores estimate unsynchronized work/rest cycles using average active support. Current Mood, synchronized shifts, manual rotations, and friend assists are not simulated.";
-const GROWTH_WARNING = "Growth materials use a configurable per-item utility weight, not an exact Sanity value. Inventory, world gathering, event rewards, seed replacement costs, and remaining upgrade demand are not yet deducted.";
-const RECEPTION_WARNING = "Reception scores value general clue collection as a configurable utility estimate; they are not an exact Credit or Sanity forecast. Specific-clue Rate-UP and Trust earn no score.";
 
 function combineConfidence(left: DataConfidence, right?: DataConfidence): DataConfidence {
   if (left === "heuristic" || right === "heuristic") return "heuristic";
@@ -90,12 +87,7 @@ export function createAssignmentScorer(
   for (const room of rooms) {
     const warnings: string[] = [];
     let confidence: DataConfidence = "provisional";
-    if (room.roomKind === "growth_chamber") {
-      warnings.push(GROWTH_WARNING);
-      confidence = "heuristic";
-    }
-    if (room.roomKind === "reception_room") {
-      warnings.push(RECEPTION_WARNING);
+    if (room.roomKind === "growth_chamber" || room.roomKind === "reception_room") {
       confidence = "heuristic";
     }
     recipes.set(room.roomId, room.recipes.map((recipe) => {
@@ -252,7 +244,7 @@ export function createAssignmentScorer(
     const projectedRecipeOutputs: Record<string, number> = {};
     const explanations: AssignmentExplanation[] = [];
     const roomPlans: RoomPlan[] = [];
-    const warnings = [PHASE_WARNING];
+    const warnings: string[] = [];
     let crossRoomGain = 0;
     for (const room of rooms) {
       const control = room.roomKind === "control_nexus";

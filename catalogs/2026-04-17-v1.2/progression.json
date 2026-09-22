@@ -981,5 +981,464 @@
         }
       ]
     }
-  ]
+  ],
+  "levelCosts": {
+    "sourceRefs": [
+      {
+        "id": "skport-calculator-rules-2026-09-22",
+        "label": "Official SKPort progression calculator rules",
+        "url": "https://game.skport.com/tools/endfield/cost-calculator",
+        "retrievedOn": "2026-09-22",
+        "confidence": "official",
+        "notes": "User-provided HAR response from /web/v1/game/endfield/calculate/rules. Rows give the cost from level L to L+1; the terminal level-90 sentinel is excluded. All five cumulative milestones match the existing catalog."
+      }
+    ],
+    "steps": [
+      {
+        "fromLevel": 1,
+        "exp": 20,
+        "tCreds": 0
+      },
+      {
+        "fromLevel": 2,
+        "exp": 30,
+        "tCreds": 0
+      },
+      {
+        "fromLevel": 3,
+        "exp": 40,
+        "tCreds": 0
+      },
+      {
+        "fromLevel": 4,
+        "exp": 60,
+        "tCreds": 0
+      },
+      {
+        "fromLevel": 5,
+        "exp": 90,
+        "tCreds": 0
+      },
+      {
+        "fromLevel": 6,
+        "exp": 140,
+        "tCreds": 0
+      },
+      {
+        "fromLevel": 7,
+        "exp": 200,
+        "tCreds": 0
+      },
+      {
+        "fromLevel": 8,
+        "exp": 280,
+        "tCreds": 0
+      },
+      {
+        "fromLevel": 9,
+        "exp": 390,
+        "tCreds": 0
+      },
+      {
+        "fromLevel": 10,
+        "exp": 510,
+        "tCreds": 10
+      },
+      {
+        "fromLevel": 11,
+        "exp": 700,
+        "tCreds": 10
+      },
+      {
+        "fromLevel": 12,
+        "exp": 940,
+        "tCreds": 20
+      },
+      {
+        "fromLevel": 13,
+        "exp": 1230,
+        "tCreds": 30
+      },
+      {
+        "fromLevel": 14,
+        "exp": 1580,
+        "tCreds": 40
+      },
+      {
+        "fromLevel": 15,
+        "exp": 2000,
+        "tCreds": 60
+      },
+      {
+        "fromLevel": 16,
+        "exp": 2560,
+        "tCreds": 90
+      },
+      {
+        "fromLevel": 17,
+        "exp": 3210,
+        "tCreds": 130
+      },
+      {
+        "fromLevel": 18,
+        "exp": 3990,
+        "tCreds": 180
+      },
+      {
+        "fromLevel": 19,
+        "exp": 4890,
+        "tCreds": 250
+      },
+      {
+        "fromLevel": 20,
+        "exp": 6080,
+        "tCreds": 310
+      },
+      {
+        "fromLevel": 21,
+        "exp": 7610,
+        "tCreds": 390
+      },
+      {
+        "fromLevel": 22,
+        "exp": 8440,
+        "tCreds": 430
+      },
+      {
+        "fromLevel": 23,
+        "exp": 9200,
+        "tCreds": 470
+      },
+      {
+        "fromLevel": 24,
+        "exp": 9890,
+        "tCreds": 500
+      },
+      {
+        "fromLevel": 25,
+        "exp": 10510,
+        "tCreds": 530
+      },
+      {
+        "fromLevel": 26,
+        "exp": 11050,
+        "tCreds": 560
+      },
+      {
+        "fromLevel": 27,
+        "exp": 11830,
+        "tCreds": 600
+      },
+      {
+        "fromLevel": 28,
+        "exp": 12370,
+        "tCreds": 620
+      },
+      {
+        "fromLevel": 29,
+        "exp": 12690,
+        "tCreds": 640
+      },
+      {
+        "fromLevel": 30,
+        "exp": 13100,
+        "tCreds": 660
+      },
+      {
+        "fromLevel": 31,
+        "exp": 13510,
+        "tCreds": 680
+      },
+      {
+        "fromLevel": 32,
+        "exp": 14100,
+        "tCreds": 710
+      },
+      {
+        "fromLevel": 33,
+        "exp": 14580,
+        "tCreds": 730
+      },
+      {
+        "fromLevel": 34,
+        "exp": 14950,
+        "tCreds": 750
+      },
+      {
+        "fromLevel": 35,
+        "exp": 15210,
+        "tCreds": 770
+      },
+      {
+        "fromLevel": 36,
+        "exp": 15460,
+        "tCreds": 780
+      },
+      {
+        "fromLevel": 37,
+        "exp": 15720,
+        "tCreds": 790
+      },
+      {
+        "fromLevel": 38,
+        "exp": 15990,
+        "tCreds": 800
+      },
+      {
+        "fromLevel": 39,
+        "exp": 16250,
+        "tCreds": 820
+      },
+      {
+        "fromLevel": 40,
+        "exp": 16520,
+        "tCreds": 830
+      },
+      {
+        "fromLevel": 41,
+        "exp": 17010,
+        "tCreds": 860
+      },
+      {
+        "fromLevel": 42,
+        "exp": 17510,
+        "tCreds": 880
+      },
+      {
+        "fromLevel": 43,
+        "exp": 18030,
+        "tCreds": 910
+      },
+      {
+        "fromLevel": 44,
+        "exp": 18570,
+        "tCreds": 930
+      },
+      {
+        "fromLevel": 45,
+        "exp": 19050,
+        "tCreds": 960
+      },
+      {
+        "fromLevel": 46,
+        "exp": 19760,
+        "tCreds": 990
+      },
+      {
+        "fromLevel": 47,
+        "exp": 20470,
+        "tCreds": 1030
+      },
+      {
+        "fromLevel": 48,
+        "exp": 21230,
+        "tCreds": 1070
+      },
+      {
+        "fromLevel": 49,
+        "exp": 22070,
+        "tCreds": 1110
+      },
+      {
+        "fromLevel": 50,
+        "exp": 22990,
+        "tCreds": 1150
+      },
+      {
+        "fromLevel": 51,
+        "exp": 23980,
+        "tCreds": 1200
+      },
+      {
+        "fromLevel": 52,
+        "exp": 25050,
+        "tCreds": 1260
+      },
+      {
+        "fromLevel": 53,
+        "exp": 26210,
+        "tCreds": 1320
+      },
+      {
+        "fromLevel": 54,
+        "exp": 27460,
+        "tCreds": 1380
+      },
+      {
+        "fromLevel": 55,
+        "exp": 28820,
+        "tCreds": 1450
+      },
+      {
+        "fromLevel": 56,
+        "exp": 30270,
+        "tCreds": 1520
+      },
+      {
+        "fromLevel": 57,
+        "exp": 31840,
+        "tCreds": 1600
+      },
+      {
+        "fromLevel": 58,
+        "exp": 33530,
+        "tCreds": 1680
+      },
+      {
+        "fromLevel": 59,
+        "exp": 35340,
+        "tCreds": 1770
+      },
+      {
+        "fromLevel": 60,
+        "exp": 14510,
+        "tCreds": 1820
+      },
+      {
+        "fromLevel": 61,
+        "exp": 14710,
+        "tCreds": 1960
+      },
+      {
+        "fromLevel": 62,
+        "exp": 14910,
+        "tCreds": 2110
+      },
+      {
+        "fromLevel": 63,
+        "exp": 15030,
+        "tCreds": 2250
+      },
+      {
+        "fromLevel": 64,
+        "exp": 15390,
+        "tCreds": 2430
+      },
+      {
+        "fromLevel": 65,
+        "exp": 15920,
+        "tCreds": 2660
+      },
+      {
+        "fromLevel": 66,
+        "exp": 16620,
+        "tCreds": 2930
+      },
+      {
+        "fromLevel": 67,
+        "exp": 17500,
+        "tCreds": 3240
+      },
+      {
+        "fromLevel": 68,
+        "exp": 18560,
+        "tCreds": 3610
+      },
+      {
+        "fromLevel": 69,
+        "exp": 19810,
+        "tCreds": 4050
+      },
+      {
+        "fromLevel": 70,
+        "exp": 21250,
+        "tCreds": 4560
+      },
+      {
+        "fromLevel": 71,
+        "exp": 22880,
+        "tCreds": 5140
+      },
+      {
+        "fromLevel": 72,
+        "exp": 24710,
+        "tCreds": 5820
+      },
+      {
+        "fromLevel": 73,
+        "exp": 26750,
+        "tCreds": 6590
+      },
+      {
+        "fromLevel": 74,
+        "exp": 29000,
+        "tCreds": 7470
+      },
+      {
+        "fromLevel": 75,
+        "exp": 31460,
+        "tCreds": 8480
+      },
+      {
+        "fromLevel": 76,
+        "exp": 33400,
+        "tCreds": 9400
+      },
+      {
+        "fromLevel": 77,
+        "exp": 35440,
+        "tCreds": 10410
+      },
+      {
+        "fromLevel": 78,
+        "exp": 37580,
+        "tCreds": 11520
+      },
+      {
+        "fromLevel": 79,
+        "exp": 39800,
+        "tCreds": 12730
+      },
+      {
+        "fromLevel": 80,
+        "exp": 42100,
+        "tCreds": 14040
+      },
+      {
+        "fromLevel": 81,
+        "exp": 45220,
+        "tCreds": 15720
+      },
+      {
+        "fromLevel": 82,
+        "exp": 48510,
+        "tCreds": 17570
+      },
+      {
+        "fromLevel": 83,
+        "exp": 51960,
+        "tCreds": 19600
+      },
+      {
+        "fromLevel": 84,
+        "exp": 55550,
+        "tCreds": 21830
+      },
+      {
+        "fromLevel": 85,
+        "exp": 59300,
+        "tCreds": 24260
+      },
+      {
+        "fromLevel": 86,
+        "exp": 63180,
+        "tCreds": 26910
+      },
+      {
+        "fromLevel": 87,
+        "exp": 67190,
+        "tCreds": 29800
+      },
+      {
+        "fromLevel": 88,
+        "exp": 71340,
+        "tCreds": 32930
+      },
+      {
+        "fromLevel": 89,
+        "exp": 75600,
+        "tCreds": 36320
+      }
+    ]
+  }
 }

@@ -11,6 +11,7 @@ import {
   hydrateScenarioForCatalog,
   listSelectableRecipes,
   migrateScenario,
+  remainingUpgradeMaterials,
   validateCatalogBundle,
   validateScenarioAgainstCatalog,
 } from "@endfield/data";
@@ -354,21 +355,41 @@ describe("data services", () => {
     ]);
   });
 
-  it("estimates level-gate requirements from shared milestone data", async () => {
+  it("uses official per-level costs instead of rounding level 30 down to 20", async () => {
     const catalog = await loadDefaultCatalog();
     const requirement = estimateLevelingRequirement(catalog, 30, 40);
 
     expect(requirement).toEqual({
-      levelExpCost: 248540,
-      levelTCredCost: 12540,
+      levelExpCost: 148870,
+      levelTCredCost: 7490,
       levelMaterialCosts: [
-        { itemId: "advanced-combat-record", quantity: 24 },
+        { itemId: "advanced-combat-record", quantity: 14 },
         { itemId: "intermediate-combat-record", quantity: 8 },
-        { itemId: "elementary-combat-record", quantity: 3 },
-        { itemId: "t-creds", quantity: 12540 },
+        { itemId: "elementary-combat-record", quantity: 5 },
+        { itemId: "t-creds", quantity: 7490 },
       ],
-      levelCostIsUpperBound: true,
+      levelCostIsUpperBound: false,
     });
+  });
+
+  it("keeps milestone fallback for old catalogs and handles the EXP item boundary", async () => {
+    const catalog = await loadDefaultCatalog();
+    expect(estimateLevelingRequirement(catalog, 59, 60)).toMatchObject({ levelExpCost: 35340, levelTCredCost: 1770 });
+    const after60 = estimateLevelingRequirement(catalog, 60, 80)!;
+    expect(after60.levelExpCost).toBe(465230);
+    expect(after60.levelMaterialCosts.some((cost) => cost.itemId.endsWith("combat-record"))).toBe(false);
+    expect(estimateLevelingRequirement(catalog, 89, 90)).toMatchObject({ levelExpCost: 75600, levelTCredCost: 36320 });
+    expect(estimateLevelingRequirement(catalog, 90, 90)?.levelExpCost).toBe(0);
+    delete catalog.progression.levelCosts;
+    expect(estimateLevelingRequirement(catalog, 30, 40)).toMatchObject({ levelExpCost: 248540, levelCostIsUpperBound: true });
+  });
+
+  it("substitutes owned EXP items within a band without spending cognitive carriers on early levels", async () => {
+    const catalog = await loadDefaultCatalog();
+    const costs = [{ itemId: "advanced-combat-record", quantity: 2 }, { itemId: "protoprism", quantity: 12 }, { itemId: "t-creds", quantity: 3000 }];
+    const stock = [{ id: "intermediate-combat-record", ownedCount: 10 }, { id: "advanced-cognitive-carrier", ownedCount: 99 }, { id: "protoprism", ownedCount: 8 }, { id: "t-creds", ownedCount: 9000 }];
+    expect(remainingUpgradeMaterials(catalog, costs, stock)).toEqual([{ itemId: "protoprism", quantity: 4 }, { itemId: "advanced-combat-record", quantity: 1 }]);
+    expect(stock[0]!.ownedCount).toBe(10);
   });
 
   it("estimates full Dijiang build costs from level 1 to max with level-banded EXP items", async () => {

@@ -69,6 +69,70 @@ function character(name: string, id: string) {
 }
 
 describe("SKPort roster import", () => {
+  function calculatorCapture(nodes: string[] = ["spaceship_skill_chr_0006_wolfgd_1_2"]) {
+    return {
+      response: { data: { userGameData: {
+        roleId: "private-role", serverId: "private-server",
+        userChars: { w: { charId: "w", owned: true, level: "60", evolvePhase: 3, talent: { latestSpaceshipSkillNodes: nodes } } },
+        userWeapons: { weapon: { weaponId: "weapon", level: "40" } },
+        itemCount: { credits: 12000, records: 0 },
+      } } },
+      characterCatalog: { data: { chars: [{ id: "w", name: "Wulfgard", cultivationTalents: [
+        { id: "spaceship_skill_chr_0006_wolfgd_1_1" }, { id: "spaceship_skill_chr_0006_wolfgd_1_2" },
+        { id: "spaceship_skill_chr_0006_wolfgd_2_1" }, { id: "spaceship_skill_chr_0006_wolfgd_2_2" },
+      ] }] } },
+      materialCatalog: { data: { materials: { credits: { id: "credits", name: "T-Creds" } }, charExpMaterials: { records: { id: "records", name: "Advanced Combat Record" } } } },
+    };
+  }
+
+  it("imports calculator material counts and confirmed Base Skill ranks without account identifiers", () => {
+    const preview = parseSkportRosterImport(calculatorCapture(), catalog);
+    expect(preview.weaponCount).toBe(1);
+    expect(preview.inventorySnapshot?.materials).toEqual([
+      { id: "t-creds", name: "T-Creds", ownedCount: 12000 },
+      { id: "advanced-combat-record", name: "Advanced Combat Record", ownedCount: 0 },
+    ]);
+    expect(preview.characters[0]?.baseSkillStates?.map((skill) => skill.unlockedRank)).toEqual([2, 0]);
+    const result = applySkportRosterImport(createStarterScenario(catalog), preview);
+    expect(result.scenario.roster.find((operator) => operator.operatorId === "wulfgard")?.baseSkillStates.map((skill) => skill.unlockedRank)).toEqual([2, 0]);
+    expect(validateScenarioAgainstCatalog(catalog, result.scenario).ok).toBe(true);
+    expect(JSON.stringify(result.scenario)).not.toMatch(/private-role|private-server|roleId|serverId/);
+  });
+
+  it("preserves manual Base Skill choices for unknown talent nodes, but accepts an explicitly empty unlocked list", () => {
+    expect(parseSkportRosterImport(calculatorCapture(["unknown-node"]), catalog).characters[0]?.baseSkillStates).toBeUndefined();
+    expect(parseSkportRosterImport(calculatorCapture([]), catalog).characters[0]?.baseSkillStates?.map((skill) => skill.unlockedRank)).toEqual([0, 0]);
+  });
+
+  it("reads calculator HAR responses and base64 material definitions while ignoring request secrets", () => {
+    const capture = calculatorCapture();
+    const entry = (path: string, body: unknown, base64 = false) => ({
+      request: { url: `https://zonai.skport.com/web/v1/game/endfield/${path}`, headers: [{ name: "authorization", value: "private-secret" }] },
+      response: { content: { text: base64 ? btoa(JSON.stringify(body)) : JSON.stringify(body), encoding: base64 ? "base64" : undefined } },
+    });
+    const preview = parseSkportRosterImport({ log: { entries: [
+      entry("search-chars", capture.characterCatalog),
+      entry("calculate/material-list", capture.materialCatalog, true),
+      entry("team/user-game-data", { data: { userGameData: { userChars: { w: { charId: "w", owned: true, level: 1 } } } } }),
+      entry("calculate/user-game-data", capture.response),
+    ] } }, catalog);
+    expect(preview.characters[0]?.level).toBe(60);
+    expect(preview.inventorySnapshot?.materials?.[0]?.id).toBe("t-creds");
+    expect(JSON.stringify(preview)).not.toContain("private-secret");
+  });
+
+  it("retains unidentified material ids without guessing and rejects invalid material counts", () => {
+    const capture = calculatorCapture();
+    const preview = parseSkportRosterImport({ response: capture.response, characterCatalog: capture.characterCatalog }, catalog);
+    expect(preview.inventorySnapshot?.materials?.[0]?.id).toBe("skport:credits");
+    capture.response.data.userGameData.itemCount.credits = -1;
+    expect(() => parseSkportRosterImport(capture, catalog)).toThrow(/invalid material quantity/);
+    expect(() => parseSkportRosterImport({ log: { entries: [{
+      request: { url: "https://zonai.skport.com/web/v1/game/endfield/calculate/user-game-data" },
+      response: { content: { text: JSON.stringify(capture.response) } },
+    }] } }, catalog)).toThrow(/invalid material quantity/);
+  });
+
   it("previews and applies a complete roster while preserving Base Skill selections", () => {
     const preview = parseSkportRosterImport({
       code: 0,

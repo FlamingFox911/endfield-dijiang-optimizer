@@ -499,6 +499,26 @@ export function estimateLevelingRequirement(
     };
   }
 
+  const steps = catalog.progression.levelCosts?.steps;
+  if (steps && Number.isInteger(currentLevel) && currentLevel >= 1) {
+    const needed = steps.filter((step) => step.fromLevel >= currentLevel && step.fromLevel < targetLevel);
+    if (needed.length === targetLevel - currentLevel) {
+      const levelExpCost = needed.reduce((sum, step) => sum + step.exp, 0);
+      const levelTCredCost = needed.reduce((sum, step) => sum + step.tCreds, 0);
+      return {
+        levelExpCost,
+        levelTCredCost,
+        levelMaterialCosts: mergeMaterialCosts(
+          decomposeExpToMaterials(needed.filter((step) => step.fromLevel < 60).reduce((sum, step) => sum + step.exp, 0), catalog.progression.expItems.filter((item) => item.maxLevel === 60)),
+          decomposeExpToMaterials(needed.filter((step) => step.fromLevel >= 60).reduce((sum, step) => sum + step.exp, 0), catalog.progression.expItems.filter((item) => item.minLevel === 61)),
+          levelTCredCost > 0 ? [{ itemId: "t-creds", quantity: levelTCredCost }] : [],
+        ),
+        // Exact from the start of the reported level; within-level EXP is not synced.
+        levelCostIsUpperBound: false,
+      };
+    }
+  }
+
   const milestones = [...catalog.progression.levelMilestones].sort((left, right) => left.level - right.level);
   const targetMilestone = milestones.find((milestone) => milestone.level === targetLevel);
   if (!targetMilestone) {
@@ -548,6 +568,27 @@ export function estimateLevelingRequirement(
     levelMaterialCosts,
     levelCostIsUpperBound: currentLevel !== floorLevel,
   };
+}
+
+/** Compare one upgrade with the imported stock; EXP items within each band are interchangeable. */
+export function remainingUpgradeMaterials(
+  catalog: GameCatalog,
+  costs: MaterialCost[],
+  materials: Array<{ id: string; ownedCount: number }>,
+): MaterialCost[] {
+  const stock = new Map(materials.map((entry) => [entry.id, entry.ownedCount]));
+  const expIds = new Set(catalog.progression.expItems.map((item) => item.itemId));
+  const remaining = mergeMaterialCosts(costs).filter((cost) => !expIds.has(cost.itemId))
+    .map((cost) => ({ ...cost, quantity: Math.max(0, cost.quantity - (stock.get(cost.itemId) ?? 0)) }))
+    .filter((cost) => cost.quantity > 0);
+  for (const maxLevel of [60, 90]) {
+    const items = catalog.progression.expItems.filter((item) => item.maxLevel === maxLevel);
+    const expValues = new Map(items.map((item) => [item.itemId, item.expValue]));
+    const required = costs.reduce((sum, cost) => sum + cost.quantity * (expValues.get(cost.itemId) ?? 0), 0);
+    const available = items.reduce((sum, item) => sum + (stock.get(item.itemId) ?? 0) * item.expValue, 0);
+    remaining.push(...decomposeExpToMaterials(Math.max(0, required - available), items));
+  }
+  return remaining;
 }
 
 export function estimateOperatorMaxBaseProgressionRequirement(
@@ -618,6 +659,7 @@ export function toGameCatalog(bundle: CatalogBundle): GameCatalog {
     manifest: bundle.manifest,
     progression: {
       catalogVersion: bundle.progression.catalogVersion,
+      levelCosts: bundle.progression.levelCosts,
       baseSkillRanks: bundle.progression.baseSkillRanks.map((entry) => ({
         ...entry,
         sourceRefs: dedupeSourceRefs(entry.sourceRefs),
@@ -1032,6 +1074,25 @@ export function validateCatalogBundle(bundle: CatalogBundle): ValidationResult {
           sourceIds,
           issues,
         );
+      }
+    }
+
+    if (progression.levelCosts != null) {
+      const costs = progression.levelCosts;
+      if (!isObject(costs) || !Array.isArray(costs.steps) || costs.steps.length !== 89
+        || costs.steps.some((step, index) => !isObject(step) || step.fromLevel !== index + 1
+          || !Number.isSafeInteger(step.exp) || (step.exp as number) <= 0
+          || !Number.isSafeInteger(step.tCreds) || (step.tCreds as number) < 0)) {
+        issues.push(makeIssue("invalid_level_costs", "progression.levelCosts", "Level costs must contain ordered, nonnegative integer costs for all 89 level transitions."));
+      } else {
+        validateSourceRefArray(costs.sourceRefs, "progression.levelCosts", sourceIds, issues);
+        for (const milestone of Array.isArray(progression.levelMilestones) ? progression.levelMilestones : []) {
+          const steps = costs.steps.filter((step: { fromLevel: number }) => step.fromLevel < milestone.level);
+          if (steps.reduce((sum: number, step: { exp: number }) => sum + step.exp, 0) !== milestone.cumulativeExp
+            || steps.reduce((sum: number, step: { tCreds: number }) => sum + step.tCreds, 0) !== milestone.cumulativeTCreds) {
+            issues.push(makeIssue("inconsistent_level_costs", "progression.levelCosts", "Per-level costs must agree with cumulative milestones."));
+          }
+        }
       }
     }
 
@@ -2391,6 +2452,13 @@ function validateScenarioShape(scenario: OptimizationScenario): ValidationIssue[
         "rosterImport.inventory",
         "SKPort inventory must contain weapon, gear, and tactical-item entries with valid ids and positive integer quantities.",
       ));
+    }
+    if (isObject(inventory) && inventory.materials != null
+      && (!Array.isArray(inventory.materials) || inventory.materials.some((entry) => !isObject(entry)
+        || typeof entry.id !== "string" || !entry.id || !Number.isSafeInteger(entry.ownedCount)
+        || (entry.ownedCount as number) < 0)
+        || new Set(inventory.materials.map((entry: { id: string }) => entry.id)).size !== inventory.materials.length)) {
+      issues.push(makeIssue("invalid_skport_materials", "rosterImport.inventory.materials", "Material quantities must be nonnegative safe integers with unique item ids."));
     }
   }
 

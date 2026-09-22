@@ -786,6 +786,35 @@ describe("optimizer runtime", () => {
     ]);
   });
 
+  it("uses imported materials to estimate acquisition effort independently for each unlock", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    const operator = scenario.roster.find((entry) => entry.operatorId === "tangtang")!;
+    operator.owned = true;
+    operator.level = 90;
+    operator.promotionTier = 4;
+    operator.baseSkillStates.forEach((skill) => { skill.unlockedRank = 0; });
+    const before = recommendUpgrades(catalog, scenario);
+    scenario.rosterImport = {
+      provider: "skport", importedAt: "2026-09-22T15:00:00Z", completeRoster: true,
+      sourceOperatorCount: 1, matchedOperatorCount: 1,
+      inventory: { weapons: [], gear: [], tacticalItems: [], materials: [
+        { id: "protoprism", ownedCount: 100 }, { id: "protohedron", ownedCount: 100 }, { id: "t-creds", ownedCount: 1000000 },
+      ] },
+    };
+    const after = recommendUpgrades(catalog, scenario);
+    expect(before.recommendations.some((entry) => entry.estimatedDaysToUnlock! > 0)).toBe(true);
+    expect(after.recommendations.length).toBe(before.recommendations.length);
+    for (const entry of after.recommendations) {
+      expect(entry.action.remainingMaterialCosts).toEqual([]);
+      expect(entry.action.materialCosts.length).toBeGreaterThan(0);
+      expect(entry.estimatedDaysToUnlock).toBe(0);
+      expect(entry.effortScore).toBe(0);
+      expect(Number.isFinite(entry.roi)).toBe(true);
+    }
+    expect(scenario.rosterImport.inventory?.materials?.[0]?.ownedCount).toBe(100);
+  });
+
   it("includes cumulative prerequisite costs for future-rank upgrade recommendations", async () => {
     const catalog = await loadDefaultCatalog();
     const scenario = createStarterScenario(catalog);

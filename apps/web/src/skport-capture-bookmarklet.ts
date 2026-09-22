@@ -1,7 +1,7 @@
 const SKPORT_CAPTURE_SOURCE = String.raw`(function(){
   "use strict";
   var stateKey="__endfieldDijiangRosterCapture";
-  var targetPaths=["/game/endfield/team/user-game-data","/game/endfield/card/detail"];
+  var targetPaths=["/game/endfield/team/user-game-data","/game/endfield/calculate/user-game-data","/game/endfield/card/detail"];
   if(!/(^|\.)skport\.com$/i.test(location.hostname)){
     alert("Open the official SKPort website before running the Endfield roster capture bookmarklet.");
     return;
@@ -76,7 +76,7 @@ const SKPORT_CAPTURE_SOURCE = String.raw`(function(){
   }
   function compactCatalog(payload,key){
     if(!payload){return null;}
-    var items=getCatalogItems(payload,key).map(function(item){return {id:item.id,name:item.name};}).filter(function(item){return item.id&&item.name;});
+    var items=getCatalogItems(payload,key).map(function(item){return {id:item.id,name:item.name,cultivationTalents:Array.isArray(item.cultivationTalents)?item.cultivationTalents.map(function(talent){return {id:talent.id};}):undefined};}).filter(function(item){return item.id&&item.name;});
     var data={};data[key]=items;return {data:data};
   }
   function compactOperatorDetail(payload){
@@ -103,6 +103,13 @@ const SKPORT_CAPTURE_SOURCE = String.raw`(function(){
       output.weaponCatalog=compactCatalog(referenceCatalogs.weapons,"weapons");
       output.equipmentCatalog=compactCatalog(referenceCatalogs.equipment,"equips");
       output.tacticalItemCatalog=compactCatalog(referenceCatalogs.tacticalItems,"tacticalItems");
+      if(referenceCatalogs.materials){
+        var materialData=referenceCatalogs.materials.data||referenceCatalogs.materials;
+        output.materialCatalog={data:{}};
+        ["materials","charExpMaterials","weaponExpMaterials"].forEach(function(key){
+          output.materialCatalog.data[key]=Object.fromEntries(Object.entries(materialData[key]||{}).map(function(entry){return [entry[0],{id:entry[1].id,name:entry[1].name}];}));
+        });
+      }
     }
     captureText=JSON.stringify(output);
     captureFileName="endfield-skport-roster-"+capturedAt.slice(0,19).replace(/[:T]/g,"-")+".json";
@@ -158,7 +165,9 @@ const SKPORT_CAPTURE_SOURCE = String.raw`(function(){
     if(finished||capturing||!directRequest){return;}
     capturing=true;
     try{
-      var rosterResponse=await directRequest("/web/v1/game/endfield/team/user-game-data",{});
+      var rosterResponse;
+      try{rosterResponse=await directRequest("/web/v1/game/endfield/team/user-game-data",{});}catch(error){}
+      if(!hasRoster(rosterResponse)){rosterResponse=await directRequest("/web/v1/game/endfield/calculate/user-game-data",{});}
       if(!hasRoster(rosterResponse)){
         setStatus("The helper is ready. Enable SKPort's official Sync Data option to request the roster.","#ffdf82");
         return;
@@ -167,12 +176,19 @@ const SKPORT_CAPTURE_SOURCE = String.raw`(function(){
         directRequest("/web/v1/game/endfield/search-chars",{}),
         directRequest("/web/v1/game/endfield/search-weapons",{}),
         directRequest("/web/v1/game/endfield/search-equipments",{}),
-        directRequest("/web/v1/game/endfield/search-tactical-items",{})
+        directRequest("/web/v1/game/endfield/search-tactical-items",{}),
+        directRequest("/web/v1/game/endfield/calculate/material-list",{}),
+        directRequest("/web/v1/game/endfield/calculate/user-game-data",{})
       ]);
       function catalogValue(index){return catalogResults[index].status==="fulfilled"?catalogResults[index].value:null;}
       var characterCatalog=catalogValue(0);
       if(!characterCatalog){setStatus("The roster was found, but SKPort's character-name catalog did not load. Click inside Team Picks to retry.","#ffba7a");return;}
       var gameData=getUserGameData(rosterResponse);
+      var calculatorData=getUserGameData(catalogValue(5));
+      if(calculatorData&&gameData.roleId!=null&&gameData.serverId!=null&&calculatorData.roleId===gameData.roleId&&calculatorData.serverId===gameData.serverId){
+        gameData=Object.assign({},gameData,calculatorData,{userWeapons:gameData.userWeapons});
+        rosterResponse={data:{userGameData:gameData}};
+      }
       var names=new Map(getCatalogCharacters(characterCatalog).map(function(character){return [character.id,character.name];}));
       var owned=Object.values(gameData.userChars||{}).filter(function(character){return character&&character.owned===true&&String(names.get(character.charId)||"").toLowerCase()!=="endministrator";});
       var operatorDetails=new Array(owned.length);
@@ -192,7 +208,7 @@ const SKPORT_CAPTURE_SOURCE = String.raw`(function(){
       }
       await Promise.all(Array.from({length:Math.min(3,owned.length)},worker));
       var capturedDetails=operatorDetails.filter(Boolean);
-      capture(rosterResponse,{characters:characterCatalog,weapons:catalogValue(1),equipment:catalogValue(2),tacticalItems:catalogValue(3)},capturedDetails,{requested:owned.length,captured:capturedDetails.length});
+      capture(rosterResponse,{characters:characterCatalog,weapons:catalogValue(1),equipment:catalogValue(2),tacticalItems:catalogValue(3),materials:catalogValue(4)},capturedDetails,{requested:owned.length,captured:capturedDetails.length});
     }catch(error){setStatus("The helper is ready. Enable or re-enable Sync Data; the response will be captured when SKPort requests it.","#ffdf82");}
     finally{if(!finished){capturing=false;}}
   }

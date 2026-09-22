@@ -260,7 +260,7 @@ function getValidationIssueTarget(issue: ValidationIssue): ValidationIssueTarget
   if (manufacturingMatch) {
     const [, roomId, field] = manufacturingMatch;
     return {
-      elementId: getRoomControlTargetId(roomId, field === "fixedRecipeId" ? "recipe" : field as "enabled" | "level"),
+      elementId: getRoomControlTargetId(roomId!, field === "fixedRecipeId" ? "recipe" : field as "enabled" | "level"),
       tab: "planner",
     };
   }
@@ -269,7 +269,7 @@ function getValidationIssueTarget(issue: ValidationIssue): ValidationIssueTarget
   if (growthFieldMatch) {
     const [, roomId, field] = growthFieldMatch;
     return {
-      elementId: getRoomControlTargetId(roomId, field as "enabled" | "level"),
+      elementId: getRoomControlTargetId(roomId!, field as "enabled" | "level"),
       tab: "planner",
     };
   }
@@ -278,7 +278,7 @@ function getValidationIssueTarget(issue: ValidationIssue): ValidationIssueTarget
   if (growthRecipesMatch) {
     const [, roomId, slotIndex] = growthRecipesMatch;
     return {
-      elementId: slotIndex != null ? getGrowthSlotTargetId(roomId, Number(slotIndex)) : getGrowthSlotsGroupTargetId(roomId),
+      elementId: slotIndex != null ? getGrowthSlotTargetId(roomId!, Number(slotIndex)) : getGrowthSlotsGroupTargetId(roomId!),
       tab: "planner",
     };
   }
@@ -2267,11 +2267,11 @@ function App() {
             </div>
             <div className="syncWarning">
               <strong>Back up your current scenario first.</strong>
-              <p>This unofficial third-party use is at your own volition. Applying a complete capture replaces saved ownership, operator levels, promotions, and equipped loadout snapshots. Use Export JSON before continuing.</p>
+              <p>This unofficial third-party use is at your own volition. Applying a complete capture replaces saved ownership, operator levels, promotions, and equipped loadout snapshots, plus Base Skill unlocks and materials when the calculator reports them. Use Export JSON before continuing.</p>
               <p>HAR files can contain sensitive session tokens even though this importer ignores them. Keep the capture private and delete it when you no longer need it.</p>
             </div>
             <p className="status">
-              The capture helper uses the official request client already loaded by Team Picks, captures each owned operator's loadout, and copies a local import payload. It does not read or save request headers, cookies, passwords, or account tokens.
+              The capture helper uses SKPort's loaded request client to capture the roster, loadouts, and calculator materials and Base Skill unlocks when available. It does not read or save request headers, cookies, passwords, or account tokens.
             </p>
             <ol className="syncInstructions">
               <li>Drag the capture helper below to your browser's bookmarks bar once. Copying its address into a new bookmark also works.</li>
@@ -2298,12 +2298,12 @@ function App() {
             </div>
             <details className="syncFallback">
               <summary>Manual Network-panel fallback</summary>
-              <p>Record the Network panel while enabling Sync Data, filter for <code>user-game-data</code>, and save that response as JSON or save a HAR with response content. Older <code>card/detail</code> captures are also supported.</p>
+              <p>Record the Network panel while enabling Sync Data in Team Picks or the Progression Calculator, then save a HAR with response content. Include <code>search-chars</code>, <code>calculate/user-game-data</code>, and <code>calculate/material-list</code> for Base Skill unlocks and material inventory. Older <code>card/detail</code> captures are also supported.</p>
             </details>
             <div className="syncScopeGrid">
               <div><span>Imported</span><strong>Ownership, level, promotion</strong></div>
-              <div><span>Saved when reported</span><strong>Combat skills, equipped loadouts, account inventory</strong></div>
-              <div><span>Not available</span><strong>Base Skill unlocks, essences, item enhancement rolls</strong></div>
+              <div><span>Imported when reported</span><strong>Base Skill unlocks, material inventory, combat skills, equipped loadouts</strong></div>
+              <div><span>Not available</span><strong>Partial level EXP, essences, item enhancement rolls</strong></div>
             </div>
             <div className="syncPaste">
               <label htmlFor="skport-capture-text">Paste captured import data</label>
@@ -2345,6 +2345,8 @@ function App() {
                   <div><span>Weapons reported</span><strong>{skportImportPreview.weaponCount}</strong></div>
                   <div><span>Gear quantity</span><strong>{skportImportPreview.gearCount}</strong></div>
                   <div><span>Tactical quantity</span><strong>{skportImportPreview.tacticalItemCount}</strong></div>
+                  <div><span>Material types</span><strong>{skportImportPreview.inventorySnapshot?.materials?.length ?? 0}</strong></div>
+                  <div><span>Base Skills synced</span><strong>{skportImportPreview.characters.filter((character) => character.baseSkillStates).length} operators</strong></div>
                 </div>
                 <div className="messageBar warning syncPreviewWarnings">
                   {skportImportPreview.warnings.map((warning) => <p key={warning}>{warning}</p>)}
@@ -3341,6 +3343,12 @@ function App() {
                           <span>Score gain (pts)</span>
                           <strong>{formatScorePoints(recommendation.scoreDelta, true)}</strong>
                         </div>
+                        {recommendation.effortScore != null && (
+                          <div className="resultMetric">
+                            <span>Effort score</span>
+                            <strong>{recommendation.effortScore.toFixed(1)}</strong>
+                          </div>
+                        )}
                         <div className="resultMetric">
                           <span>ROI (pts/effort)</span>
                           <strong>{formatScorePoints(recommendation.roi)}</strong>
@@ -3375,6 +3383,14 @@ function App() {
                           <span>Skill</span>
                           <MaterialCostList catalog={catalog} costs={recommendation.action.skillMaterialCosts} />
                         </div>
+                        {recommendation.action.remainingMaterialCosts && (
+                          <div className="resultDataCell">
+                            <span>Still needed after inventory</span>
+                            {recommendation.action.remainingMaterialCosts.length > 0
+                              ? <MaterialCostList catalog={catalog} costs={recommendation.action.remainingMaterialCosts} />
+                              : <p>Covered by imported inventory</p>}
+                          </div>
+                        )}
                       </div>
                       {extraNotes.length > 0 && (
                         <div className="resultNotesGrid">

@@ -695,6 +695,14 @@
       "retrievedOn": "2026-09-13",
       "confidence": "community",
       "notes": "All two-rank Base Skills checked against extracted game data and SKPORT; conflicts resolved in docs/base-skill-audit.md. Clue strength is qualitative, not a percentage."
+    },
+    {
+      "id": "skport-calculator-rules-2026-09-22",
+      "label": "Official SKPort progression calculator rules",
+      "url": "https://game.skport.com/tools/endfield/cost-calculator",
+      "retrievedOn": "2026-09-22",
+      "confidence": "official",
+      "notes": "User-provided HAR response from /web/v1/game/endfield/calculate/rules. Rows give the cost from level L to L+1; the terminal level-90 sentinel is excluded. All five cumulative milestones match the existing catalog."
     }
   ]
 }

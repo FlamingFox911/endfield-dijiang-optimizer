@@ -276,6 +276,10 @@ export interface ProgressionDocument {
   promotionTiers: PromotionTierProgression[];
   promotionOverrides: OperatorPromotionOverride[];
   levelMilestones: LevelProgressionMilestone[];
+  levelCosts?: {
+    sourceRefs: SourceRef[];
+    steps: Array<{ fromLevel: number; exp: number; tCreds: number }>;
+  };
   expItems: OperatorExpItemDefinition[];
 }
 
@@ -374,6 +378,8 @@ export interface SkportInventorySnapshot {
   weapons: SkportInventoryEntry[];
   gear: SkportInventoryEntry[];
   tacticalItems: SkportInventoryEntry[];
+  /** Calculator material ids normalized to catalog item ids when recognized. */
+  materials?: SkportInventoryEntry[];
 }
 
 export interface OwnedOperatorState {
@@ -553,6 +559,7 @@ export interface UpgradeAction {
   promotionMaterialCosts: MaterialCost[];
   skillMaterialCosts: MaterialCost[];
   materialCosts: MaterialCost[];
+  remainingMaterialCosts?: MaterialCost[];
   unlockHint?: string;
 }
 
@@ -560,6 +567,7 @@ export interface UpgradeRecommendation {
   action: UpgradeAction;
   scoreDelta: number;
   roi: number;
+  effortScore?: number;
   projectedOutputChanges?: Array<{ productKind: ProductKind; before: number; after: number }>;
   estimatedDaysToUnlock?: number;
   notes: string[];
