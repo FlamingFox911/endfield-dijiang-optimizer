@@ -1995,22 +1995,29 @@ function App() {
     setSkportImportError(null);
     try {
       if (!text) {
-        throw new Error("Paste the SKPort import data before previewing it.");
+        throw new Error("Paste the SKPort import data before previewing or applying it.");
       }
       if (text.length > MAX_SKPORT_IMPORT_FILE_BYTES) {
         throw new Error(`SKPort capture is too large. Keep pasted data at or below ${Math.floor(MAX_SKPORT_IMPORT_FILE_BYTES / 1_000_000)} MB.`);
       }
-      setSkportImportPreview(parseSkportRosterImportText(text, catalog));
+      const preview = parseSkportRosterImportText(text, catalog);
+      setSkportImportPreview(preview);
+      return preview;
     } catch (error) {
       setSkportImportError(error instanceof Error ? error.message : "Failed to read the pasted SKPort roster capture.");
+      return null;
     }
   };
 
   const confirmSkportImport = () => {
-    if (!skportImportConsent || !skportImportPreview) {
+    if (!skportImportConsent) {
       return;
     }
-    const imported = applySkportRosterImport(scenario, skportImportPreview);
+    const preview = skportImportPreview ?? previewPastedSkportImport();
+    if (!preview) {
+      return;
+    }
+    const imported = applySkportRosterImport(scenario, preview);
     setScenario(imported.scenario);
     setMessages([
       `Imported ${imported.updatedOperatorCount} matched operator${imported.updatedOperatorCount === 1 ? "" : "s"} from SKPort${imported.clearedOperatorCount > 0 ? ` and marked ${imported.clearedOperatorCount} absent operator${imported.clearedOperatorCount === 1 ? "" : "s"} unowned` : ""}.`,
@@ -2345,7 +2352,7 @@ function App() {
               <li>Drag the capture helper below to your browser's bookmarks bar once. Copying its address into a new bookmark also works.</li>
               <li>On the <a href="https://www.skport.com/game/endfield" target="_blank" rel="noreferrer">official SKPort Endfield page</a>, open <strong>Team Picks</strong> from the yellow Game Tools panel.</li>
               <li>On Team Picks, activate the saved bookmarklet. If <strong>Sync Data</strong> is off, approve or enable it; if capture does not begin while it is on, toggle it off and on once.</li>
-              <li>Wait while the helper captures every owned operator, then click <strong>Copy import data</strong>. Return here, paste it below, and preview it. JSON download remains available as a fallback.</li>
+              <li>Wait while the helper captures every owned operator, then click <strong>Copy import data</strong>. Return here, paste it below, check the confirmation box, and apply the import. You can preview it first if desired. JSON download remains available as a fallback.</li>
             </ol>
             <div className="bookmarkletSetup">
               <div>
@@ -2426,7 +2433,7 @@ function App() {
               <span>I understand this is unofficial, have made any backup I need, and want to overwrite the fields listed above.</span>
             </label>
             <div className="toolbarActions syncActions">
-              <button type="button" onClick={confirmSkportImport} disabled={!skportImportConsent || !skportImportPreview}>Apply one-time import</button>
+              <button type="button" onClick={confirmSkportImport} disabled={!skportImportConsent || (!skportImportPreview && !skportImportText.trim())}>Apply one-time import</button>
               <button type="button" className="secondary" onClick={closeSkportImport}>Cancel</button>
             </div>
           </div>

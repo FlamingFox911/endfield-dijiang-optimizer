@@ -1216,7 +1216,7 @@ describe("App", () => {
     expect(revokeObjectUrl).toHaveBeenCalledWith("blob:test");
   });
 
-  it("previews and confirms a local one-time SKPort roster import", async () => {
+  it.each(["preview", "direct", "consent before paste"])("confirms a local one-time SKPort roster import (%s)", async (flow) => {
     render(<App />);
     await screen.findByText("Endfield Dijiang Optimizer");
 
@@ -1229,6 +1229,12 @@ describe("App", () => {
     expect(bookmarklet.getAttribute("href")).toContain("/game/endfield/team/user-game-data");
     const applyButton = within(dialog).getByRole("button", { name: "Apply one-time import" });
     expect(applyButton).toBeDisabled();
+    if (flow === "consent before paste") {
+      await userEvent.click(within(dialog).getByRole("checkbox"));
+      expect(applyButton).toBeDisabled();
+      fireEvent.change(within(dialog).getByLabelText("Paste captured import data"), { target: { value: "   " } });
+      expect(applyButton).toBeDisabled();
+    }
 
     const payload = {
       data: {
@@ -1250,12 +1256,16 @@ describe("App", () => {
     };
     const captureText = within(dialog).getByLabelText("Paste captured import data");
     fireEvent.change(captureText, { target: { value: JSON.stringify(payload) } });
-    await userEvent.click(within(dialog).getByRole("button", { name: "Preview pasted capture" }));
-
-    expect(await within(dialog).findByText("Complete roster capture")).toBeInTheDocument();
-    expect(within(dialog).getByText("Selected: Pasted capture")).toBeInTheDocument();
-    expect(within(dialog).getByText("1 / 1 reported")).toBeInTheDocument();
-    await userEvent.click(within(dialog).getByRole("checkbox"));
+    if (flow === "preview") {
+      await userEvent.click(within(dialog).getByRole("button", { name: "Preview pasted capture" }));
+      expect(await within(dialog).findByText("Complete roster capture")).toBeInTheDocument();
+      expect(within(dialog).getByText("Selected: Pasted capture")).toBeInTheDocument();
+      expect(within(dialog).getByText("1 / 1 reported")).toBeInTheDocument();
+    }
+    if (flow !== "consent before paste") {
+      expect(applyButton).toBeDisabled();
+      await userEvent.click(within(dialog).getByRole("checkbox"));
+    }
     expect(applyButton).toBeEnabled();
     await userEvent.click(applyButton);
 
@@ -1272,6 +1282,35 @@ describe("App", () => {
       promotionTier: 3,
       skportSnapshot: { weapon: { name: "Test Weapon" } },
     });
+  });
+
+  it.each([false, true])("rejects invalid pasted SKPort data without changing the draft (previous preview: %s)", async (previewFirst) => {
+    render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.click(screen.getByRole("button", { name: "Sync SKPort roster" }));
+    const dialog = screen.getByRole("dialog", { name: "Sync SKPort roster" });
+    const captureText = within(dialog).getByLabelText("Paste captured import data");
+    const savedDraft = localStorage.getItem("endfield-dijiang-optimizer:draft");
+
+    if (previewFirst) {
+      fireEvent.change(captureText, { target: { value: JSON.stringify({
+        data: { detail: {
+          base: { charNum: 1 },
+          chars: [{ id: "char_chen", level: 67, evolvePhase: 3, charData: { id: "char_chen", name: "Chen Qianyu" } }],
+        } },
+      }) } });
+      await userEvent.click(within(dialog).getByRole("button", { name: "Preview pasted capture" }));
+      expect(within(dialog).getByText("Complete roster capture")).toBeInTheDocument();
+    }
+
+    fireEvent.change(captureText, { target: { value: "invalid capture" } });
+    await userEvent.click(within(dialog).getByRole("checkbox"));
+    await userEvent.click(within(dialog).getByRole("button", { name: "Apply one-time import" }));
+
+    expect(within(dialog).getByText("SKPort roster import requires a valid JSON or HAR file.")).toBeInTheDocument();
+    expect(within(dialog).queryByText("Complete roster capture")).not.toBeInTheDocument();
+    expect(dialog).toBeInTheDocument();
+    expect(localStorage.getItem("endfield-dijiang-optimizer:draft")).toBe(savedDraft);
   });
 
   it("imports a scenario JSON file", async () => {
