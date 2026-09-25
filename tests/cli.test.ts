@@ -25,6 +25,15 @@ describe("cli", () => {
     const parsed = JSON.parse(output);
     expect(parsed.bundleValidation.ok).toBe(true);
     expect(parsed.scenarioResults.length).toBeGreaterThan(0);
+
+    const tiesOutput = execFileSync(process.execPath, [cliPath, "optimize", "--scenario",
+      path.resolve(repoRoot, "scenarios/examples/current-base.simple.json"), "--json"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+    });
+    const result = JSON.parse(tiesOutput).result;
+    expect(result.roomPlans.length).toBeGreaterThan(0);
+    expect(result.roomPlans.every((room: { alternativeOperatorIdsBySlot?: string[][] }) => Array.isArray(room.alternativeOperatorIdsBySlot))).toBe(true);
   });
 
   it("packs bundled catalogs and scenarios with the published CLI artifact", { timeout: 15000 }, () => {

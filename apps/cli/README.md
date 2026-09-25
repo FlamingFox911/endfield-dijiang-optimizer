@@ -18,7 +18,7 @@ Current repo status:
 - `endfield-opt init-scenario`
   Create a starter scenario JSON file pinned to the current catalog version.
 - `endfield-opt optimize --scenario ./my-base.json`
-  Solve the current-base scenario.
+  Solve the current-base scenario, including interchangeable unassigned operators per slot that preserve the total score with other slots fixed.
 - `endfield-opt optimize --scenario ./my-base.json --max-facilities`
   Solve the hypothetical fully upgraded Dijiang scenario.
 - `endfield-opt recommend-upgrades --scenario ./my-base.json`

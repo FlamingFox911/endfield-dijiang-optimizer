@@ -131,6 +131,8 @@ export interface OperatorDefinition {
   id: string;
   name: string;
   rarity: 4 | 5 | 6;
+  /** First featured limited banner date (YYYY-MM-DD), used only to order ties. */
+  limitedBannerDebut?: string;
   className: string;
   images: ImageAsset[];
   baseSkills: BaseSkillDefinition[];
@@ -524,6 +526,10 @@ export interface RoomPlan {
   chosenRecipeIds?: string[];
   chosenProductKind?: ProductKind;
   assignedOperatorIds: string[];
+  /** Unassigned replacements preserving total score with all other slots fixed.
+   * Indexed by displayed slot, excluding its current worker; hard assignments have no alternatives.
+   */
+  alternativeOperatorIdsBySlot?: string[][];
   scoreBreakdown: ScoreBreakdown;
   projectedScore: number;
   projectedOutputs: Record<ProductKind, number>;

@@ -2776,6 +2776,15 @@ export function parseLiveRosterUpdate(value: unknown): LiveRosterUpdateDocument 
     operatorIds.add(operator.id);
     requireLiveRoster(typeof operator.name === "string" && operator.name.length > 0, `${operatorPath}.name must be a non-empty string.`);
     requireLiveRoster([4, 5, 6].includes(Number(operator.rarity)), `${operatorPath}.rarity must be 4, 5, or 6.`);
+    if (operator.limitedBannerDebut !== undefined) {
+      requireLiveRoster(
+        typeof operator.limitedBannerDebut === "string"
+          && /^\d{4}-\d{2}-\d{2}$/.test(operator.limitedBannerDebut)
+          && Number.isFinite(Date.parse(operator.limitedBannerDebut))
+          && new Date(operator.limitedBannerDebut).toISOString().slice(0, 10) === operator.limitedBannerDebut,
+        `${operatorPath}.limitedBannerDebut must be an ISO date when present.`,
+      );
+    }
     requireLiveRoster(typeof operator.className === "string" && operator.className.length > 0, `${operatorPath}.className must be a non-empty string.`);
     requireLiveRoster(Array.isArray(operator.images) && operator.images.length > 0, `${operatorPath}.images must not be empty.`);
     requireLiveRoster(
@@ -2894,6 +2903,7 @@ export function mergeLiveRosterUpdate(catalog: GameCatalog, update: LiveRosterUp
     (currentById.has(operator.id) ? updatedOperatorIds : addedOperatorIds).push(operator.id);
     return {
       ...operator,
+      limitedBannerDebut: operator.limitedBannerDebut ?? currentById.get(operator.id)?.limitedBannerDebut,
       baseSkills: operator.baseSkills.map((skill, skillIndex) => {
         const signature = getBaseSkillIconSignature(skill);
         const currentSkill = currentById.get(operator.id)?.baseSkills.find((entry) => entry.id === skill.id);

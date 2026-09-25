@@ -911,6 +911,74 @@ function OperatorChip(
   );
 }
 
+function TiedOptionsPopover({ catalog, operatorIds, slotLabel }: {
+  catalog: GameCatalog;
+  operatorIds: string[];
+  slotLabel: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [style, setStyle] = useState<CSSProperties>({ visibility: "hidden" });
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const panelId = useId();
+  const cancelClose = () => clearTimeout(closeTimer.current);
+  const show = () => { cancelClose(); setOpen(true); };
+  const hide = () => { cancelClose(); setOpen(false); };
+
+  useEffect(() => () => clearTimeout(closeTimer.current), []);
+  useLayoutEffect(() => {
+    if (!open) return;
+    const position = () => {
+      if (triggerRef.current && panelRef.current) {
+        setStyle(getViewportTooltipStyle(triggerRef.current.getBoundingClientRect(), panelRef.current.getBoundingClientRect(), "end"));
+      }
+    };
+    const dismiss = (event: PointerEvent) => {
+      if (!wrapperRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    position();
+    window.addEventListener("resize", position);
+    window.addEventListener("scroll", position, true);
+    document.addEventListener("pointerdown", dismiss);
+    return () => {
+      window.removeEventListener("resize", position);
+      window.removeEventListener("scroll", position, true);
+      document.removeEventListener("pointerdown", dismiss);
+    };
+  }, [open, operatorIds]);
+
+  return (
+    <div ref={wrapperRef} className="tiedOptionsPopover"
+      onMouseEnter={show}
+      onMouseLeave={() => { cancelClose(); closeTimer.current = setTimeout(() => setOpen(false), 150); }}
+      onFocusCapture={show}
+      onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) hide(); }}
+      onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); hide(); } }}
+    >
+      <button ref={triggerRef} type="button" className="tiedOptionsButton"
+        aria-label={`Alternatives for ${slotLabel}`} aria-expanded={open}
+        aria-controls={open ? panelId : undefined} aria-describedby={open ? panelId : undefined}
+        onClick={show}
+      ><span aria-hidden="true">⇄</span></button>
+      {open && (
+        <div ref={panelRef} id={panelId} role="tooltip" tabIndex={0} className="tiedOptionsPanel" style={style}>
+          <strong>Equal-score alternatives</strong>
+          <p>Use one alternative at a time; other slots stay fixed.</p>
+          <ul>
+            {operatorIds.map((id) => {
+              const operator = catalog.operators.find((entry) => entry.id === id);
+              return <li key={id}><OperatorChip catalog={catalog} operator={operator} fallbackLabel={id}
+                meta={`${operator?.rarity ?? "?"} star`} /></li>;
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AnyOperatorChip() {
   return (
     <div className="operatorChip operatorChipPlaceholder">
@@ -3184,21 +3252,31 @@ function App() {
                           <span className="miniStat">{room.dataConfidence}</span>
                         </div>
                         <div className="operatorChipList operatorChipGrid">
-                          {room.assignedOperatorIds.map((operatorId) => {
+                          {room.assignedOperatorIds.map((operatorId, slotIndex) => {
                             const operator = operatorsById.get(operatorId);
+                            const alternatives = room.alternativeOperatorIdsBySlot?.[slotIndex] ?? [];
                             return (
-                              <OperatorChip
-                                key={`${room.roomId}-${operatorId}`}
-                                catalog={catalog}
-                                operator={operator}
-                                fallbackLabel={operatorId}
-                                meta={`${operator?.className ?? "Unknown"} | ${operator?.rarity ?? "?"} star`}
-                              />
+                              <div className="resultOperatorSlot" key={`${room.roomId}-${operatorId}`}>
+                                <OperatorChip
+                                  catalog={catalog}
+                                  operator={operator}
+                                  fallbackLabel={operatorId}
+                                  meta={`${operator?.className ?? "Unknown"} | ${operator?.rarity ?? "?"} star`}
+                                />
+                                {alternatives.length > 0 && <TiedOptionsPopover catalog={catalog} operatorIds={alternatives}
+                                  slotLabel={`slot ${slotIndex + 1}: ${operator?.name ?? operatorId}`} />}
+                              </div>
                             );
                           })}
-                          {Array.from({ length: openSlotCount }, (_, slotIndex) => (
-                            <AnyOperatorChip key={`${room.roomId}-any-${slotIndex}`} />
-                          ))}
+                          {Array.from({ length: openSlotCount }, (_, openIndex) => {
+                            const slotIndex = room.assignedOperatorIds.length + openIndex;
+                            const alternatives = room.alternativeOperatorIdsBySlot?.[slotIndex] ?? [];
+                            return <div className="resultOperatorSlot" key={`${room.roomId}-any-${openIndex}`}>
+                              <AnyOperatorChip />
+                              {alternatives.length > 0 && <TiedOptionsPopover catalog={catalog} operatorIds={alternatives}
+                                slotLabel={`slot ${slotIndex + 1}: open slot`} />}
+                            </div>;
+                          })}
                         </div>
                         {recipes.length > 0 && (
                           <div className="resultRecipeList">

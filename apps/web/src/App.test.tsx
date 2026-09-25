@@ -257,6 +257,7 @@ describe("App", () => {
 
     const ownedToggles = await screen.findAllByRole("checkbox", { name: "Owned" });
     await userEvent.click(ownedToggles[0]!);
+    expect(screen.queryByRole("checkbox", { name: /Show tied options/ })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Optimize" }));
 
     expect(screen.getByRole("dialog", { name: "Optimization progress" })).toBeInTheDocument();
@@ -285,6 +286,7 @@ describe("App", () => {
               chosenRecipeIds: ["elementary-cognitive-carrier"],
               chosenProductKind: "operator_exp",
               assignedOperatorIds: ["chen-qianyu", "xaihi"],
+              alternativeOperatorIdsBySlot: [["yvonne", "laevatain"], []],
               scoreBreakdown: {
                 directProductionScore: 30,
                 supportRoomScore: 12,
@@ -314,13 +316,35 @@ describe("App", () => {
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "Optimization progress" })).not.toBeInTheDocument();
       expect(screen.getByText("Why this wins")).toBeInTheDocument();
-      expect(screen.getByText(/Total score/i)).toBeInTheDocument();
+      expect(screen.getByText("Total score (pts)")).toBeInTheDocument();
     });
 
     const roomHeading = screen.getAllByText("Manufacturing Cabin 1").find((element) => element.closest(".resultCard"));
     const roomCard = requireHtmlElement(roomHeading?.closest(".resultCard"));
     expect(within(roomCard).getByRole("img", { name: "Chen Qianyu portrait" })).toBeInTheDocument();
     expect(within(roomCard).getByRole("img", { name: "Xaihi portrait" })).toBeInTheDocument();
+    const alternativesButton = within(roomCard).getByRole("button", { name: "Alternatives for slot 1: Chen Qianyu" });
+    expect(within(roomCard).queryByRole("button", { name: /Alternatives for slot 2/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    expect(within(roomCard).queryByText("Equal-score alternatives")).not.toBeInTheDocument();
+    await userEvent.hover(alternativesButton);
+    const alternatives = screen.getByRole("tooltip");
+    expect(Array.from(alternatives.querySelectorAll("img")).map((img) => img.alt)).toEqual(["Yvonne portrait", "Laevatain portrait"]);
+    expect(alternatives).toHaveTextContent("Use one alternative at a time");
+    // The panel remains reachable across the gap and can be scrolled.
+    await userEvent.unhover(alternativesButton);
+    await userEvent.hover(alternatives);
+    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+    await userEvent.unhover(alternatives);
+    await waitFor(() => expect(screen.queryByRole("tooltip")).not.toBeInTheDocument());
+    act(() => alternativesButton.focus());
+    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    fireEvent.click(alternativesButton);
+    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+    fireEvent.pointerDown(document.body);
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
 
   it("omits empty recipe text for support rooms and renders growth recipes without pipe separators", async () => {
@@ -366,6 +390,7 @@ describe("App", () => {
               slotCap: 3,
               chosenRecipeIds: [],
               assignedOperatorIds: [],
+              alternativeOperatorIdsBySlot: [["yvonne"], [], []],
               scoreBreakdown: { directProductionScore: 0, supportRoomScore: 0, crossRoomBonusContribution: 0, totalScore: 0 },
               projectedScore: 0,
               projectedOutputs: { operator_exp: 0, weapon_exp: 0, fungal: 0, vitrified_plant: 0, rare_mineral: 0 },
@@ -404,6 +429,11 @@ describe("App", () => {
     const receptionCard = requireHtmlElement(receptionHeading?.closest(".resultCard"));
     expect(within(receptionCard).getAllByText("Any")).toHaveLength(3);
     expect(within(receptionCard).getAllByLabelText("Any operator")).toHaveLength(3);
+    const openSlotAlternatives = within(receptionCard).getByRole("button", { name: "Alternatives for slot 1: open slot" });
+    expect(within(receptionCard).getAllByRole("button", { name: /Alternatives for slot/ })).toHaveLength(1);
+    await userEvent.hover(openSlotAlternatives);
+    expect(within(screen.getByRole("tooltip")).getByRole("img", { name: "Yvonne portrait" })).toBeInTheDocument();
+    await userEvent.unhover(openSlotAlternatives);
 
     const growthHeading = screen.getAllByText("Growth Chamber 1").find((element) => element.closest(".resultCard"));
     const growthCard = requireHtmlElement(growthHeading?.closest(".resultCard"));

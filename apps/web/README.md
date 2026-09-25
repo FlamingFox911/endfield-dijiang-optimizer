@@ -20,6 +20,8 @@ Current repo status:
 - `Recommend unlocks` also runs in the worker and opens its own progress modal with candidate counts, baseline score, best delta, elapsed time, and cancel.
 - The modal shows approximate node-based progress, current best score, elapsed time, and a cancel action.
 - Optimization effort is saved with the scenario draft and exported/imported JSON.
+- Tied alternatives are included automatically. Hover, focus, or tap a slot's ⇄ icon to see its interchangeable operators. Alternatives apply one change at a time, with other slots fixed.
+- Equal scores prefer limited 6-stars (newest banner debut first), then regular 6-stars, 5-stars, and 4-stars. This never adds points. See [assignment ties](../../docs/optimizer-ties.md).
 - The UI exposes named profiles:
   - `Fast`
   - `Balanced`

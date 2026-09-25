@@ -8,6 +8,7 @@ import {
   clampOptimizationEffort, getOptimizationSearchConfig,
 } from "./config.js";
 import { createAssignmentScorer } from "./assignment-scoring.js";
+import { createOperatorPreference } from "./operator-preference.js";
 import type { OptimizationProgressSnapshot, OptimizationSearchConfig, SolveScenarioOptions } from "./types.js";
 
 export interface NormalizedRoom {
@@ -291,7 +292,8 @@ export function solveNormalizedScenario(
   const owned = new Map(scenario.roster.filter((operator) => operator.owned && knownIds.has(operator.operatorId))
     .map((operator) => [operator.operatorId, operator]));
   const hard = buildHardAssignmentState(scenario, rooms, owned, warnings);
-  const available = [...owned.keys()].filter((id) => !hard.hardAssignedOperatorIds.has(id)).sort();
+  const compareOperators = createOperatorPreference(catalog.operators);
+  const available = [...owned.keys()].filter((id) => !hard.hardAssignedOperatorIds.has(id)).sort(compareOperators);
   const scorer = createAssignmentScorer(catalog, scenario, rooms);
   // Keep each room's slots together to eliminate equivalent worker permutations.
   // Control is considered after productive rooms, when its actual benefit is known.
@@ -324,6 +326,32 @@ export function solveNormalizedScenario(
     const used = new Set([...assignment.values()].flat().filter(Boolean));
     return available.filter((id) => !used.has(id));
   };
+  const workersIn = (assignment: Map<string, Array<string | null>>) =>
+    [...assignment.values()].flat().filter((id): id is string => id != null);
+  const compareLists = (left: string[], right: string[]) => {
+    left.sort(compareOperators);
+    right.sort(compareOperators);
+    for (let index = 0; index < Math.min(left.length, right.length); index += 1) {
+      const order = compareOperators(left[index]!, right[index]!);
+      if (order !== 0) return order;
+    }
+    return left.length - right.length;
+  };
+  const compareAssignments = (
+    left: Map<string, Array<string | null>>, right: Map<string, Array<string | null>>,
+  ) => {
+    // Prefer the workforce first, then resolve placement ties in stable room order.
+    const workforce = compareLists(workersIn(left), workersIn(right));
+    if (workforce !== 0) return workforce;
+    for (const room of rooms) {
+      const order = compareLists(
+        left.get(room.roomId)!.filter((id): id is string => id != null),
+        right.get(room.roomId)!.filter((id): id is string => id != null),
+      );
+      if (order !== 0) return order;
+    }
+    return 0;
+  };
   const greedyFill = (assignment: Map<string, Array<string | null>>) => {
     let current = scorer.score(assignment);
     while (true) {
@@ -338,7 +366,10 @@ export function solveNormalizedScenario(
           values[index] = id;
           const score = scorer.score(assignment);
           values[index] = null;
-          if (score > (next?.score ?? current) + 1e-12) next = { roomId: room.roomId, index, id, score };
+          if (score > (next?.score ?? current) + 1e-12
+            || (next && score === next.score && compareOperators(id, next.id) < 0)) {
+            next = { roomId: room.roomId, index, id, score };
+          }
         }
       }
       if (!next) return current;
@@ -348,7 +379,8 @@ export function solveNormalizedScenario(
   };
   const accept = (assignment: Map<string, Array<string | null>>, score: number) => {
     const workers = [...assignment.values()].flat().filter(Boolean).length;
-    if (score > bestScore || (score === bestScore && workers < bestWorkerCount)) {
+    if (score > bestScore || (score === bestScore && (workers < bestWorkerCount
+      || (workers === bestWorkerCount && compareAssignments(assignment, bestAssignments) < 0)))) {
       bestAssignments = cloneAssignedByRoom(assignment);
       bestScore = score;
       bestWorkerCount = workers;
@@ -362,12 +394,7 @@ export function solveNormalizedScenario(
       return;
     }
     visitedNodes += 1;
-    const workerCount = owned.size - remaining.length;
-    if (currentScore > bestScore || (currentScore === bestScore && workerCount < bestWorkerCount)) {
-      bestScore = currentScore;
-      bestWorkerCount = workerCount;
-      bestAssignments = cloneAssignedByRoom(assigned);
-    }
+    accept(assigned, currentScore);
     if (visitedNodes === 1 || visitedNodes % Math.max(1, config.progressIntervalNodes) === 0) {
       emitProgress("Searching assignments", depth);
     }
@@ -392,7 +419,7 @@ export function solveNormalizedScenario(
       const score = scorer.score(assigned);
       roomAssignments[slot.index] = null;
       return { id, score };
-    }).sort((left, right) => right.score - left.score || left.id.localeCompare(right.id));
+    }).sort((left, right) => right.score - left.score || compareOperators(left.id, right.id));
     const largeSearch = remaining.length * (slots.length - depth) > Math.max(20, config.maxBranchCandidatesPerSlot * 10);
     const limit = largeSearch ? config.maxBranchCandidatesPerSlot : candidates.length;
     if (candidates.length > limit) candidatesLimited = true;
@@ -471,11 +498,51 @@ export function solveNormalizedScenario(
   }
   const completed = cloneAssignedByRoom(bestAssignments);
   accept(completed, greedyFill(completed));
+  // Budget-limited search must still resolve every single-worker tie. Each
+  // replacement strictly improves the finite preference order, so this terminates.
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const slot of slots) {
+      const values = bestAssignments.get(slot.roomId)!;
+      const original = values[slot.index];
+      if (original == null) continue;
+      for (const id of freeIds(bestAssignments)) {
+        maybeCancel();
+        if (compareOperators(id, original) >= 0) continue;
+        values[slot.index] = id;
+        if (scorer.score(bestAssignments) === bestScore) {
+          changed = true;
+          break;
+        }
+        values[slot.index] = original;
+      }
+    }
+  }
   maybeCancel();
   if (budgetExceeded) warnings.push(`Optimization search stopped after ${visitedNodes} visited nodes using the '${config.profileLabel}' profile.`);
   if (candidatesLimited) warnings.push("Candidate limits were used; this is the best assignment found within the selected search depth.");
   emitProgress("Scoring best plan", slots.length);
   const result = scorer.result(bestAssignments);
+  for (const plan of result.roomPlans) {
+    plan.assignedOperatorIds.sort(compareOperators);
+    const values = bestAssignments.get(plan.roomId)!;
+    const unassigned = freeIds(bestAssignments);
+    plan.alternativeOperatorIdsBySlot = Array.from({ length: plan.slotCap ?? values.length }, (_, index) => {
+      const original = plan.assignedOperatorIds[index] ?? null;
+      if (original != null && hard.hardAssignedOperatorIds.has(original)) return [];
+      const assignmentIndex = values.indexOf(original);
+      if (assignmentIndex < 0) return [];
+      const alternatives: string[] = [];
+      for (const id of unassigned) {
+        maybeCancel();
+        values[assignmentIndex] = id;
+        if (scorer.score(bestAssignments) === bestScore) alternatives.push(id);
+      }
+      values[assignmentIndex] = original;
+      return alternatives;
+    });
+  }
   result.warnings = uniqueWarnings([...warnings, ...result.warnings]);
   return result;
 }

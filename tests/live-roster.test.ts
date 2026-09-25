@@ -104,6 +104,17 @@ function sourceData() {
 }
 
 describe("automatic live roster updates", () => {
+  it("validates optional limited-banner dates and preserves them across skill-only updates", async () => {
+    const update = buildLiveRosterUpdate(sourceData(), generatedAt);
+    update.operators[0]!.limitedBannerDebut = "2026-08-01";
+    expect(parseLiveRosterUpdate(update).operators[0]!.limitedBannerDebut).toBe("2026-08-01");
+    const catalog = mergeLiveRosterUpdate(await loadDefaultCatalog(), update).catalog;
+    delete update.operators[0]!.limitedBannerDebut;
+    expect(mergeLiveRosterUpdate(catalog, update).catalog.operators.find((operator) => operator.id === "test-operator")?.limitedBannerDebut).toBe("2026-08-01");
+    update.operators[0]!.limitedBannerDebut = "2026-02-31";
+    expect(() => parseLiveRosterUpdate(update)).toThrow("limitedBannerDebut must be an ISO date");
+  });
+
   it("maps the known Dijiang source effect types", () => {
     expect(mapFactorySkillModifier({
       id: "clue",

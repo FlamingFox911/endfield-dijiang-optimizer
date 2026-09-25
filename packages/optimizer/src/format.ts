@@ -70,6 +70,11 @@ export function formatOptimizationResultText(
       lines.push(`  recipe: ${recipeNames.join(", ")}`);
     }
     lines.push(`  operators: ${assignedOperators.join(", ") || "(none)"}`);
+    room.alternativeOperatorIdsBySlot?.forEach((alternatives, index) => {
+      if (alternatives.length === 0) return;
+      const names = alternatives.map((id) => operatorsById.get(id)?.name ?? id);
+      lines.push(`  slot ${index + 1} alternatives (one change at a time): ${names.join(", ")}`);
+    });
 
     const projectedOutputs = Object.entries(room.projectedOutputs)
       .filter(([, value]) => value > 0)
