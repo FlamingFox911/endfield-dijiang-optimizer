@@ -539,6 +539,15 @@ export interface RoomPlan {
 }
 
 export interface OptimizationResult {
+  /** Completion concerns the modeled objective, not the accuracy of game data. */
+  search?: {
+    complete: boolean;
+    visitedNodes: number;
+    /** null for unlimited maximum effort. */
+    maxVisitedNodes: number | null;
+    budgetExceeded: boolean;
+    candidatesLimited: boolean;
+  };
   catalogVersion: CatalogVersion;
   totalScore: number;
   projectedRecipeOutputs: Record<string, number>;
@@ -580,6 +589,8 @@ export interface UpgradeRecommendation {
 }
 
 export interface UpgradeRecommendationResult {
+  searchComplete?: boolean;
+  warnings?: string[];
   catalogVersion: CatalogVersion;
   baselineScore: number;
   rankingMode: UpgradeRankingMode;

@@ -16,6 +16,8 @@ export {
   applyMaxFacilitiesOverlay,
   OptimizationCancelledError,
   normalizeScenario,
+  getOptimizationSearchLimits,
+  getScenarioSearchConfig,
   solveNormalizedScenario,
   solveScenario,
 } from "./solver.js";

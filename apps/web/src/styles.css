@@ -301,16 +301,11 @@ label {
   box-shadow: 0 0 0 3px rgba(30, 90, 114, 0.14);
 }
 
-.toolbarFieldProfile {
-  grid-column: span 3;
-}
-
 .toolbarFieldDemand,
 .toolbarFieldPriorityRecipe {
   grid-column: span 4;
 }
 
-.toolbarFieldEffort,
 .toolbarFieldRanking {
   grid-column: span 4;
 }
@@ -1686,6 +1681,15 @@ dl div {
   margin: 16px 0;
 }
 
+.recommendationProgress > [role="status"] {
+  min-block-size: 2lh;
+}
+
+.recommendationProgress {
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+}
+
 @media (max-width: 1180px) {
   .hero,
   .toolbar,
@@ -1746,9 +1750,7 @@ dl div {
     grid-template-columns: 1fr;
   }
 
-  .toolbarFieldProfile,
   .toolbarFieldDemand,
-  .toolbarFieldEffort,
   .toolbarFieldRanking,
   .toolbarFieldPriorityRecipe,
   .toolbarFieldOverlay {

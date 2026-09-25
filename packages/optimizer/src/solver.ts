@@ -9,6 +9,9 @@ import {
 } from "./config.js";
 import { createAssignmentScorer } from "./assignment-scoring.js";
 import { createOperatorPreference } from "./operator-preference.js";
+import { boundAssignmentSearch } from "./search-space.js";
+import { createSearchTiming } from "./search-timing.js";
+import { searchRoomTeams } from "./team-search.js";
 import type { OptimizationProgressSnapshot, OptimizationSearchConfig, SolveScenarioOptions } from "./types.js";
 
 export interface NormalizedRoom {
@@ -35,12 +38,17 @@ export class OptimizationCancelledError extends Error {
 
 function resolveSearchConfig(
   scenario: OptimizationScenario,
+  limits: ReturnType<typeof boundAssignmentSearch>,
   options?: SolveScenarioOptions,
 ): OptimizationSearchConfig {
+  const nodeLimit = limits.exceedsBoundedBudget ? Number.POSITIVE_INFINITY : limits.nodeUpperBound;
   if (options?.searchConfig) {
     return {
       ...options.searchConfig,
-      effort: clampOptimizationEffort(options.searchConfig.effort),
+      effort: Math.min(limits.maxEffort, clampOptimizationEffort(options.searchConfig.effort)),
+      maxVisitedNodes: options.searchConfig.maxVisitedNodes == null ? null : Math.min(nodeLimit, options.searchConfig.maxVisitedNodes),
+      maxBranchCandidatesPerSlot: options.searchConfig.maxBranchCandidatesPerSlot == null ? null
+        : Math.min(Math.max(1, limits.availableOperators), options.searchConfig.maxBranchCandidatesPerSlot),
     };
   }
 
@@ -48,9 +56,13 @@ function resolveSearchConfig(
   const defaultEffort = profile === "custom"
     ? DEFAULT_OPTIMIZATION_EFFORT
     : OPTIMIZATION_PROFILE_EFFORTS[profile];
-  const effort = clampOptimizationEffort(scenario.options.optimizationEffort ?? defaultEffort);
+  // Maximum is an intent, including when a saved endpoint becomes outdated after
+  // roster/facility edits outside the web UI.
+  const effort = profile === "exhaustive" ? limits.maxEffort
+    : Math.min(limits.maxEffort, clampOptimizationEffort(scenario.options.optimizationEffort ?? defaultEffort));
 
-  return getOptimizationSearchConfig(profile, effort);
+  const config = getOptimizationSearchConfig(profile, effort, limits.maxEffort);
+  return { ...config, maxVisitedNodes: config.maxVisitedNodes == null ? null : Math.min(config.maxVisitedNodes, nodeLimit) };
 }
 
 function uniqueWarnings(warnings: string[]): string[] {
@@ -280,6 +292,25 @@ function cloneAssignedByRoom(assignedByRoom: Map<string, Array<string | null>>) 
   );
 }
 
+function prepareSearchState(catalog: GameCatalog, normalized: NormalizedScenarioResult, warnings: string[]) {
+  const knownIds = new Set(catalog.operators.map((operator) => operator.id));
+  const owned = new Map(normalized.scenario.roster.filter((operator) => operator.owned && knownIds.has(operator.operatorId))
+    .map((operator) => [operator.operatorId, operator]));
+  const hard = buildHardAssignmentState(normalized.scenario, normalized.rooms, owned, warnings);
+  const limits = boundAssignmentSearch(owned.size - hard.hardAssignedOperatorIds.size,
+    [...hard.assignedByRoom.values()].map((assignments) => assignments.filter((id) => id == null).length));
+  return { owned, hard, limits };
+}
+
+/** Includes active facilities and valid hard assignments; safe for every unlock counterfactual. */
+export function getOptimizationSearchLimits(catalog: GameCatalog, scenario: OptimizationScenario) {
+  return prepareSearchState(catalog, normalizeScenario(catalog, scenario), []).limits;
+}
+
+export function getScenarioSearchConfig(catalog: GameCatalog, scenario: OptimizationScenario) {
+  return resolveSearchConfig(scenario, getOptimizationSearchLimits(catalog, scenario));
+}
+
 export function solveNormalizedScenario(
   catalog: GameCatalog,
   normalized: NormalizedScenarioResult,
@@ -287,11 +318,8 @@ export function solveNormalizedScenario(
 ): OptimizationResult {
   const warnings = [...normalized.warnings];
   const { scenario, rooms } = normalized;
-  const config = resolveSearchConfig(scenario, options);
-  const knownIds = new Set(catalog.operators.map((operator) => operator.id));
-  const owned = new Map(scenario.roster.filter((operator) => operator.owned && knownIds.has(operator.operatorId))
-    .map((operator) => [operator.operatorId, operator]));
-  const hard = buildHardAssignmentState(scenario, rooms, owned, warnings);
+  const { owned, hard, limits } = prepareSearchState(catalog, normalized, warnings);
+  const config = resolveSearchConfig(scenario, limits, options);
   const compareOperators = createOperatorPreference(catalog.operators);
   const available = [...owned.keys()].filter((id) => !hard.hardAssignedOperatorIds.has(id)).sort(compareOperators);
   const scorer = createAssignmentScorer(catalog, scenario, rooms);
@@ -311,15 +339,25 @@ export function solveNormalizedScenario(
   let visitedNodes = 0;
   let budgetExceeded = false;
   let candidatesLimited = false;
+  const searchTiming = createSearchTiming(config.maxVisitedNodes);
+  let lastProgressAt = Number.NEGATIVE_INFINITY;
   const maybeCancel = () => {
     if (options?.shouldCancel?.()) throw new OptimizationCancelledError();
   };
   const emitProgress = (phase: string, currentDepth: number) => {
+    if (!options?.onProgress) return;
+    const now = performance.now();
+    // Unlimited searches can visit hundreds of thousands of nodes per second.
+    // Keep worker messages and React updates from consuming that search time.
+    if ((phase === "Searching assignments" || phase === "Scoring room combinations")
+      && visitedNodes > 1 && now - lastProgressAt < 250) return;
+    lastProgressAt = now;
     options?.onProgress?.({
       phase, visitedNodes, totalSlots: slots.length, currentDepth, bestScore,
       maxBranchCandidatesPerSlot: config.maxBranchCandidatesPerSlot,
       profileLabel: config.profileLabel, effort: config.effort,
       maxVisitedNodes: config.maxVisitedNodes,
+      timing: searchTiming.snapshot(visitedNodes),
     } satisfies OptimizationProgressSnapshot);
   };
   const freeIds = (assignment: Map<string, Array<string | null>>) => {
@@ -389,7 +427,7 @@ export function solveNormalizedScenario(
   const assigned = hard.assignedByRoom;
   const dfs = (depth: number, remaining: string[], currentScore: number) => {
     maybeCancel();
-    if (visitedNodes >= config.maxVisitedNodes) {
+    if (config.maxVisitedNodes != null && visitedNodes >= config.maxVisitedNodes) {
       budgetExceeded = true;
       return;
     }
@@ -420,13 +458,16 @@ export function solveNormalizedScenario(
       roomAssignments[slot.index] = null;
       return { id, score };
     }).sort((left, right) => right.score - left.score || compareOperators(left.id, right.id));
-    const largeSearch = remaining.length * (slots.length - depth) > Math.max(20, config.maxBranchCandidatesPerSlot * 10);
-    const limit = largeSearch ? config.maxBranchCandidatesPerSlot : candidates.length;
+    const branchCap = config.maxBranchCandidatesPerSlot;
+    const largeSearch = branchCap != null && remaining.length * (slots.length - depth) > Math.max(20, branchCap * 10);
+    const limit = largeSearch ? branchCap : candidates.length;
+    if (depth === 0) searchTiming.setTotalBranches(Math.min(limit, candidates.length) + 1);
     if (candidates.length > limit) candidatesLimited = true;
     for (const candidate of candidates.slice(0, limit)) {
       if (budgetExceeded) break;
       roomAssignments[slot.index] = candidate.id;
       dfs(depth + 1, remaining.filter((id) => id !== candidate.id), candidate.score);
+      if (depth === 0 && !budgetExceeded) searchTiming.completeBranch();
       roomAssignments[slot.index] = null;
     }
     // Leaving the remainder of ANY room empty is a valid allocation. In
@@ -435,6 +476,7 @@ export function solveNormalizedScenario(
       let nextRoom = depth + 1;
       while (slots[nextRoom]?.roomId === slot.roomId) nextRoom += 1;
       dfs(nextRoom, remaining, currentScore);
+      if (depth === 0 && !budgetExceeded) searchTiming.completeBranch();
     }
   };
   maybeCancel();
@@ -455,7 +497,24 @@ export function solveNormalizedScenario(
     accept(hinted, scorer.score(hinted));
     accept(hinted, greedyFill(hinted));
   }
-  dfs(0, available, scorer.score(hard.assignedByRoom));
+  searchTiming.start();
+  if (config.maxVisitedNodes == null && config.maxBranchCandidatesPerSlot == null) {
+    searchRoomTeams({
+      rooms, available, hardAssignments: hard.assignedByRoom, scorer, compareOperators,
+      best: () => ({ score: bestScore, assignments: bestAssignments, workerCount: bestWorkerCount }),
+      accept, checkCancel: maybeCancel,
+      visit: (depth) => {
+        visitedNodes += 1;
+        if (visitedNodes === 1 || visitedNodes % config.progressIntervalNodes === 0) emitProgress("Searching assignments", depth);
+      },
+      phase: (phase) => emitProgress(phase, 0),
+      rootCount: (count) => searchTiming.setTotalBranches(count),
+      rootComplete: () => searchTiming.completeBranch(),
+    });
+  } else {
+    dfs(0, available, scorer.score(hard.assignedByRoom));
+  }
+  searchTiming.finish();
   maybeCancel();
   emitProgress("Improving best assignment", slots.length);
   // A truncated search should still complete useful empty slots and check local
@@ -521,9 +580,16 @@ export function solveNormalizedScenario(
   }
   maybeCancel();
   if (budgetExceeded) warnings.push(`Optimization search stopped after ${visitedNodes} visited nodes using the '${config.profileLabel}' profile.`);
-  if (candidatesLimited) warnings.push("Candidate limits were used; this is the best assignment found within the selected search depth.");
+  if (candidatesLimited) warnings.push("Candidate limits were used; this is the best assignment found within the selected search effort.");
   emitProgress("Scoring best plan", slots.length);
   const result = scorer.result(bestAssignments);
+  result.search = {
+    complete: !budgetExceeded && !candidatesLimited,
+    visitedNodes,
+    maxVisitedNodes: config.maxVisitedNodes,
+    budgetExceeded,
+    candidatesLimited,
+  };
   for (const plan of result.roomPlans) {
     plan.assignedOperatorIds.sort(compareOperators);
     const values = bestAssignments.get(plan.roomId)!;

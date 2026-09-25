@@ -28,24 +28,36 @@ export interface UpgradeAdvisor {
 export interface OptimizationSearchConfig {
   profileLabel: OptimizationProfile;
   effort: number;
-  maxBranchCandidatesPerSlot: number;
-  maxVisitedNodes: number;
+  /** null means every eligible candidate is considered. */
+  maxBranchCandidatesPerSlot: number | null;
+  /** null means search continues until completion or cancellation. */
+  maxVisitedNodes: number | null;
   progressIntervalNodes: number;
 }
 
 export interface OptimizationProgressSnapshot {
+  timing?: {
+    elapsedMs: number;
+    nodesPerSecond: number | null;
+    estimatedRemainingMs: number | null;
+    estimateBasis: "budget" | "branches" | null;
+    completedBranches: number;
+    totalBranches: number;
+    searchFinished: boolean;
+  };
   phase: string;
   visitedNodes: number;
   totalSlots: number;
   currentDepth: number;
   bestScore: number;
-  maxBranchCandidatesPerSlot: number;
+  maxBranchCandidatesPerSlot: number | null;
   profileLabel: OptimizationProfile;
   effort: number;
-  maxVisitedNodes: number;
+  maxVisitedNodes: number | null;
 }
 
 export interface UpgradeRecommendationProgressSnapshot {
+  assignmentSearch?: OptimizationProgressSnapshot;
   phase: string;
   completedCandidates: number;
   totalCandidates: number;

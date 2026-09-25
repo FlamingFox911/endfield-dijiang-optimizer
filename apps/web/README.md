@@ -18,17 +18,15 @@ Current repo status:
 
 - `Optimize` runs in a dedicated worker and opens a progress modal instead of blocking the page.
 - `Recommend unlocks` also runs in the worker and opens its own progress modal with candidate counts, baseline score, best delta, elapsed time, and cancel.
-- The modal shows approximate node-based progress, current best score, elapsed time, and a cancel action.
-- Optimization effort is saved with the scenario draft and exported/imported JSON.
+- Optimization shows allocation states checked, best score, elapsed time, and Cancel. Recommendations show candidate counts, baseline score, best gain, elapsed time, and Cancel. Completed popups remain open with a completion message until **View results** is selected.
+- Both actions always use unlimited exact assignment search. There is no effort slider or optimization-profile selector. Older draft and imported search settings are upgraded to `exhaustive` with canonical effort 100; roster, facility, demand, and unlock-ranking preferences are preserved.
 - Tied alternatives are included automatically. Hover, focus, or tap a slot's ⇄ icon to see its interchangeable operators. Alternatives apply one change at a time, with other slots fixed.
 - Equal scores prefer limited 6-stars (newest banner debut first), then regular 6-stars, 5-stars, and 4-stars. This never adds points. See [assignment ties](../../docs/optimizer-ties.md).
-- The UI exposes named profiles:
-  - `Fast`
-  - `Balanced`
-  - `Thorough`
-  - `Exhaustive`
-- A `Search effort` slider from `1` to `100` provides granular tuning. Moving the slider away from a preset switches the scenario to `Custom`.
-- `Exhaustive` means the highest configured search budget in the app, not an unconditional guarantee of full exhaustive search on large states.
+- Exact search fixes Control Nexus support, scores room teams, then prunes incompatible allocations and branches whose upper bounds cannot beat the current result. Equivalent orders within a room are counted once. No time, node, or candidate cutoff applies.
+- Recommendations re-solve the baseline and every individual unlock candidate exactly. They rank individual skill-rank targets, not sequences of upgrades.
+- Large searches can still take time; Cancel terminates the worker and preserves previous completed results. Search speed, ETA/status cards, and Control-team counters are omitted from the popup because short runs do not produce useful samples.
+- Results report search completion separately from data confidence. Completed search is optimal for the modeled objective; budget or candidate truncation means only the best assignment found. Unlock recommendations disclose incomplete baseline and candidate searches because these can change gains and rankings. Unlocks are evaluated individually, not as combined upgrade sequences.
+- See [exact search and accuracy](../../docs/search-effort.md) for the proof strategy, exhaustive checks, and model limits.
 
 ## Primary screens
 
@@ -57,6 +55,7 @@ Current repo status:
 
 ## UX priorities
 
+- Optimization and recommendation progress popups stay open after completion with final statistics and a frozen elapsed time. Select **View results** to dismiss the popup.
 - The user should be able to answer "what should I put where?" in one screen.
 - The user should be able to answer "who should I level next for Dijiang?" in the same run.
 - The app should show why a recommendation wins, not only which recommendation wins.

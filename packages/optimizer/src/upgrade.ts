@@ -19,7 +19,7 @@ import {
 } from "@endfield/data";
 
 import { SUPPORT_WEIGHTS } from "./config.js";
-import { solveScenario } from "./solver.js";
+import { getScenarioSearchConfig, solveScenario } from "./solver.js";
 import type { RecommendUpgradesOptions } from "./types.js";
 
 export class UpgradeRecommendationsCancelledError extends Error {
@@ -261,11 +261,28 @@ export function recommendUpgrades(
 
   const rankingMode = resolveRankingMode(scenario.options.upgradeRankingMode);
   maybeCancel();
-  const baseline = options?.baselineResult ?? baselineResult ?? solveScenario(catalog, scenario, { shouldCancel });
   const operatorDefs = new Map(catalog.operators.map((operator) => [operator.id, operator]));
   const actions = getUpgradeActions(catalog, scenario);
+  const suppliedBaseline = options?.baselineResult ?? baselineResult;
+  const requireComplete = getScenarioSearchConfig(catalog, scenario).maxVisitedNodes == null;
+  // Maximum effort must not inherit uncertainty from a previously bounded run.
+  const baseline = suppliedBaseline && (!requireComplete || suppliedBaseline.search?.complete)
+    ? suppliedBaseline
+    : solveScenario(catalog, scenario, {
+      shouldCancel,
+      initialAssignments: suppliedBaseline?.roomPlans,
+      onProgress: (assignmentSearch) => options?.onProgress?.({
+        phase: "Optimizing baseline assignments",
+        completedCandidates: 0,
+        totalCandidates: actions.length,
+        baselineScore: assignmentSearch.bestScore,
+        bestScoreDelta: 0,
+        assignmentSearch,
+      }),
+    });
   let completedCandidates = 0;
   let bestScoreDelta = Number.NEGATIVE_INFINITY;
+  let incompleteCandidates = 0;
 
   options?.onProgress?.({
     phase: "Evaluating unlock candidates",
@@ -279,7 +296,18 @@ export function recommendUpgrades(
     .map((action) => {
       maybeCancel();
       const upgradedScenario = applyUpgradeActionToScenario(scenario, action);
-      const upgradedResult = solveScenario(catalog, upgradedScenario, { shouldCancel, initialAssignments: baseline.roomPlans });
+      const upgradedResult = solveScenario(catalog, upgradedScenario, {
+        shouldCancel,
+        initialAssignments: baseline.roomPlans,
+        onProgress: (assignmentSearch) => options?.onProgress?.({
+          phase: `Searching unlock ${completedCandidates + 1} of ${actions.length}`,
+          completedCandidates,
+          totalCandidates: actions.length,
+          baselineScore: baseline.totalScore,
+          bestScoreDelta: Number.isFinite(bestScoreDelta) ? bestScoreDelta : 0,
+          assignmentSearch,
+        }),
+      });
       const scoreDelta = upgradedResult.totalScore - baseline.totalScore;
       const projectedOutputChanges = (Object.keys(baseline.projectedOutputs) as ProductKind[])
         .map((productKind) => ({
@@ -292,6 +320,10 @@ export function recommendUpgrades(
       const operatorDef = operatorDefs.get(action.operatorId);
       const estimatedDaysToUnlock = effortScore / SUPPORT_WEIGHTS.estimatedEffortPerDay;
       const notes = operatorDef ? [`Operator: ${operatorDef.name}`] : [];
+      if (!upgradedResult.search?.complete) incompleteCandidates += 1;
+      if (!baseline.search?.complete || !upgradedResult.search?.complete) {
+        notes.push("Assignment search is incomplete or unverified; this estimated gain and its ranking may change with more search effort.");
+      }
       completedCandidates += 1;
       bestScoreDelta = Math.max(bestScoreDelta, scoreDelta);
 
@@ -324,7 +356,7 @@ export function recommendUpgrades(
         notes.push("No bundled upgrade cost data exists yet; ROI falls back to score delta.");
       }
       if (scoreDelta <= 0) {
-        notes.push("This unlock does not improve the current assignment result immediately.");
+        notes.push("No immediate improvement was found for this unlock at the selected search effort.");
       }
 
       options?.onProgress?.({
@@ -348,6 +380,11 @@ export function recommendUpgrades(
     .sort((left, right) => compareRecommendations(rankingMode, left, right));
 
   return {
+    searchComplete: Boolean(baseline.search?.complete) && incompleteCandidates === 0,
+    warnings: [
+      ...(!baseline.search?.complete ? ["Baseline assignment search is incomplete or unverified; unlock gains may be overestimated or underestimated."] : []),
+      ...(incompleteCandidates > 0 ? [`${incompleteCandidates} unlock candidate search(es) did not complete. Gains and rankings may change with more search effort.`] : []),
+    ],
     catalogVersion: scenario.catalogVersion,
     baselineScore: baseline.totalScore,
     rankingMode,

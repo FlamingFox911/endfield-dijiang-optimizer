@@ -5,7 +5,6 @@ import type {
   GameCatalog,
   LiveRosterUpdateDocument,
   MaterialCost,
-  OptimizationProfile,
   OptimizationResult,
   OptimizationScenario,
   ProductKind,
@@ -37,12 +36,8 @@ import {
 } from "@endfield/data";
 import type { SkportRosterImportPreview } from "@endfield/data";
 import {
-  DEFAULT_OPTIMIZATION_EFFORT,
-  DEFAULT_OPTIMIZATION_PROFILE,
   MAX_OPTIMIZATION_EFFORT,
-  OPTIMIZATION_PROFILE_EFFORTS,
-  clampOptimizationEffort,
-  getOptimizationSearchConfig,
+  getScenarioSearchConfig,
   formatScorePoints,
   formatProjectedOutputChange,
 } from "@endfield/optimizer";
@@ -59,7 +54,6 @@ const DRAFT_KEY = "endfield-dijiang-optimizer:draft";
 const CATALOG_SYNC_SEEN_KEY = "endfield-dijiang-optimizer:catalog-sync-seen";
 const MAX_IMPORT_FILE_BYTES = 1_000_000;
 const MAX_SKPORT_IMPORT_FILE_BYTES = 50_000_000;
-const OPTIMIZATION_PROFILES: Exclude<OptimizationProfile, "custom">[] = ["fast", "balanced", "thorough", "exhaustive"];
 const DEMAND_WEIGHT_ORDER: ProductKind[] = [
   "operator_exp",
   "weapon_exp",
@@ -209,12 +203,14 @@ type RosterFacilityFilter = "all" | GameCatalog["operators"][number]["baseSkills
 interface OptimizationRunState {
   runId: number;
   startedAt: number;
+  completedAt?: number;
   progress: OptimizationProgressSnapshot;
 }
 
 interface RecommendationRunState {
   runId: number;
   startedAt: number;
+  completedAt?: number;
   progress: UpgradeRecommendationProgressSnapshot;
 }
 
@@ -1034,18 +1030,14 @@ function getRankLabel(
   return `${label.charAt(0).toUpperCase()}${label.slice(1)} (${getSkillBadgeLabel(skill, rank)})`;
 }
 
-function getCanonicalEffortForProfile(profile: Exclude<OptimizationProfile, "custom">): number {
-  return OPTIMIZATION_PROFILE_EFFORTS[profile];
-}
-
-function getScenarioSearchConfig(scenario: OptimizationScenario) {
-  const profile = scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE;
-  const fallbackEffort = profile === "custom"
-    ? DEFAULT_OPTIMIZATION_EFFORT
-    : getCanonicalEffortForProfile(profile);
-  const effort = clampOptimizationEffort(scenario.options.optimizationEffort ?? fallbackEffort);
-
-  return getOptimizationSearchConfig(profile, effort);
+// Old drafts and imports may carry bounded search settings. The web app always
+// requests the complete assignment search, including every unlock counterfactual.
+function withExactSearch(scenario: OptimizationScenario): OptimizationScenario {
+  return { ...scenario, options: {
+    ...scenario.options,
+    optimizationProfile: "exhaustive",
+    optimizationEffort: MAX_OPTIMIZATION_EFFORT,
+  } };
 }
 
 function getAvailableHardAssignmentOperatorIds(
@@ -1078,21 +1070,6 @@ function formatElapsedTime(valueMs: number): string {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-}
-
-function getOptimizationProfileSummary(profile: OptimizationProfile): string {
-  switch (profile) {
-    case "fast":
-      return "Quickest estimate";
-    case "balanced":
-      return "Recommended default";
-    case "thorough":
-      return "Searches more assignments";
-    case "exhaustive":
-      return "Slowest; may still stop at the search budget";
-    case "custom":
-      return "Custom search budget";
-  }
 }
 
 function getUpgradeRankingModeSummary(mode: "balanced" | "roi" | "fastest"): string {
@@ -1197,7 +1174,7 @@ function App() {
         if (!savedDraft) {
           const starterScenario = createStarterScenario(nextCatalog);
           setCatalog(nextCatalog);
-          setScenario(starterScenario);
+          setScenario(withExactSearch(starterScenario));
           saveScenarioDraft(starterScenario);
           setMessages(rosterMessages);
           return;
@@ -1206,7 +1183,7 @@ function App() {
         const migration = migrateScenario(savedDraftInput);
         const hydration = hydrateScenarioForCatalog(nextCatalog, migration.scenario);
         setCatalog(nextCatalog);
-        setScenario(hydration.scenario);
+        setScenario(withExactSearch(hydration.scenario));
         saveScenarioDraft(hydration.scenario);
         setMessages([
           ...rosterMessages,
@@ -1306,7 +1283,7 @@ function App() {
       return;
     }
 
-    setScenario(hydration.scenario);
+    setScenario(withExactSearch(hydration.scenario));
     setMessages((current) => [...summarizeHydration(hydration, false), ...current]);
   }, [catalog, scenario]);
 
@@ -1322,6 +1299,11 @@ function App() {
       return;
     }
 
+    if (activeRun.completedAt != null) {
+      setElapsedMs(activeRun.completedAt - activeRun.startedAt);
+      return;
+    }
+
     setElapsedMs(Date.now() - activeRun.startedAt);
     const timer = window.setInterval(() => {
       setElapsedMs(Date.now() - activeRun.startedAt);
@@ -1331,7 +1313,6 @@ function App() {
   }, [optimizationRun, recommendationRun]);
 
   const deferredSearch = useDeferredValue(search);
-
   const defaultSortedOperators = useMemo(
     () => [...(catalog?.operators ?? [])].sort(compareOperatorsByDefaultOrder),
     [catalog],
@@ -1652,35 +1633,6 @@ function App() {
     }));
   };
 
-  const setOptimizationProfile = (profile: OptimizationProfile) => {
-    updateScenario((current) => ({
-      ...current,
-      options: {
-        ...current.options,
-        optimizationProfile: profile,
-        optimizationEffort: profile === "custom"
-          ? clampOptimizationEffort(current.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)
-          : getCanonicalEffortForProfile(profile),
-      },
-    }));
-  };
-
-  const setOptimizationEffort = (effort: number) => {
-    const clampedEffort = clampOptimizationEffort(effort);
-    const matchingProfile = OPTIMIZATION_PROFILES.find(
-      (profile) => getCanonicalEffortForProfile(profile) === clampedEffort,
-    );
-
-    updateScenario((current) => ({
-      ...current,
-      options: {
-        ...current.options,
-        optimizationEffort: clampedEffort,
-        optimizationProfile: matchingProfile ?? "custom",
-      },
-    }));
-  };
-
   const setDemandPreset = (preset: DemandProfilePreset) => {
     updateDemandProfile((current) => ({
       ...current,
@@ -1719,12 +1671,39 @@ function App() {
     activeRunKindRef.current = null;
   };
 
+  const finishRecommendations = (runId: number, completedResult: UpgradeRecommendationResult) => {
+    stopActiveWorker();
+    const completedAt = Date.now();
+    setRecommendationRun((current) => current && current.runId === runId ? {
+      ...current,
+      completedAt,
+      progress: {
+        ...current.progress,
+        completedCandidates: completedResult.recommendations.length,
+        totalCandidates: completedResult.recommendations.length,
+        baselineScore: completedResult.baselineScore,
+        bestScoreDelta: completedResult.recommendations.length
+          ? Math.max(...completedResult.recommendations.map((recommendation) => recommendation.scoreDelta))
+          : 0,
+      },
+    } : current);
+    setRecommendations(completedResult);
+    setMessages([]);
+    setActiveTab("results");
+  };
+
+  const viewCompletedResults = () => {
+    setOptimizationRun(null);
+    setRecommendationRun(null);
+    setActiveTab("results");
+  };
+
   const launchOptimization = () => {
     stopActiveWorker();
 
     const runId = nextRunIdRef.current;
     nextRunIdRef.current += 1;
-    const searchConfig = getScenarioSearchConfig(scenario);
+    const searchConfig = getScenarioSearchConfig(catalog, scenario);
     const worker = createOptimizerWorker();
     workerRef.current = worker;
     activeRunIdRef.current = runId;
@@ -1763,7 +1742,16 @@ function App() {
 
       if (message.type === "optimization-completed") {
         stopActiveWorker();
-        setOptimizationRun(null);
+        const completedAt = Date.now();
+        setOptimizationRun((current) => current && current.runId === message.runId ? {
+          ...current,
+          completedAt,
+          progress: {
+            ...current.progress,
+            visitedNodes: message.result.search?.visitedNodes ?? current.progress.visitedNodes,
+            bestScore: message.result.totalScore,
+          },
+        } : current);
         setMessages(message.result.warnings);
         setResult(message.result);
         setActiveTab("results");
@@ -1778,11 +1766,7 @@ function App() {
       }
 
       if (message.type === "recommendations-completed") {
-        stopActiveWorker();
-        setRecommendationRun(null);
-        setRecommendations(message.result);
-        setMessages([]);
-        setActiveTab("results");
+        finishRecommendations(message.runId, message.result);
         return;
       }
 
@@ -1855,11 +1839,7 @@ function App() {
       }
 
       if (message.type === "recommendations-completed") {
-        stopActiveWorker();
-        setRecommendationRun(null);
-        setRecommendations(message.result);
-        setMessages([]);
-        setActiveTab("results");
+        finishRecommendations(message.runId, message.result);
         return;
       }
 
@@ -2018,7 +1998,7 @@ function App() {
       return;
     }
     const imported = applySkportRosterImport(scenario, preview);
-    setScenario(imported.scenario);
+    setScenario(withExactSearch(imported.scenario));
     setMessages([
       `Imported ${imported.updatedOperatorCount} matched operator${imported.updatedOperatorCount === 1 ? "" : "s"} from SKPort${imported.clearedOperatorCount > 0 ? ` and marked ${imported.clearedOperatorCount} absent operator${imported.clearedOperatorCount === 1 ? "" : "s"} unowned` : ""}.`,
       ...imported.warnings,
@@ -2049,7 +2029,7 @@ function App() {
       if (!importedValidation.ok) {
         throw new Error(importedValidation.issues.map((issue) => issue.message).join(" "));
       }
-      setScenario(hydration.scenario);
+      setScenario(withExactSearch(hydration.scenario));
       setMessages([
         migration.migrated ? `Imported scenario and migrated it from format ${migration.fromFormatVersion} to ${migration.toFormatVersion}.` : "Imported scenario.",
         ...summarizeHydration(hydration),
@@ -2098,32 +2078,6 @@ function App() {
 
       <section className="toolbar">
         <div className="toolbarGrid">
-          <label className="pill compact toolbarField toolbarFieldProfile">
-            <span>Optimization profile</span>
-            <select value={scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE} onChange={(event) => setOptimizationProfile(event.target.value as OptimizationProfile)}>
-              {OPTIMIZATION_PROFILES.map((profile) => <option key={profile} value={profile}>{formatLabel(profile)}</option>)}
-              <option value="custom">Custom</option>
-            </select>
-          </label>
-          <label className="pill rangePill toolbarField toolbarFieldEffort">
-              <span className="labelWithHelp">
-                <span>Search depth</span>
-                <HelpPopover
-                  label="?"
-                  assistiveLabel={`Controls how much assignment search the solver performs before stopping. Current depth: ${clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)} out of ${MAX_OPTIMIZATION_EFFORT}.`}
-                  content={"Controls how much of the assignment search space the solver explores before stopping.\n\nHigher values usually improve solution quality, but take longer.\nThe selected optimization profile still sets the search strategy; this slider tunes effort within that profile."}
-                />
-              </span>
-            <input
-              type="range"
-              min={1}
-              max={MAX_OPTIMIZATION_EFFORT}
-              value={clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)}
-              onChange={(event) => setOptimizationEffort(Number(event.target.value))}
-            />
-            <strong>{clampOptimizationEffort(scenario.options.optimizationEffort ?? DEFAULT_OPTIMIZATION_EFFORT)}/{MAX_OPTIMIZATION_EFFORT}</strong>
-            <small>{getOptimizationProfileSummary(scenario.options.optimizationProfile ?? DEFAULT_OPTIMIZATION_PROFILE)}</small>
-          </label>
           <label className="pill toolbarField toolbarFieldDemand">
             <span className="labelWithHelp">
               <span>Demand profile</span>
@@ -2264,28 +2218,28 @@ function App() {
             <div className="panelHeader">
               <div>
                 <p className="eyebrow">Optimization progress</p>
-                <h2>{formatLabel(optimizationRun.progress.profileLabel)}</h2>
+                <h2>Best assignment</h2>
               </div>
               <span className="miniStat">{formatElapsedTime(elapsedMs)}</span>
             </div>
-            <p className="status">{optimizationRun.progress.phase}</p>
+            <p className="status" role="status">{optimizationRun.completedAt != null
+              ? "Optimization complete. Your results are ready."
+              : optimizationRun.progress.phase}</p>
             <div className="heroMetaGrid modalStats">
-              <div><span>Visited nodes</span><strong>{optimizationRun.progress.visitedNodes}</strong></div>
+              <div><span>Allocation states checked</span><strong>{optimizationRun.progress.visitedNodes.toLocaleString()}</strong></div>
               <div><span>Best score (pts)</span><strong>{formatScorePoints(optimizationRun.progress.bestScore)}</strong></div>
-              <div><span>Depth</span><strong>{optimizationRun.progress.currentDepth} / {Math.max(optimizationRun.progress.totalSlots, 0)}</strong></div>
-              <div><span>Branch cap</span><strong>{optimizationRun.progress.maxBranchCandidatesPerSlot}</strong></div>
-              <div><span>Node budget</span><strong>{optimizationRun.progress.maxVisitedNodes}</strong></div>
-              <div><span>Effort</span><strong>{optimizationRun.progress.effort}/{MAX_OPTIMIZATION_EFFORT}</strong></div>
             </div>
-            <p className="warningText">{getOptimizationProfileSummary(optimizationRun.progress.profileLabel)}</p>
-            <button type="button" onClick={cancelOptimization}>Cancel</button>
+            {optimizationRun.completedAt == null && <p className="status">Searching for the optimal assignment for your roster, rooms, and priorities.</p>}
+            {optimizationRun.completedAt != null
+              ? <button type="button" onClick={viewCompletedResults}>View results</button>
+              : <button type="button" onClick={cancelOptimization}>Cancel</button>}
           </div>
         </section>
       )}
 
       {recommendationRun && (
         <section className="modalBackdrop">
-          <div className="modalCard" role="dialog" aria-modal="true" aria-label="Recommendation progress">
+          <div className="modalCard recommendationProgress" role="dialog" aria-modal="true" aria-label="Recommendation progress">
             <div className="panelHeader">
               <div>
                 <p className="eyebrow">Recommendation progress</p>
@@ -2293,13 +2247,17 @@ function App() {
               </div>
               <span className="miniStat">{formatElapsedTime(elapsedMs)}</span>
             </div>
-            <p className="status">{recommendationRun.progress.phase}</p>
+            <p className="status" role="status">{recommendationRun.completedAt != null
+              ? "Recommendations complete. Your results are ready."
+              : recommendationRun.progress.phase}</p>
             <div className="heroMetaGrid modalStats">
               <div><span>Candidates</span><strong>{recommendationRun.progress.completedCandidates} / {recommendationRun.progress.totalCandidates}</strong></div>
               <div><span>Baseline score (pts)</span><strong>{formatScorePoints(recommendationRun.progress.baselineScore)}</strong></div>
               <div><span>Best score gain (pts)</span><strong>{formatScorePoints(recommendationRun.progress.bestScoreDelta, true)}</strong></div>
             </div>
-            <button type="button" onClick={cancelOptimization}>Cancel</button>
+            {recommendationRun.completedAt != null
+              ? <button type="button" onClick={viewCompletedResults}>View results</button>
+              : <button type="button" onClick={cancelOptimization}>Cancel</button>}
           </div>
         </section>
       )}
@@ -3220,6 +3178,9 @@ function App() {
 
             {result ? (
               <div className="resultWorkspace">
+                {result.search && <p className="status">{result.search.complete
+                  ? "Search complete: optimal for the current modeled objective."
+                  : "Best assignment found; optimality not proven. More search effort may find a better plan."} {result.search.visitedNodes.toLocaleString()} states visited.</p>}
                 {optimizationSearchWarning && (
                   <article className="resultSummary resultAlertSummary">
                     <div className="panelHeader panelHeaderWide">
@@ -3376,6 +3337,10 @@ function App() {
 
             {recommendations && (
               <div className="recommendationStack">
+                {recommendations.searchComplete != null && <p className="status">{recommendations.searchComplete
+                  ? "All assignment searches complete for the modeled objective. Unlocks are evaluated individually."
+                  : "Unlock gains are estimates from incomplete or unverified assignment searches; rankings may change."}</p>}
+                {recommendations.warnings?.map((warning) => <p className="warningText" key={warning}>{warning}</p>)}
                 <div className="panelHeader panelHeaderWide">
                   <div>
                     <p className="eyebrow">Recommendations</p>

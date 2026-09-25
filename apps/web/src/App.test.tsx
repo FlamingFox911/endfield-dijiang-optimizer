@@ -123,8 +123,6 @@ function getVisiblePortraitNames(container: HTMLElement): string[] {
 }
 
 describe("App", () => {
-  const getOptimizationProfileSelect = () => screen.getByText("Optimization profile").closest("label")!.querySelector("select") as HTMLSelectElement;
-  const getSearchEffortSlider = () => screen.getByText("Search depth").closest("label")!.querySelector('input[type="range"]') as HTMLInputElement;
   const getDemandProfileSelect = () => screen.getByText("Demand profile").closest("label")!.querySelector("select") as HTMLSelectElement;
   const getPriorityRecipeSelect = () => screen.getByText("Priority recipe").closest("label")!.querySelector("select") as HTMLSelectElement;
   const getRosterSortSelect = () => screen.getByText("Sort roster").closest("label")!.querySelector("select") as HTMLSelectElement;
@@ -258,11 +256,18 @@ describe("App", () => {
     const ownedToggles = await screen.findAllByRole("checkbox", { name: "Owned" });
     await userEvent.click(ownedToggles[0]!);
     expect(screen.queryByRole("checkbox", { name: /Show tied options/ })).not.toBeInTheDocument();
+    const now = vi.spyOn(Date, "now").mockReturnValue(1_000);
+    const setInterval = vi.spyOn(window, "setInterval");
+    const clearInterval = vi.spyOn(window, "clearInterval");
     await userEvent.click(screen.getByRole("button", { name: "Optimize" }));
 
     expect(screen.getByRole("dialog", { name: "Optimization progress" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Optimize" })).toBeDisabled();
+    const elapsedTimer = setInterval.mock.results.at(-1)!.value;
+    setInterval.mockClear();
+    clearInterval.mockClear();
 
+    now.mockReturnValue(6_000);
     act(() => {
       workerInstances[0]!.emit({
         type: "optimization-completed",
@@ -270,6 +275,7 @@ describe("App", () => {
         result: {
           catalogVersion: "2026-04-17/v1.2",
           totalScore: 42,
+          search: { complete: true, visitedNodes: 1234, maxVisitedNodes: null, budgetExceeded: false, candidatesLimited: false },
           projectedRecipeOutputs: {},
           projectedOutputs: {
             operator_exp: 0,
@@ -313,6 +319,19 @@ describe("App", () => {
       });
     });
 
+    const completedDialog = screen.getByRole("dialog", { name: "Optimization progress" });
+    expect(within(completedDialog).getByRole("status")).toHaveTextContent("Optimization complete. Your results are ready.");
+    expect(within(completedDialog).getByText("42,000")).toBeInTheDocument();
+    expect(within(completedDialog).getByText("1,234")).toBeInTheDocument();
+    expect(within(completedDialog).getByText("0:05")).toBeInTheDocument();
+    expect(within(completedDialog).queryByRole("button", { name: "Cancel" })).not.toBeInTheDocument();
+    expect(workerInstances[0]!.terminate).toHaveBeenCalledTimes(1);
+    expect(clearInterval).toHaveBeenCalledWith(elapsedTimer);
+    expect(setInterval).not.toHaveBeenCalled();
+    now.mockRestore();
+    setInterval.mockRestore();
+    clearInterval.mockRestore();
+    await userEvent.click(within(completedDialog).getByRole("button", { name: "View results" }));
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "Optimization progress" })).not.toBeInTheDocument();
       expect(screen.getByText("Why this wins")).toBeInTheDocument();
@@ -419,6 +438,8 @@ describe("App", () => {
       });
     });
 
+    await userEvent.click(screen.getByRole("button", { name: "View results" }));
+
     await waitFor(() => {
       expect(screen.getByText("Why this wins")).toBeInTheDocument();
     });
@@ -497,13 +518,114 @@ describe("App", () => {
     expect(screen.queryByText("Snapshot")).not.toBeInTheDocument();
     expect(screen.queryByText("Source refs")).not.toBeInTheDocument();
     expect(screen.queryByText("Known data gaps")).not.toBeInTheDocument();
-    expect(screen.getByText("Search depth")).toBeInTheDocument();
+    expect(screen.queryByText("Search effort")).not.toBeInTheDocument();
+    expect(screen.queryByText("Optimization profile")).not.toBeInTheDocument();
 
     const headerStats = screen.getByText("Catalog sync").closest(".heroStats");
     expect(headerStats).not.toBeNull();
     expect(headerStats).toHaveTextContent("Owned operators");
     expect(headerStats).toHaveTextContent("Recipes");
     expect(headerStats?.children).toHaveLength(6);
+  });
+
+  it.each(["fast", "custom", "thorough"])("replaces saved %s settings with exact search and keeps it after roster edits", async (profile) => {
+    seedDraft(operators.operators.slice(0, 8).map((operator) => operator.id));
+    const key = "endfield-dijiang-optimizer:draft";
+    const draft = JSON.parse(localStorage.getItem(key)!);
+    draft.options.optimizationProfile = profile;
+    draft.options.optimizationEffort = 1;
+    localStorage.setItem(key, JSON.stringify(draft));
+    render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+    expect(JSON.parse(localStorage.getItem(key)!).options).toMatchObject({ optimizationProfile: "exhaustive", optimizationEffort: 100 });
+    expect(screen.queryByText("Search effort")).not.toBeInTheDocument();
+    expect(screen.queryByText("Optimization profile")).not.toBeInTheDocument();
+    await userEvent.click(getPortraitTile(operators.operators[0]!.name));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Owned" }));
+    expect(JSON.parse(localStorage.getItem(key)!).options).toMatchObject({ optimizationProfile: "exhaustive", optimizationEffort: 100 });
+  });
+
+  it("runs unlimited search by default and cancels optimization and recommendations", async () => {
+    seedDraft(operators.operators.map((operator) => operator.id));
+    render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.click(screen.getByRole("button", { name: "Optimize" }));
+    if (screen.queryByRole("dialog", { name: "Proceed with warnings" })) {
+      await userEvent.click(screen.getByRole("button", { name: "Proceed" }));
+    }
+    expect(workerInstances[0]!.postMessage).toHaveBeenCalledWith(expect.objectContaining({
+      type: "start-optimization",
+      searchConfig: expect.objectContaining({ maxVisitedNodes: null, maxBranchCandidatesPerSlot: null }),
+    }));
+    expect(screen.queryByText("Search speed")).not.toBeInTheDocument();
+    expect(screen.queryByText("Search status")).not.toBeInTheDocument();
+    expect(screen.queryByText("Control teams finished")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(workerInstances[0]!.terminate).toHaveBeenCalled();
+    expect(screen.queryByRole("dialog", { name: "Optimization progress" })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Recommend unlocks" }));
+    if (screen.queryByRole("dialog", { name: "Proceed with warnings" })) {
+      await userEvent.click(screen.getByRole("button", { name: "Proceed" }));
+    }
+    expect(workerInstances[1]!.postMessage).toHaveBeenCalledWith(expect.objectContaining({
+      type: "start-recommendations",
+      scenario: expect.objectContaining({ options: expect.objectContaining({ optimizationProfile: "exhaustive" }) }),
+    }));
+    act(() => workerInstances[1]!.emit({
+      type: "recommendations-progress", runId: 2,
+      progress: {
+        phase: "Optimizing baseline assignments", completedCandidates: 0, totalCandidates: 4, baselineScore: 1, bestScoreDelta: 0,
+        assignmentSearch: { phase: "Searching assignments", visitedNodes: 1_000, totalSlots: 6, currentDepth: 3,
+          bestScore: 1, maxBranchCandidatesPerSlot: null, maxVisitedNodes: null, profileLabel: "exhaustive", effort: 100 },
+      },
+    }));
+    expect(screen.queryByText("Search speed")).not.toBeInTheDocument();
+    expect(screen.queryByText("Search status")).not.toBeInTheDocument();
+    expect(screen.queryByText("Control teams finished")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(workerInstances[1]!.terminate).toHaveBeenCalled();
+    expect(screen.queryByRole("dialog", { name: "Recommendation progress" })).not.toBeInTheDocument();
+  });
+
+  it("keeps recommendation summary metrics mounted between candidates without per-search timing", async () => {
+    render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.click((await screen.findAllByRole("checkbox", { name: "Owned" }))[0]!);
+    await userEvent.click(screen.getByRole("button", { name: "Recommend unlocks" }));
+    const dialog = screen.getByRole("dialog", { name: "Recommendation progress" });
+    const summary = {
+      phase: "Evaluating unlock candidates", completedCandidates: 1, totalCandidates: 2, baselineScore: 1, bestScoreDelta: 0.1,
+    };
+    const search = {
+      phase: "Searching assignments", visitedNodes: 1000, totalSlots: 6, currentDepth: 3,
+      bestScore: 1, maxBranchCandidatesPerSlot: null, maxVisitedNodes: null, profileLabel: "exhaustive" as const, effort: 100,
+    };
+    act(() => workerInstances[0]!.emit({
+      type: "recommendations-progress", runId: 1,
+      progress: { ...summary, completedCandidates: 0, phase: "Searching unlock 1 of 2", assignmentSearch: { ...search, timing: {
+        elapsedMs: 1000, nodesPerSecond: 1000, estimatedRemainingMs: 1000, estimateBasis: "branches",
+        completedBranches: 1, totalBranches: 2, searchFinished: false,
+      } } },
+    }));
+    const candidatesLabel = within(dialog).getByText("Candidates");
+    const statCount = dialog.querySelectorAll(".modalStats > div").length;
+    expect(statCount).toBe(3);
+    act(() => workerInstances[0]!.emit({ type: "recommendations-progress", runId: 1, progress: summary }));
+    expect(within(dialog).getByText("Candidates")).toBe(candidatesLabel);
+    expect(candidatesLabel.parentElement).toHaveTextContent("1 / 2");
+    expect(dialog.querySelectorAll(".modalStats > div")).toHaveLength(statCount);
+    expect(within(dialog).getByRole("status")).toHaveTextContent("Evaluating unlock candidates");
+    act(() => workerInstances[0]!.emit({
+      type: "recommendations-progress", runId: 1,
+      progress: { ...summary, phase: "Searching unlock 2 of 2", assignmentSearch: { ...search, visitedNodes: 0 } },
+    }));
+    expect(within(dialog).getByText("Candidates")).toBe(candidatesLabel);
+    expect(dialog.querySelectorAll(".modalStats > div")).toHaveLength(statCount);
+    expect(within(dialog).queryByText("Search speed")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("Search status")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("Control teams finished")).not.toBeInTheDocument();
+    await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
   });
 
   it("filters the roster by owned state, facility focus, and search text", async () => {
@@ -631,6 +753,8 @@ describe("App", () => {
       });
     });
 
+    await userEvent.click(screen.getByRole("button", { name: "View results" }));
+
     const recommendationCard = await screen.findByText("Blade Critique");
     expect(requireHtmlElement(recommendationCard.closest(".resultCard"))).not.toBeNull();
     expect(screen.getByAltText("Blade Critique icon")).toBeInTheDocument();
@@ -688,6 +812,8 @@ describe("App", () => {
         },
       });
     });
+
+    await userEvent.click(screen.getByRole("button", { name: "View results" }));
 
     const recommendationCard = requireHtmlElement((await screen.findByText("Blade Critique")).closest(".resultCard"));
     expect(within(recommendationCard).queryByText(/Current Elite 1 Lv40/)).not.toBeInTheDocument();
@@ -1039,6 +1165,8 @@ describe("App", () => {
       });
     });
 
+    await userEvent.click(screen.getByRole("button", { name: "View results" }));
+
     await waitFor(() => {
       expect(screen.getByText("Why this wins")).toBeInTheDocument();
     });
@@ -1106,6 +1234,15 @@ describe("App", () => {
       });
     });
 
+    const completedDialog = screen.getByRole("dialog", { name: "Recommendation progress" });
+    expect(within(completedDialog).getByRole("status")).toHaveTextContent("Recommendations complete. Your results are ready.");
+    expect(within(completedDialog).getByText("1 / 1")).toBeInTheDocument();
+    expect(within(completedDialog).getByText(displayedGain)).toBeInTheDocument();
+    expect(within(completedDialog).queryByRole("button", { name: "Cancel" })).not.toBeInTheDocument();
+    expect(workerInstances[0]!.terminate).toHaveBeenCalledTimes(1);
+    await userEvent.click(within(completedDialog).getByRole("button", { name: "View results" }));
+    expect(screen.queryByRole("dialog", { name: "Recommendation progress" })).not.toBeInTheDocument();
+
     await waitFor(() => {
       expect(screen.getByText("Next unlocks")).toBeInTheDocument();
     });
@@ -1164,6 +1301,8 @@ describe("App", () => {
         },
       });
     });
+
+    await userEvent.click(screen.getByRole("button", { name: "View results" }));
 
     const recommendationCard = (await screen.findByText("Blade Critique")).closest(".resultCard") as HTMLElement;
     const badge = within(recommendationCard).getByLabelText(/Blade Critique:/);
@@ -1349,8 +1488,10 @@ describe("App", () => {
     });
 
     await waitFor(() => {
-      expect(getOptimizationProfileSelect()).toHaveValue("custom");
-      expect(getSearchEffortSlider()).toHaveValue("17");
+      expect(screen.getByText(/^Imported scenario/)).toBeInTheDocument();
+      const saved = JSON.parse(localStorage.getItem("endfield-dijiang-optimizer:draft")!);
+      expect(saved.options).toMatchObject({ optimizationProfile: "exhaustive", optimizationEffort: 100 });
+      expect(saved.facilities.manufacturingCabins[0].level).toBe(2);
     });
   });
 
@@ -1435,7 +1576,7 @@ describe("App", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/references unknown recipe/i)).toBeInTheDocument();
-      expect(getOptimizationProfileSelect()).toHaveValue("balanced");
+      expect(JSON.parse(localStorage.getItem("endfield-dijiang-optimizer:draft")!).options.optimizationProfile).toBe("exhaustive");
     });
   });
 
@@ -1477,7 +1618,7 @@ describe("App", () => {
     });
   });
 
-  it("normalizes older drafts so the second manufacturing cabin is visible and keeps optimization effort", async () => {
+  it("normalizes older drafts and caps optimization effort for an empty roster", async () => {
     localStorage.setItem(
       "endfield-dijiang-optimizer:draft",
       JSON.stringify({
@@ -1506,8 +1647,7 @@ describe("App", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Manufacturing Cabin 2")).toBeInTheDocument();
-      expect(getOptimizationProfileSelect()).toHaveValue("thorough");
-      expect(getSearchEffortSlider()).toHaveValue("14");
+      expect(JSON.parse(localStorage.getItem("endfield-dijiang-optimizer:draft")!).options).toMatchObject({ optimizationProfile: "exhaustive", optimizationEffort: 100 });
     });
   });
 
@@ -1641,6 +1781,8 @@ describe("App", () => {
         },
       });
     });
+
+    await userEvent.click(screen.getByRole("button", { name: "View results" }));
 
     await screen.findByText("77,000");
 

@@ -109,7 +109,7 @@ const OPTIMIZATION_PROFILE_EFFORTS: Record<Exclude<OptimizationProfile, "custom"
   fast: 8,
   balanced: 18,
   thorough: 30,
-  exhaustive: 45,
+  exhaustive: 100,
 };
 export const DEMAND_PROFILE_PRESETS = [
   "balanced",

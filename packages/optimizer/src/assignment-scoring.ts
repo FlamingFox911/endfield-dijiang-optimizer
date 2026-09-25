@@ -210,6 +210,10 @@ export function createAssignmentScorer(
 
   function evaluateRoom(room: NormalizedRoom, assignments: Assignments, support: MoodModifiers): RoomEvaluation {
     const ids = workerIds(room.roomId, assignments);
+    return evaluateTeam(room, ids, support);
+  }
+
+  function evaluateTeam(room: NormalizedRoom, ids: string[], support: MoodModifiers): RoomEvaluation {
     const key = `${room.roomId}|${ids.join(",")}|${support.moodDropReductionPercent}|${support.moodRegenPercent}`;
     const cached = roomCache.get(key);
     if (cached) return cached;
@@ -346,5 +350,9 @@ export function createAssignmentScorer(
       || (room.roomKind === "reception_room" && worker.clueEfficiencyPercent > 0);
   }
 
-  return { score, result, roomUpperBound, canContribute };
+  return {
+    score, result, roomUpperBound, canContribute, controlSupport,
+    scoreTeam: (roomId: string, ids: string[], support: MoodModifiers) =>
+      evaluateTeam(roomsById.get(roomId)!, [...ids].sort(), support).score,
+  };
 }

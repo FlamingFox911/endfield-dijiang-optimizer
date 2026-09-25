@@ -20,7 +20,7 @@ export const OPTIMIZATION_PROFILE_EFFORTS: Record<Exclude<OptimizationProfile, "
   fast: 8,
   balanced: 18,
   thorough: 30,
-  exhaustive: 45,
+  exhaustive: 100,
 };
 
 export const DEFAULT_OPTIMIZATION_PROFILE: OptimizationProfile = "balanced";
@@ -35,8 +35,23 @@ export function clampOptimizationEffort(value: number): number {
   return Math.min(MAX_OPTIMIZATION_EFFORT, Math.max(MIN_OPTIMIZATION_EFFORT, Math.round(value)));
 }
 
-export function getOptimizationSearchConfig(profile: OptimizationProfile, effort: number): OptimizationSearchConfig {
-  const normalizedEffort = clampOptimizationEffort(effort);
+export function getOptimizationSearchConfig(
+  profile: OptimizationProfile,
+  effort: number,
+  maxEffort = MAX_OPTIMIZATION_EFFORT,
+): OptimizationSearchConfig {
+  const ceiling = clampOptimizationEffort(maxEffort);
+  const normalizedEffort = Math.min(ceiling, clampOptimizationEffort(effort));
+  if (normalizedEffort === ceiling) {
+    return {
+      profileLabel: profile,
+      effort: normalizedEffort,
+      maxBranchCandidatesPerSlot: null,
+      maxVisitedNodes: null,
+      // Unbounded search still needs regular progress updates and cancellation.
+      progressIntervalNodes: 1_000,
+    };
+  }
   const branchCap = Math.min(30, Math.max(4, Math.ceil(4 + normalizedEffort * 0.35)));
   const maxVisitedNodes = 1_000 + (normalizedEffort * normalizedEffort * 2_000);
   const progressIntervalNodes = Math.max(10, Math.floor(maxVisitedNodes / 20));
@@ -51,13 +66,14 @@ export function getOptimizationSearchConfig(profile: OptimizationProfile, effort
 }
 
 export const DEFAULT_SOLVER_STRATEGY = {
-  name: "assignment enumeration + branch and bound",
+  name: "assignment search + exact room-team branch and bound",
   guarantee: "approximate",
   summary:
-    "Compare assignment sets using estimated working/resting cycles and recipe-specific output, with upper-bound pruning and a search budget.",
+    "Compare assignment sets using estimated working/resting cycles and recipe-specific output, with upper-bound pruning. Maximum effort removes search budgets and candidate limits.",
   steps: [
     "Normalize the scenario and apply the max-facilities overlay if requested.",
     "Reserve hard assignments before searching other rooms.",
+    "At maximum effort, enumerate Control Nexus teams first and score complete teams for each remaining room.",
     "Use the scenario's fixed recipe selection for each production room.",
     "Branch on remaining operator-slot choices while pruning with an optimistic bound.",
     "Use the same whole-assignment score for search and results, and return per-room marginal explanations.",

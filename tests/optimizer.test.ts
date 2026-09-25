@@ -606,10 +606,11 @@ describe("optimizer runtime", () => {
     }
     let lastBestScore = 0;
     const result = solveScenario(catalog, scenario, {
-      searchConfig: { ...getOptimizationSearchConfig("exhaustive", 45), progressIntervalNodes: 1 },
+      searchConfig: { ...getOptimizationSearchConfig("exhaustive", 100), progressIntervalNodes: 1 },
       onProgress: (progress) => { lastBestScore = progress.bestScore; },
     });
     expect(result.totalScore).toBeCloseTo(oracleBest, 9);
+    expect(result.search?.complete).toBe(true);
     expect(lastBestScore).toBeCloseTo(result.totalScore, 9);
     expect(result.roomPlans.reduce((sum, room) => sum + room.projectedScore, 0)).toBeCloseTo(result.totalScore, 12);
     expect(result.roomPlans.find((room) => room.roomId === "mfg-1")!.assignedOperatorIds).toEqual(["ember"]);

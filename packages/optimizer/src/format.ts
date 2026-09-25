@@ -50,6 +50,7 @@ export function formatOptimizationResultText(
   const lines = [
     `Catalog: ${result.catalogVersion}`,
     `Total score (pts): ${formatScorePoints(result.totalScore)}`,
+    ...(result.search ? [`Assignment search: ${result.search.complete ? "complete for the modeled objective" : "best found; optimality not proven"} (${result.search.visitedNodes} states visited)`] : []),
     `Score model: ${result.supportWeightsVersion}`,
     "",
     "Room plans",
@@ -115,6 +116,8 @@ export function formatUpgradeRecommendationsText(
     `Catalog: ${result.catalogVersion}`,
     `Ranking mode: ${result.rankingMode}`,
     `Baseline score (pts): ${formatScorePoints(result.baselineScore)}`,
+    ...(result.searchComplete == null ? [] : [`Assignment searches: ${result.searchComplete ? "all complete for the modeled objective" : "best found; rankings may change"}`]),
+    ...(result.warnings ?? []).map((warning) => `Warning: ${warning}`),
     "",
     "Recommendations",
   ];
