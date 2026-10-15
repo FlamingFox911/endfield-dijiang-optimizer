@@ -29,6 +29,18 @@ export function evaluateLiveRosterDeployment(
       `Candidate catalog would reduce live rare Growth Chamber recipes from ${published.recipes.length} to ${candidate.recipes.length}.`,
     );
   }
+  for (const [label, previousIds, nextIds] of [
+    ["operators", published.operators.map((entry) => entry.id), candidate.operators.map((entry) => entry.id)],
+    ["Growth Chamber recipes", published.recipes.map((entry) => entry.id), candidate.recipes.map((entry) => entry.id)],
+    ["promotion overrides", published.promotionOverrides.map((entry) => `${entry.operatorId}:${entry.promotionTier}`),
+      candidate.promotionOverrides.map((entry) => `${entry.operatorId}:${entry.promotionTier}`)],
+  ] as const) {
+    const next = new Set(nextIds);
+    const missing = previousIds.filter((id) => !next.has(id));
+    if (missing.length > 0) {
+      throw new Error(`Candidate catalog would remove published ${label}: ${missing.join(", ")}.`);
+    }
+  }
   if (candidate.contentHash === published.contentHash) {
     if (published.warnings.length > 0) {
       return { shouldDeploy: true, reason: "published catalog health recovered" };

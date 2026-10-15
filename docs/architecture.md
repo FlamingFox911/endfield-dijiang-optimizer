@@ -63,7 +63,9 @@ Facility, established recipe, and progression snapshots remain versioned and imm
 - push and manual web builds fetch and normalize every operator from the official SKPORT catalog; the extracted source separately discovers newly released rarity-5 Growth Chamber cultivation items and remains an outage fallback only when SKPORT is unavailable
 - scheduled workflow heartbeats choose a six-hour release window, daily incomplete-data window, or weekly stable window from `catalogs/live-sync-policy.json`, and cheaply inspect the official SKPORT catalog for released operators missing from the deployed roster
 - a scheduled check generates and validates a candidate before starting the Pages deployment job
-- unchanged content hashes, source warnings, and regressive operator or Growth Chamber recipe counts block scheduled deployments
+- unchanged content hashes and source warnings block scheduled deployments; missing published operator IDs, Growth Chamber recipe IDs, or promotion overrides also block replacement, even if total counts do not decrease
+- new operators with incomplete wiki details, Base Skills, or Promotion IV materials remain non-selectable `pendingOperators` until complete; existing operators are never silently deferred, and unsupported effects still fail validation
+- push and manual deployments apply the same safety checks and restore the previous healthy overlay with its content-addressed portraits if normalization or portrait processing fails; unreadable or unhealthy published baselines fail closed
 - official operator release dates affect cadence and completeness checks; official SKPORT Base Skill tables supply operator optimization values
 - the live overlay carries the official named game version associated with the latest effective release-policy entry, so the UI does not confuse an older immutable bundle version with the active game release
 - browser tabs periodically fetch the generated same-origin roster document

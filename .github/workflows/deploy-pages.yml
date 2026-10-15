@@ -104,6 +104,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     env:
       PAGES_BASE_PATH: /${{ github.event.repository.name }}/
+      PUBLISHED_CATALOG_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/roster/latest.json
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -135,6 +136,10 @@ jobs:
 
       - name: Build web app
         if: github.event_name != 'schedule'
+        env:
+          # Ship application changes even during a wiki outage, without replacing
+          # the deployed roster with an incomplete or regressive overlay.
+          SYNC_LIVE_ROSTER_FALLBACK_TO_PUBLISHED: "1"
         run: npm run build --workspace @endfield/web
 
       - name: Configure Pages

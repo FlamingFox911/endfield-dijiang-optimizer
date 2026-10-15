@@ -232,13 +232,81 @@ describe("official SKPORT roster source", () => {
       },
     });
 
-    const result = buildSkportRoster(data, "2026-08-22T12:00:00.000Z");
+    const result = buildSkportRoster(data, "2026-08-22T12:00:00.000Z", new Set(["released-without-details"]));
 
     expect(isSkportPreviewItem(preview)).toBe(true);
     expect(result.operators.map((operator) => operator.name)).toEqual(["Liino"]);
     expect(result.warnings).toEqual([
       "Official operator 'Released Without Details' has no detail payload.",
     ]);
+  });
+
+  it("defers a newly released operator with no Base Skill tables, then includes it when complete", () => {
+    const data = officialSourceData();
+    const si = structuredClone(data.operatorItems[0]!);
+    si.itemId = "1278";
+    si.name = "Si";
+    Object.assign(si.brief, { dotType: "label_type_up" });
+    data.operatorItems.push(si);
+    const detail = structuredClone(data.details[0]!);
+    detail.itemId = si.itemId;
+    detail.name = si.name;
+    // A published identity/promotion page is not enough to optimize an operator.
+    const completeDocuments = detail.document.documentMap;
+    detail.document.documentMap = { promotion: completeDocuments.promotion } as typeof completeDocuments;
+    data.details.push(detail);
+    const known = new Set(["liino"]);
+    const pending = buildOfficialPrimaryLiveRosterUpdate(data, undefined, undefined, undefined, known);
+
+    expect(pending.operators.map((operator) => operator.id)).toEqual(["liino"]);
+    expect(pending.promotionOverrides.map((entry) => entry.operatorId)).toEqual(["liino"]);
+    expect(pending.warnings).toEqual([]);
+    expect(pending.pendingOperators).toEqual([{
+      id: "si", name: "Si", reason: "Official operator 'Si' is awaiting two complete Base Skill tables.",
+    }]);
+    expect(parseLiveRosterUpdate(pending)).toBe(pending);
+
+    detail.document.documentMap = completeDocuments;
+    const complete = buildOfficialPrimaryLiveRosterUpdate(data, undefined, undefined, undefined, known);
+    expect(complete.operators.map((operator) => operator.id)).toEqual(["liino", "si"]);
+    expect(complete.promotionOverrides.map((entry) => entry.operatorId)).toEqual(["liino", "si"]);
+    expect(complete.pendingOperators).toEqual([]);
+    expect(complete.warnings).toEqual([]);
+  });
+
+  it("also waits for the second skill, both ranks, and Promotion IV costs", () => {
+    for (const missing of ["second skill", "second rank", "promotion"]) {
+      const data = officialSourceData();
+      const documents = data.details[0]!.document.documentMap;
+      if (missing === "second skill") delete (documents as any).nexus;
+      if (missing === "second rank") documents.nexus.blockMap.table.table.rowIds.pop();
+      if (missing === "promotion") delete (documents as any).promotion;
+      const result = buildSkportRoster(data);
+      expect(result.operators, missing).toEqual([]);
+      expect(result.promotionOverrides, missing).toEqual([]);
+      expect(result.pendingOperators, missing).toMatchObject([{ id: "liino" }]);
+      expect(result.warnings, missing).toEqual([]);
+    }
+  });
+
+  it("does not treat lost data on an existing operator as a pending new release", () => {
+    const data = officialSourceData();
+    delete (data.details[0]!.document.documentMap as any).nexus;
+    const result = buildSkportRoster(data, undefined, new Set(["liino"]));
+    expect(result.pendingOperators).toEqual([]);
+    expect(result.warnings).toEqual(["Official operator 'Liino' is awaiting two complete Base Skill tables."]);
+  });
+
+  it("does not hide unsupported effects as incomplete new-operator data", () => {
+    const data = officialSourceData();
+    data.details[0]!.document.documentMap.nexus = skillDocument("nexus",
+      ["New Skill β", "Assign to Control Nexus to grant a completely unknown bonus +10%", "Promote to E2 to unlock"],
+      ["New Skill γ", "Assign to Control Nexus to grant a completely unknown bonus +20%", "Promote to E4 to unlock"],
+    );
+    const result = buildSkportRoster(data);
+    expect(result.pendingOperators).toEqual([]);
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0]).toContain("Unsupported official Base Skill effect");
   });
 
   it("matches all 60 audited skills after parsing and merging the captured official rows", async () => {

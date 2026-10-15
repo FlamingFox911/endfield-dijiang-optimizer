@@ -3,6 +3,8 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import sharp from "sharp";
+import { parseLiveRosterUpdate } from "@endfield/data";
+import { loadDefaultCatalog } from "@endfield/data/node";
 
 import type {
   EffectModifier,
@@ -22,6 +24,7 @@ import {
   SKPORT_WIKI_URL,
   type SkportRosterSourceData,
 } from "./sync-skport-roster";
+import { evaluateLiveRosterDeployment } from "./evaluate-live-roster-update";
 
 const DEFAULT_SOURCE_BASE_URL = "https://endfieldtools.dev";
 const DEFAULT_OUTPUT_PATH = path.resolve("apps", "web", "public", "roster", "latest.json");
@@ -696,6 +699,7 @@ export function buildOfficialPrimaryLiveRosterUpdate(
   supplementalData: LiveRareResourceSourceData | undefined,
   generatedAt = new Date().toISOString(),
   sourceBaseUrl = DEFAULT_SOURCE_BASE_URL,
+  knownOperatorIds: ReadonlySet<string> = new Set(),
 ): LiveRosterUpdateDocument {
   const supplementalUpdate = supplementalData
     ? buildLiveRareResourceSupplement(supplementalData, generatedAt, sourceBaseUrl)
@@ -703,6 +707,7 @@ export function buildOfficialPrimaryLiveRosterUpdate(
   const official = buildSkportRoster(
     officialData,
     generatedAt,
+    knownOperatorIds,
   );
   const operators = official.operators;
   const promotionOverrides = official.promotionOverrides;
@@ -718,6 +723,7 @@ export function buildOfficialPrimaryLiveRosterUpdate(
     sourceUpdatedAt: official.sourceUpdatedAt,
     contentHash: createLiveCatalogContentHash({ operators, promotionOverrides, recipes, assets }),
     source: official.source,
+    pendingOperators: official.pendingOperators,
     operators,
     promotionOverrides,
     recipes,
@@ -759,7 +765,8 @@ export async function optimizeLiveRosterPortraits(
   }
   const outputDirectory = path.dirname(outputPath);
   const portraitDirectory = path.join(outputDirectory, "portraits");
-  await fs.rm(portraitDirectory, { recursive: true, force: true });
+  // Content-addressed files can coexist: a failed refresh must not delete the
+  // portraits belonging to the previous usable local overlay.
   await fs.mkdir(portraitDirectory, { recursive: true });
 
   const operators: OperatorDefinition[] = [];
@@ -801,15 +808,93 @@ export async function optimizeLiveRosterPortraits(
   };
 }
 
+interface PublicationOptions {
+  published?: LiveRosterUpdateDocument;
+  publishedUrl?: string;
+  allowFallback?: boolean;
+}
+
+export async function finalizeLiveRosterUpdate(
+  candidate: LiveRosterUpdateDocument,
+  outputPath: string,
+  options: PublicationOptions = {},
+): Promise<LiveRosterUpdateDocument> {
+  try {
+    parseLiveRosterUpdate(candidate);
+    if (options.published) {
+      // Check safety before downloading any images, on push builds as well as schedules.
+      evaluateLiveRosterDeployment(candidate, options.published);
+    } else if (options.publishedUrl && candidate.warnings.length > 0) {
+      throw new Error(`Cannot publish an initial catalog with warnings: ${candidate.warnings.join(" | ")}`);
+    }
+    return parseLiveRosterUpdate(await optimizeLiveRosterPortraits(candidate, outputPath));
+  } catch (error) {
+    const { published, publishedUrl, allowFallback } = options;
+    if (!allowFallback || !published || !publishedUrl) {
+      throw error;
+    }
+    // Never relabel an already unhealthy document as a valid fallback.
+    evaluateLiveRosterDeployment(published, published);
+    console.warn(`Roster refresh rejected; retaining the published catalog: ${error instanceof Error ? error.message : String(error)}`);
+    const appRoot = new URL("../", publishedUrl);
+    const portraitDirectory = path.join(path.dirname(outputPath), "portraits");
+    await fs.mkdir(portraitDirectory, { recursive: true });
+    for (const operator of published.operators) {
+      for (const portrait of operator.images) {
+        // Only same-origin content-addressed portraits can be restored safely.
+        const match = /^roster\/portraits\/[a-z0-9]+(?:-[a-z0-9]+)*-([a-f0-9]{12})\.webp$/.exec(portrait.path);
+        if (!match) {
+          throw new Error(`Published operator '${operator.name}' has no restorable optimized portrait.`);
+        }
+        const response = await fetchWithRetry(new URL(portrait.path, appRoot).href);
+        const bytes = Buffer.from(await response.arrayBuffer());
+        const digest = createHash("sha256").update(bytes).digest("hex").slice(0, 12);
+        if (digest !== match[1]) {
+          throw new Error(`Published portrait for '${operator.name}' failed its content hash check.`);
+        }
+        await fs.writeFile(path.join(portraitDirectory, path.basename(portrait.path)), bytes);
+      }
+    }
+    // Keep the original dates and content hash: no successful sync took place.
+    return published;
+  }
+}
+
+async function readPreviousUpdate(outputPath: string, publishedUrl?: string): Promise<LiveRosterUpdateDocument | undefined> {
+  if (publishedUrl) {
+    const url = new URL(publishedUrl);
+    url.searchParams.set("checked", String(Date.now()));
+    const response = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    if (response.status === 404) {
+      return undefined; // First deployment only; other failures must not erase the baseline.
+    }
+    if (!response.ok) {
+      throw new Error(`Cannot read the published catalog baseline: HTTP ${response.status}.`);
+    }
+    return parseLiveRosterUpdate(await response.json());
+  }
+  try {
+    return parseLiveRosterUpdate(JSON.parse(await fs.readFile(outputPath, "utf8")));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      console.warn(`Cannot use the local catalog as a baseline: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    return undefined;
+  }
+}
+
 async function main(): Promise<void> {
   const outputPath = readOutputArgument(process.argv.slice(2));
   if (process.env.SYNC_LIVE_ROSTER_REUSE_EXISTING === "1") {
-    const existing = JSON.parse(await fs.readFile(outputPath, "utf8")) as Partial<LiveRosterUpdateDocument>;
-    if (!existing.contentHash?.match(/^[a-f0-9]{64}$/) || !Array.isArray(existing.operators)) {
-      throw new Error(`Cannot reuse invalid live catalog at '${outputPath}'.`);
-    }
-    if (!Array.isArray(existing.warnings) || existing.warnings.length > 0) {
+    const existing = parseLiveRosterUpdate(JSON.parse(await fs.readFile(outputPath, "utf8")));
+    if (existing.warnings.length > 0) {
       throw new Error(`Cannot reuse live catalog with warnings at '${outputPath}'.`);
+    }
+    // A scheduled artifact may have waited in the Pages queue while another
+    // deployment added operators. Recheck the current baseline before reusing it.
+    if (process.env.PUBLISHED_CATALOG_URL) {
+      const published = await readPreviousUpdate(outputPath, process.env.PUBLISHED_CATALOG_URL);
+      if (published) evaluateLiveRosterDeployment(existing, published);
     }
     for (const operator of existing.operators) {
       const portraitPath = operator?.images?.find((image) => image.kind === "portrait")?.path;
@@ -824,8 +909,16 @@ async function main(): Promise<void> {
     );
     return;
   }
+  const disabled = process.env.SYNC_LIVE_ROSTER_DISABLE === "1";
+  const publishedUrl = disabled ? undefined : process.env.PUBLISHED_CATALOG_URL;
+  const previous = disabled ? undefined : await readPreviousUpdate(outputPath, publishedUrl);
+  const bundled = await loadDefaultCatalog();
+  const knownOperatorIds = new Set([
+    ...bundled.operators.map((operator) => operator.id),
+    ...(previous?.operators.map((operator) => operator.id) ?? []),
+  ]);
   let update: LiveRosterUpdateDocument;
-  if (process.env.SYNC_LIVE_ROSTER_DISABLE === "1") {
+  if (disabled) {
     update = createEmptyUpdate(new Error("Network sync was disabled by SYNC_LIVE_ROSTER_DISABLE=1."));
   } else {
     const [officialResult, supplementalResult] = await Promise.allSettled([
@@ -836,6 +929,9 @@ async function main(): Promise<void> {
       update = buildOfficialPrimaryLiveRosterUpdate(
         officialResult.value,
         supplementalResult.status === "fulfilled" ? supplementalResult.value : undefined,
+        undefined,
+        undefined,
+        knownOperatorIds,
       );
       if (supplementalResult.status === "rejected") {
         const reason = supplementalResult.reason instanceof Error
@@ -858,6 +954,13 @@ async function main(): Promise<void> {
       }
     }
   }
+  if (!disabled) {
+    const included = new Set(update.operators.map((operator) => operator.id));
+    const missing = [...knownOperatorIds].filter((id) => !included.has(id));
+    if (missing.length > 0) {
+      update.warnings.push(`Previously available operators are missing from the candidate: ${missing.join(", ")}.`);
+    }
+  }
   const gameVersion = await readCurrentGameVersion();
   if (gameVersion) {
     update = {
@@ -872,13 +975,18 @@ async function main(): Promise<void> {
       }),
     };
   }
-  update = await optimizeLiveRosterPortraits(update, outputPath);
+  update = await finalizeLiveRosterUpdate(update, outputPath, {
+    published: previous,
+    publishedUrl,
+    allowFallback: process.env.SYNC_LIVE_ROSTER_FALLBACK_TO_PUBLISHED === "1",
+  });
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
   await fs.writeFile(outputPath, `${JSON.stringify(update, null, 2)}\n`, "utf8");
   console.log(
     `synced live catalog -> ${path.relative(process.cwd(), outputPath)} (${update.operators.length} operators, ${update.recipes.length} rare Growth Chamber recipes, ${update.warnings.length} warnings)`,
   );
   update.warnings.forEach((warning) => console.warn(`roster sync warning: ${warning}`));
+  update.pendingOperators?.forEach((operator) => console.log(`roster sync pending: ${operator.reason}`));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -325,6 +325,8 @@ export interface LiveRosterUpdateDocument {
   recipes: RecipeDefinition[];
   assets: ImageAsset[];
   warnings: string[];
+  /** Discovered entries awaiting wiki data; never selectable or included in the content hash. */
+  pendingOperators?: Array<{ id: string; name: string; reason: string }>;
 }
 
 export interface OwnedBaseSkillState {

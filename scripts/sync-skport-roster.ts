@@ -5,6 +5,7 @@ import type {
   BaseSkillDefinition,
   EffectModifier,
   FacilityKind,
+  LiveRosterUpdateDocument,
   OperatorDefinition,
   OperatorPromotionOverride,
   SourceRef,
@@ -126,8 +127,13 @@ export interface SkportRosterBuildResult {
   operators: OperatorDefinition[];
   promotionOverrides: OperatorPromotionOverride[];
   warnings: string[];
+  pendingOperators: NonNullable<LiveRosterUpdateDocument["pendingOperators"]>;
   sourceUpdatedAt?: string;
 }
+
+// Missing authored sections are expected for new releases, unlike unsupported
+// effects or malformed data. Previously published operators remain strict.
+class IncompleteSkportOperatorError extends Error {}
 
 interface ParsedCell {
   text: string;
@@ -527,6 +533,9 @@ function createSkportOperator(
     });
   }
   const uniqueSkills = Array.from(new Map(officialSkills.map((skill) => [skill.id, skill])).values());
+  if (uniqueSkills.length < 2) {
+    throw new IncompleteSkportOperatorError(`Official operator '${name}' is awaiting two complete Base Skill tables.`);
+  }
   if (uniqueSkills.length !== 2) {
     throw new Error(`Official operator '${name}' did not expose two supported Base Skill tables.`);
   }
@@ -564,6 +573,9 @@ function createSkportPromotionOverride(
       quantity: entry.count,
     }))
     .filter((entry) => entry.itemId && !["protoset", "t-creds"].includes(entry.itemId));
+  if (additionalMaterialCosts.length < 2) {
+    throw new IncompleteSkportOperatorError(`Official operator '${operator.name}' is awaiting Promotion IV material data.`);
+  }
   if (additionalMaterialCosts.length !== 2) {
     throw new Error(`Official operator '${operator.name}' has unsupported Promotion IV material data.`);
   }
@@ -578,6 +590,7 @@ function createSkportPromotionOverride(
 export function buildSkportRoster(
   data: SkportRosterSourceData,
   generatedAt = new Date().toISOString(),
+  knownOperatorIds: ReadonlySet<string> = new Set(),
 ): SkportRosterBuildResult {
   const retrievedOn = generatedAt.slice(0, 10);
   const source: SourceRef = {
@@ -592,32 +605,37 @@ export function buildSkportRoster(
   const operators: OperatorDefinition[] = [];
   const promotionOverrides: OperatorPromotionOverride[] = [];
   const warnings: string[] = [];
+  const pendingOperators: SkportRosterBuildResult["pendingOperators"] = [];
   for (const item of data.operatorItems) {
     // SKPORT publishes explicitly marked preview cards before their optimization data exists.
-    // They become eligible automatically when the official catalog removes the preview marker.
+    // After the marker disappears they still need complete optimization data.
     if (isSkportPreviewItem(item)) {
       continue;
     }
-    const detail = detailById.get(item.itemId);
-    if (!detail) {
-      warnings.push(`Official operator '${item.name}' has no detail payload.`);
-      continue;
-    }
+    const name = OPERATOR_NAME_OVERRIDES[item.name] ?? item.name;
+    const id = slugify(name);
     try {
+      const detail = detailById.get(item.itemId);
+      if (!detail) {
+        throw new IncompleteSkportOperatorError(`Official operator '${name}' has no detail payload.`);
+      }
       const operator = createSkportOperator(
         item,
         detail,
         data.tagNamesById,
         retrievedOn,
       );
+      const promotion = createSkportPromotionOverride(operator, detail, data.entryNamesById);
+      // Publish the operator and its progression atomically, never a partial entry.
       operators.push(operator);
-      try {
-        promotionOverrides.push(createSkportPromotionOverride(operator, detail, data.entryNamesById));
-      } catch (error) {
-        warnings.push(error instanceof Error ? error.message : String(error));
-      }
+      promotionOverrides.push(promotion);
     } catch (error) {
-      warnings.push(error instanceof Error ? error.message : String(error));
+      const reason = error instanceof Error ? error.message : String(error);
+      if (error instanceof IncompleteSkportOperatorError && !knownOperatorIds.has(id)) {
+        pendingOperators.push({ id, name, reason });
+      } else {
+        warnings.push(reason);
+      }
     }
   }
   return {
@@ -625,6 +643,7 @@ export function buildSkportRoster(
     operators,
     promotionOverrides,
     warnings,
+    pendingOperators,
     sourceUpdatedAt: data.sourceUpdatedAt,
   };
 }

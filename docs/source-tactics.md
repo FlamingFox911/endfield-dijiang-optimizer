@@ -20,9 +20,12 @@ This document records how public catalog data is obtained at the domain level, s
   - run `npm run sync:live-roster`; no browser binary or user login is required
 - Safety rule:
   - `robots.txt` currently resolves to the wiki application shell rather than publishing crawler restrictions; keep detail requests in small batches anyway
-  - unsupported descriptions, missing operator fields, incomplete promotion costs, or unknown table shapes produce a warning that blocks a scheduled deployment
-  - missing data on an explicitly marked preview entry is expected and does not warn or change the optimizer catalog; once SKPORT removes the preview marker, the normal two-skill validation applies automatically
-  - an operator without exactly two supported official Base Skill tables produces a warning; operator fields are never mixed with a secondary source
+  - explicitly marked preview entries remain excluded; removing the preview marker does not guarantee that the wiki has finished documenting a release
+  - a newly discovered operator with missing details, fewer than two complete Base Skill tables, or missing Promotion IV costs is recorded in `pendingOperators`, not made selectable; other complete entries can still update without warnings
+  - the bundled and previous published operator IDs distinguish new entries from existing ones: losing data on an existing operator still warns and blocks replacement
+  - unsupported descriptions, inconsistent ranks, or other malformed data still warn, even for new operators; operator fields are never mixed with a secondary source
+  - pending operators are retried at the existing incomplete-data cadence and admitted automatically once fully documented; pending metadata does not change the semantic content hash or trigger a deployment
+  - push and manual Pages builds validate against the published catalog too; on a failed refresh they restore a healthy published overlay and its hash-checked portraits, preserving the previous sync date; an unhealthy or unreadable fallback fails closed
   - the browser app never calls SKPORT directly; it reads only the validated same-origin generated overlay
 
 ## endfieldtools.dev extracted data

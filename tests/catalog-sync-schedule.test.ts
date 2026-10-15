@@ -152,4 +152,19 @@ describe("release-aware catalog sync schedule", () => {
 
     expect(operatorIds).toEqual(["mifu"]);
   });
+
+  it("keeps retrying pending released entries until they are actually usable", () => {
+    const waiting = {
+      ...published(["arcane", "liino"]),
+      pendingOperators: [{ id: "si", name: "Si", reason: "Awaiting Base Skills" }],
+    };
+    const now = new Date("2026-10-15T00:30:00.000Z");
+    const upstream = ["arcane", "liino", "si"];
+    expect(decideCatalogSync(policy, waiting, now, policy.dailySchedule, upstream)).toMatchObject({
+      cadence: "daily", shouldCheck: true, upstreamMissingOperatorIds: ["si"],
+    });
+    expect(decideCatalogSync(policy, published(upstream), now, policy.dailySchedule, upstream)).toMatchObject({
+      cadence: "weekly", shouldCheck: false, upstreamMissingOperatorIds: [],
+    });
+  });
 });

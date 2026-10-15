@@ -14,6 +14,7 @@ import { loadDefaultCatalog } from "@endfield/data/node";
 import {
   buildLiveRosterUpdate,
   createLiveCatalogContentHash,
+  finalizeLiveRosterUpdate,
   mapFactorySkillModifier,
   optimizeLiveRosterPortraits,
 } from "../scripts/sync-live-roster";
@@ -274,6 +275,100 @@ describe("automatic live roster updates", () => {
     expect(() => evaluateLiveRosterDeployment(regressive, published)).toThrow(
       "would reduce live operators from 1 to 0",
     );
+  });
+
+  it("blocks lost published identities even when replacement entries keep the counts unchanged", () => {
+    const published = buildLiveRosterUpdate(sourceData(), generatedAt);
+    const renamed = structuredClone(published);
+    renamed.operators[0]!.id = "different-operator";
+    renamed.promotionOverrides[0]!.operatorId = "different-operator";
+    expect(() => evaluateLiveRosterDeployment(renamed, published)).toThrow("remove published operators: test-operator");
+
+    const replacedRecipe = structuredClone(published);
+    replacedRecipe.recipes[0]!.id = "different-resource";
+    expect(() => evaluateLiveRosterDeployment(replacedRecipe, published)).toThrow("remove published Growth Chamber recipes");
+
+    const lostProgression = structuredClone(published);
+    lostProgression.promotionOverrides = [];
+    expect(() => evaluateLiveRosterDeployment(lostProgression, published)).toThrow("remove published promotion overrides");
+  });
+
+  it("keeps pending entries unselectable without triggering semantic deployments", async () => {
+    const published = buildLiveRosterUpdate(sourceData(), generatedAt);
+    const candidate = structuredClone(published);
+    candidate.pendingOperators = [{ id: "si", name: "Si", reason: "Awaiting Base Skills" }];
+    expect(parseLiveRosterUpdate(candidate)).toBe(candidate);
+    expect(createLiveCatalogContentHash(candidate)).toBe(published.contentHash);
+    expect(evaluateLiveRosterDeployment(candidate, published).shouldDeploy).toBe(false);
+    const merged = mergeLiveRosterUpdate(await loadDefaultCatalog(), candidate);
+    expect(merged.catalog.operators.some((operator) => operator.id === "si")).toBe(false);
+
+    candidate.pendingOperators[0]!.id = candidate.operators[0]!.id;
+    expect(() => parseLiveRosterUpdate(candidate)).toThrow("duplicated or selectable");
+    candidate.pendingOperators = [{ id: "si", name: "", reason: "" }];
+    expect(() => parseLiveRosterUpdate(candidate)).toThrow("must contain a slug id, name, and reason");
+  });
+
+  it("restores the healthy published overlay and its portraits when a push refresh is unsafe", async () => {
+    const directory = await fs.mkdtemp(path.join(os.tmpdir(), "endfield-roster-fallback-"));
+    const outputPath = path.join(directory, "latest.json");
+    const publishedUrl = "https://example.com/optimizer/roster/latest.json";
+    const sourceBytes = await sharp({ create: {
+      width: 32, height: 32, channels: 3, background: { r: 20, g: 80, b: 160 },
+    } }).png().toBuffer();
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(sourceBytes)));
+    const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const published = await optimizeLiveRosterPortraits(buildLiveRosterUpdate(sourceData(), generatedAt), outputPath);
+      const portraitFile = path.join(directory, "portraits", path.basename(published.operators[0]!.images[0]!.path));
+      const publishedBytes = await fs.readFile(portraitFile);
+      for (const failure of ["warning", "regression", "portrait failure"]) {
+        const candidate = buildLiveRosterUpdate(sourceData(), "2026-10-15T12:00:00.000Z");
+        if (failure === "warning") candidate.warnings.push("Existing operator lost its skills");
+        if (failure === "regression") {
+          candidate.operators = [];
+          candidate.promotionOverrides = [];
+        }
+        await fs.unlink(portraitFile); // Simulate a fresh CI checkout with no old assets.
+        const fetchMock = vi.fn(async (url: string) => new Response(
+          url === `https://example.com/optimizer/${published.operators[0]!.images[0]!.path}`
+            ? publishedBytes : "invalid remote portrait",
+        ));
+        vi.stubGlobal("fetch", fetchMock);
+        const restored = await finalizeLiveRosterUpdate(candidate, outputPath, {
+          published, publishedUrl, allowFallback: true,
+        });
+        expect(restored, failure).toBe(published);
+        expect(restored.generatedAt, failure).toBe(generatedAt);
+        expect(restored.contentHash, failure).toBe(published.contentHash);
+        expect(await fs.readFile(portraitFile), failure).toEqual(publishedBytes);
+        expect(fetchMock).toHaveBeenCalledWith(
+          `https://example.com/optimizer/${published.operators[0]!.images[0]!.path}`, expect.anything(),
+        );
+      }
+
+      const invalid = structuredClone(published);
+      invalid.warnings.push("source incomplete");
+      await expect(finalizeLiveRosterUpdate(invalid, outputPath, { published, publishedUrl }))
+        .rejects.toThrow("Candidate catalog has 1 warning");
+      await expect(finalizeLiveRosterUpdate(invalid, outputPath, { published: invalid, publishedUrl, allowFallback: true }))
+        .rejects.toThrow("Candidate catalog has 1 warning");
+      vi.stubGlobal("fetch", vi.fn(async () => new Response("corrupted published portrait")));
+      await expect(finalizeLiveRosterUpdate(invalid, outputPath, { published, publishedUrl, allowFallback: true }))
+        .rejects.toThrow("failed its content hash check");
+
+      vi.stubGlobal("fetch", vi.fn(async () => new Response(sourceBytes)));
+      const healthy = buildLiveRosterUpdate(sourceData(), "2026-10-15T12:00:00.000Z");
+      healthy.pendingOperators = [{ id: "si", name: "Si", reason: "Awaiting Base Skills" }];
+      const refreshed = await finalizeLiveRosterUpdate(healthy, outputPath, { published, publishedUrl, allowFallback: true });
+      expect(refreshed.generatedAt).toBe(healthy.generatedAt);
+      expect(refreshed.pendingOperators).toEqual(healthy.pendingOperators);
+      expect(refreshed.warnings).toEqual([]);
+    } finally {
+      warning.mockRestore();
+      vi.unstubAllGlobals();
+      await fs.rm(directory, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
+    }
   });
 
   it("hydrates shared skill costs and merges new operators without changing the catalog version", async () => {

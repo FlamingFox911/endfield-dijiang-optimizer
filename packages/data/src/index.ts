@@ -2872,6 +2872,20 @@ export function parseLiveRosterUpdate(value: unknown): LiveRosterUpdateDocument 
     }
   }
 
+  if (value.pendingOperators !== undefined) {
+    requireLiveRoster(Array.isArray(value.pendingOperators), "pendingOperators must be an array when present.");
+    const pendingIds = new Set<string>();
+    for (const entry of value.pendingOperators) {
+      requireLiveRoster(isObject(entry)
+        && typeof entry.id === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.id)
+        && typeof entry.name === "string" && entry.name.trim().length > 0
+        && typeof entry.reason === "string" && entry.reason.trim().length > 0,
+      "pendingOperators entries must contain a slug id, name, and reason.");
+      requireLiveRoster(!operatorIds.has(entry.id) && !pendingIds.has(entry.id), `pendingOperators id '${entry.id}' is duplicated or selectable.`);
+      pendingIds.add(entry.id);
+    }
+  }
+
   for (const [overrideIndex, override] of value.promotionOverrides.entries()) {
     const overridePath = `promotionOverrides[${overrideIndex}]`;
     requireLiveRoster(isObject(override), `${overridePath} must be an object.`);
