@@ -3223,6 +3223,7 @@ function App() {
                   ? "Search complete: optimal for the current modeled objective."
                   : "Best assignment found; optimality not proven. More search effort may find a better plan."} {result.search.visitedNodes.toLocaleString()} states visited.</p>}
                 <p className="subtle">Unstaffed slots use no operator and add no staffing or skill effects. Each operator appears once in the plan. Reception assignments avoid specific-clue Rate-UP unless you use a Hard Assignment.</p>
+                <p className="subtle">Room scores exclude the shipwide gain credited to Control Nexus. Working hours and outputs include its support.</p>
                 {scenario.options.shiftRotation?.enabled && <p className="subtle">Facilities rotate only when both shifts have operators. A facility with one team uses normal operation and rests when Mood is depleted.</p>}
                 {(result.unassignedOperators?.length ?? 0) > 0 && <details className="resultSummary">
                   <summary>Unused owned operators ({result.unassignedOperators!.length})</summary>
@@ -3272,7 +3273,7 @@ function App() {
                         </div>
                         {room.workingHoursPerDay !== undefined && <p className="shiftResultSummary">
                           Estimated work {room.workingHoursPerDay.toFixed(2)}h/day · {room.shift ? "Downtime" : "Rest"} {room.downtimeHoursPerDay?.toFixed(2)}h/day
-                          {room.assignedOperatorIds.length > 0 && room.estimatedWorkHoursFromFullMood !== undefined && <><br />From full Mood: {room.estimatedWorkHoursFromFullMood === null ? "no Mood drain" : `${room.estimatedWorkHoursFromFullMood.toFixed(2)}h at estimated support`}</>}
+                          {room.assignedOperatorIds.length > 0 && room.estimatedWorkHoursFromFullMood !== undefined && <><br />Single stint from full Mood: {room.estimatedWorkHoursFromFullMood === null ? "no Mood drain" : `${room.estimatedWorkHoursFromFullMood.toFixed(2)}h at estimated support`}</>}
                         </p>}
                         <div className="operatorChipList operatorChipGrid">
                           {room.assignedOperatorIds.map((operatorId, slotIndex) => {

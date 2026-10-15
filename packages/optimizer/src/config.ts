@@ -3,7 +3,7 @@ import type { OptimizationProfile } from "@endfield/domain";
 import type { OptimizationSearchConfig } from "./types.js";
 
 export const SUPPORT_WEIGHTS = {
-  version: "v5",
+  version: "v6",
   assignedOperatorProductionEfficiencyPercent: 40,
   baselineMoodDrainPerHour: 3_600,
   baselineMoodRegenPerHour: 6_000,
@@ -11,7 +11,9 @@ export const SUPPORT_WEIGHTS = {
   // Utility per percentage point of active Reception throughput, including
   // its base, +40% per worker, and multiplicative general clue skills. This is
   // a configurable preference scale, not a measured Credits-to-EXP conversion.
-  receptionClueCollectionWeight: 0.01,
+  // Calibrated with staffing included so Balanced does not prioritize Reception
+  // over all production cabins combined; see the scoring-model review.
+  receptionClueCollectionWeight: 0.001,
   receptionClueRateWeight: 0,
   priorityRecipeFocusMultiplier: 2.5,
   estimatedEffortPerDay: 18,

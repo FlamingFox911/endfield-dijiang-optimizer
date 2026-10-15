@@ -54,6 +54,24 @@ describe("rotation Mood forecast", () => {
     expect(normal.downtimeHoursPerDay).toBeGreaterThan(0);
   });
 
+  it("matches the analytic normal Nexus work/rest cycle and excludes its own regen during rest", () => {
+    const workers = [16, 16, 12].map((moodRegenPercent) => ({ ...noMood, moodRegenPercent }));
+    const support = simulateControlRotation([{ workers }], "normal-cycle");
+    // Independent cumulative-work formula across the forecast's measurement
+    // window. A normal team can rest and return more than once in a day.
+    const stint = 50_000 / 3600;
+    const cycle = stint + 50_000 / 6000;
+    const cumulative = (hour: number) => Math.floor(hour / cycle) * stint + Math.min(hour % cycle, stint);
+    const expectedDaily = (cumulative(42 * 24) - cumulative(14 * 24)) / 28;
+    expect(expectedDaily).toBeCloseTo(15.07142857142857, 10);
+    expect(support.workingHoursPerDay[0]).toBeCloseTo(expectedDaily, 10);
+    expect(support.average.moodRegenPercent).toBeCloseTo(44 * expectedDaily / 24, 10);
+    const normal = getRotationUptime({ workers });
+    expect(normal.estimatedWorkHoursFromFullMood).toBeCloseTo(stint, 10);
+    expect(normal.workingHoursPerDay + normal.downtimeHoursPerDay).toBeCloseTo(24, 10);
+    expect(normal.workingHoursPerDay).toBeCloseTo(expectedDaily, 10);
+  });
+
   it("carries partial recovery across days even when a full-Mood team initially covers its window", () => {
     const result = getRotationUptime({ schedule: { startMinute: 0, endMinute: 1200 },
       workers: [{ ...noMood, moodDropReductionPercent: 40 }] });

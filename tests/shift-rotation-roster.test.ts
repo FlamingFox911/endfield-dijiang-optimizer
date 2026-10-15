@@ -39,7 +39,7 @@ describe("27-operator rotation roster regression", () => {
   it("reproduces the 27-operator roster offline and returns only playable hourly schedules", () => {
     expect(validateScenarioAgainstCatalog(catalog, scenario).ok).toBe(true);
     expect(scenario.roster.filter((entry) => entry.owned)).toHaveLength(27);
-    expect(result.roomPlans).toHaveLength(9);
+    expect(result.roomPlans).toHaveLength(10);
     expect(result.search?.scheduleSearch?.resolutionMinutes).toBe(60);
     for (const plan of result.roomPlans) {
       if (!plan.shift) {
@@ -57,9 +57,9 @@ describe("27-operator rotation roster regression", () => {
       expect(plan.shiftSchedule!.startMinute).toBe(other.shiftSchedule!.endMinute);
       expect(plan.downtimeHoursPerDay).toBeGreaterThanOrEqual(0);
     }
-    // v5 includes Reception's baseline and staffing in the objective.
-    expect(result.totalScore).toBeGreaterThan(4);
-    expect(result.supportWeightsVersion).toBe("v5-rotation-v4");
+    // v6 retains staffing and rebalances Reception against production.
+    expect(result.totalScore).toBeGreaterThan(1);
+    expect(result.supportWeightsVersion).toBe("v6-rotation-v4");
     expect(result.search?.complete).toBe(false);
   });
 
@@ -73,10 +73,13 @@ describe("27-operator rotation roster regression", () => {
     expect(result.roomPlans.reduce((sum, plan) => sum + plan.projectedScore, 0)).toBeCloseTo(result.totalScore, 10);
   });
 
-  it("fills both Reception shifts and uses the previously omitted workers", () => {
+  it("keeps Reception useful without letting it outweigh the rest of a Balanced base", () => {
     const reception = result.roomPlans.filter((plan) => plan.roomKind === "reception_room");
     expect(reception).toHaveLength(2);
-    expect(reception.every((plan) => plan.assignedOperatorIds.length === 3)).toBe(true);
+    expect(reception.every((plan) => plan.assignedOperatorIds.length > 0)).toBe(true);
+    const share = reception.reduce((sum, plan) => sum + plan.projectedScore, 0) / result.totalScore;
+    expect(share).toBeGreaterThan(0.1);
+    expect(share).toBeLessThan(0.3);
     expect(reception.flatMap((plan) => plan.assignedOperatorIds)).toContain("akekuri");
     expect(result.roomPlans.flatMap((plan) => plan.assignedOperatorIds)).toContain("avywenna");
     expect(result.unassignedOperators).toEqual([]);
@@ -91,9 +94,9 @@ describe("27-operator rotation roster regression", () => {
     const room = result.roomPlans.find((plan) => plan.roomKind === "reception_room" && plan.assignedOperatorIds.includes("akekuri"))!;
     const incomplete = new Map(assigned);
     incomplete.set(room.roomId, room.assignedOperatorIds.filter((id) => id !== "akekuri"));
-    expect(scorer.score(assigned) - scorer.score(incomplete)).toBeCloseTo(0.32, 10);
+    expect(scorer.score(assigned) - scorer.score(incomplete)).toBeCloseTo(0.032, 10);
     const akekuri = scorer.result(incomplete).unassignedOperators!.find((entry) => entry.operatorId === "akekuri")!;
-    expect(akekuri.bestOpenSlotScoreGain).toBeCloseTo(0.32, 10);
+    expect(akekuri.bestOpenSlotScoreGain).toBeCloseTo(0.032, 10);
     expect(akekuri.reasons.join(" ")).toContain("an open seat may still improve the plan");
   });
 
