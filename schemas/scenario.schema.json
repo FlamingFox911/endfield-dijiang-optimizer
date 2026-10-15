@@ -202,7 +202,8 @@
             ],
             "properties": {
               "operatorId": { "type": "string" },
-              "roomId": { "type": "string" }
+              "roomId": { "type": "string" },
+              "shift": { "enum": ["A", "B"] }
             },
             "additionalProperties": false
           }
@@ -218,6 +219,19 @@
       ],
       "properties": {
         "maxFacilities": { "type": "boolean" },
+        "shiftRotation": {
+          "type": "object",
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "scheduleMode": { "enum": ["optimized", "fixed"] },
+            "schedules": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/$defs/shiftSchedule" }
+            }
+          },
+          "additionalProperties": false
+        },
         "upgradeRankingMode": {
           "type": "string",
           "enum": [
@@ -232,6 +246,15 @@
   },
   "additionalProperties": false,
   "$defs": {
+    "shiftSchedule": {
+      "type": "object",
+      "required": ["startMinute", "endMinute"],
+      "properties": {
+        "startMinute": { "type": "integer", "minimum": 0, "maximum": 1380, "multipleOf": 60 },
+        "endMinute": { "type": "integer", "minimum": 0, "maximum": 1380, "multipleOf": 60 }
+      },
+      "additionalProperties": false
+    },
     "skportInventoryEntry": {
       "type": "object",
       "required": ["id", "ownedCount"],

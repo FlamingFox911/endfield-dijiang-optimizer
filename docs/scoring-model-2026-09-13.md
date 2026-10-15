@@ -1,14 +1,15 @@
-# Operator scoring review: model v4
+# Operator scoring review: model v5
 
-Reviewed September 13, 2026. The implementation uses the same assignment objective during search and final reporting. Display points remain 1,000 times internal utility units; calculations retain full precision.
+Reviewed September 13, 2026; Reception staffing corrected October 15, 2026 in model v5. The implementation uses the same assignment objective during search and final reporting. Display points remain 1,000 times internal utility units; calculations retain full precision. Earlier v4 totals omitted Reception's base throughput and +40% per working operator, so they are not directly comparable with v5 totals.
 
 An operator does not have a fixed intrinsic score. Its value is the difference it makes to the whole assignment, including the worker it displaces, the selected recipes, other workers, and Control Nexus support. A +10% production skill and a +10% Mood skill are not interchangeable percentages.
 
 ## Findings and implemented corrections
 
-| Aspect | Previous behavior | v4 treatment |
+| Aspect | Previous behavior | Current treatment |
 | --- | --- | --- |
 | Staffed slots | Final output included +40% per assigned worker, but assignment search omitted that contribution | Search and results evaluate the same complete assignment, including active staffing and the option to leave any room empty |
+| Reception staffing | Counted general clue skill percentages only; generic workers incorrectly received zero score | Base active throughput and +40% per worker, multiplied by general clue efficiency, with matching search bounds and generic-worker eligibility |
 | Limited searches | Could stop on a partial assignment or return a worse arrangement after an upgrade | Start from a greedy complete assignment, improve moves/swaps, fill useful empty slots, and retain the rescored baseline assignment as an upgrade incumbent |
 | Empty or fully resting rooms | Received the unstaffed baseline production rate | Zero production when nobody works |
 | Production skills | Added skill percentages to staffing percentages | Matching skill bonuses sum together, then multiply the staffing factor |
@@ -80,7 +81,9 @@ Control workers can affect several productive rooms and Reception simultaneously
 
 Combat and Cognitive EXP serve different level ranges, so equal replacement value does not make them interchangeable for an account's current upgrades. Fungi, plants, and minerals likewise have exact threshold/species requirements. The [economics matrix](scoring-economics-2026-09-13.md) gives those consumption bands and repeatable alternatives.
 
-Current growth defaults remain **1 utility unit per produced item**, multiplied by the selected demand profile and optional recipe priority. General clue collection remains **0.01 utility units per active percentage point per hour**, multiplied by the Reception preference. Neither is a measured conversion to EXP or Sanity. The default is transparent and configurable, but is not an account-specific scarcity model. A three-item plant recipe can consequently outrank a one-item fungus recipe until priorities reflect demand.
+Current growth defaults remain **1 utility unit per produced item**, multiplied by the selected demand profile and optional recipe priority. Reception uses **0.01 utility units per percentage point of estimated active clue throughput**, multiplied by the Reception preference. Its throughput follows `I(N > 0) * (1 + 0.40*N) * (1 + sum of active general clue skill bonuses)`: three working operators with +30% total clue skills give 286%, including the base and staffing terms. The same joint working/resting expectation applies as in production; daily shifts use their simulated working hours once. This is a utility scale, not a claim of clues per hour, a measured conversion to EXP or Sanity, or an account-specific scarcity model. The weight is unchanged; the scored quantity now includes the formerly omitted staffing and base terms.
+
+The user's October 15 report identified the missing Reception staffing term. A [firsthand Reception measurement](https://www.resetera.com/threads/arknights-endfield-ot-whenfield-nowfield.1410379/page-96) independently reports two working operators adding 80%, with a +20% general clue skill multiplying 180% to give 216%. The hourly rotation regression now fills all six Reception seats and uses all 27 owned operators in the supplied roster. Specific-clue skills still add no objective value, and automatic placements respect the user's rule excluding those skills unless pinned.
 
 A complete demand model needs a planning horizon, chosen operator/weapon/skill upgrades, inventory, and intended external acquisitions. Over that horizon:
 

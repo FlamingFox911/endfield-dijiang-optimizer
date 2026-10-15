@@ -185,6 +185,46 @@ describe("App", () => {
     );
   });
 
+  it("opts into cabin schedules and preserves overnight times and Shift B pins when toggled off", async () => {
+    seedDraft(["ember", "chen-qianyu"]);
+    const first = render(<App />);
+    const toggle = await screen.findByRole("checkbox", { name: "Cabin shift rotation (A/B)" });
+    expect(toggle).not.toBeChecked();
+    expect(toggle.closest(".toolbarGrid")).toBe(screen.getByRole("checkbox", { name: /Max facilities overlay/ }).closest(".toolbarGrid"));
+    await userEvent.click(screen.getByRole("tab", { name: /Plan base/i }));
+    expect(screen.queryByRole("article", { name: "Cabin shift schedules" })).not.toBeInTheDocument();
+    await userEvent.click(toggle);
+    expect(screen.getByRole("article", { name: "Cabin shift schedules" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Shift schedule mode" })).toHaveValue("optimized");
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Shift schedule mode" }), "fixed");
+    const startTime = screen.getByRole("combobox", { name: "Manufacturing Cabin 1 Shift A start" });
+    expect(within(startTime).getAllByRole("option")).toHaveLength(24);
+    expect(within(startTime).getAllByRole("option").every((option) => option.textContent?.endsWith(":00"))).toBe(true);
+    fireEvent.change(screen.getByLabelText("Manufacturing Cabin 1 Shift A start"), { target: { value: "20:00" } });
+    fireEvent.change(screen.getByLabelText("Manufacturing Cabin 1 Shift A end"), { target: { value: "08:00" } });
+    await userEvent.click(screen.getByRole("button", { name: "Add hard assignment" }));
+    const shiftSelect = screen.getByRole("combobox", { name: /^Shift for / });
+    await userEvent.selectOptions(shiftSelect, "B");
+    let saved = JSON.parse(localStorage.getItem("endfield-dijiang-optimizer:draft")!);
+    expect(saved.options.shiftRotation.schedules["mfg-1"]).toEqual({ startMinute: 1200, endMinute: 480 });
+    expect(saved.facilities.hardAssignments[0].shift).toBe("B");
+    await userEvent.click(toggle);
+    expect(screen.getByText("Shift B pin saved; inactive while rotation is off.")).toBeInTheDocument();
+    first.unmount();
+    render(<App />);
+    await userEvent.click(await screen.findByRole("checkbox", { name: "Cabin shift rotation (A/B)" }));
+    await userEvent.click(screen.getByRole("tab", { name: /Plan base/i }));
+    expect(screen.getByLabelText("Manufacturing Cabin 1 Shift A start")).toHaveValue("20:00");
+    expect(screen.getByRole("combobox", { name: /^Shift for / })).toHaveValue("B");
+    await userEvent.click(screen.getByRole("button", { name: "Swap Manufacturing Cabin 1 shift hours" }));
+    expect(screen.getByLabelText("Manufacturing Cabin 1 Shift A start")).toHaveValue("08:00");
+    await userEvent.click(screen.getByRole("button", { name: "Reset Manufacturing Cabin 1 shift hours" }));
+    expect(screen.getByLabelText("Manufacturing Cabin 1 Shift A start")).toHaveValue("00:00");
+    expect(screen.getByLabelText("Manufacturing Cabin 1 Shift A end")).toHaveValue("12:00");
+    saved = JSON.parse(localStorage.getItem("endfield-dijiang-optimizer:draft")!);
+    expect(saved.facilities.hardAssignments[0].shift).toBe("B");
+  });
+
   it("announces unchanged catalog sync content only once across rebuild timestamps", async () => {
     const update = createTestLiveRosterUpdate();
     localStorage.setItem("endfield-dijiang-optimizer:catalog-sync-seen", JSON.stringify({
@@ -370,6 +410,8 @@ describe("App", () => {
     render(<App />);
 
     await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.click(getPortraitTile("Akekuri"));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Owned" }));
 
     await userEvent.click(screen.getByRole("button", { name: "Optimize" }));
 
@@ -380,6 +422,11 @@ describe("App", () => {
         result: {
           catalogVersion: "2026-04-17/v1.2",
           totalScore: 3,
+          unassignedOperators: [{
+            operatorId: "akekuri",
+            reasons: ["Reception teams already cover their scheduled hours, so extra Mood sustain adds no clue-collection gain."],
+            bestOpenSlotScoreGain: 0,
+          }],
           projectedRecipeOutputs: {},
           projectedOutputs: {
             operator_exp: 0,
@@ -445,11 +492,16 @@ describe("App", () => {
     });
 
     expect(screen.queryByText("No recipe selected")).not.toBeInTheDocument();
+    const unusedSummary = screen.getByText("Unused owned operators (1)");
+    await userEvent.click(unusedSummary);
+    expect(unusedSummary.closest("details")).toHaveAttribute("open");
+    expect(unusedSummary.closest("details")).toHaveTextContent("Akekuri");
+    expect(unusedSummary.closest("details")).toHaveTextContent("Reception teams already cover their scheduled hours");
 
     const receptionHeading = screen.getAllByText("Reception Room").find((element) => element.closest(".resultCard"));
     const receptionCard = requireHtmlElement(receptionHeading?.closest(".resultCard"));
-    expect(within(receptionCard).getAllByText("Any")).toHaveLength(3);
-    expect(within(receptionCard).getAllByLabelText("Any operator")).toHaveLength(3);
+    expect(within(receptionCard).getAllByText("Unstaffed")).toHaveLength(3);
+    expect(within(receptionCard).getAllByLabelText("Unstaffed slot")).toHaveLength(3);
     const openSlotAlternatives = within(receptionCard).getByRole("button", { name: "Alternatives for slot 1: open slot" });
     expect(within(receptionCard).getAllByRole("button", { name: /Alternatives for slot/ })).toHaveLength(1);
     await userEvent.hover(openSlotAlternatives);

@@ -8,6 +8,7 @@ This repository now contains the full shared runtime, a packaged CLI, a browser 
 
 - Optimize Manufacturing Cabin, Growth Chamber, Control Nexus, and Reception Room assignments from the user's manually entered or explicitly imported roster.
 - Respect globally hard-assigned operators in any room and optimize around those fixed placements.
+- Optionally optimize A/B cabin teams and daily schedules, with fixed-time overrides, separate pins, and Mood-aware downtime forecasts. See [Cabin shift rotation](docs/shift-rotation.md).
 - Simulate a "max facilities" scenario without mutating the user's saved base state.
 - Recommend which operators' Base Skills to unlock next to improve Dijiang output.
 - Support both a CLI workflow and a richer GUI with portraits, input boxes, sliders where applicable, steppers, and facility cards.

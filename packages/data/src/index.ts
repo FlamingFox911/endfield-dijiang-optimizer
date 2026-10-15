@@ -31,7 +31,10 @@ import type {
   MigrationResult,
 } from "@endfield/domain";
 
+import { isValidShiftSchedule, getShiftRoomId, snapShiftScheduleToHours } from "./shifts.js";
+
 export * from "./skport-import.js";
+export * from "./shifts.js";
 
 export const CURRENT_CATALOG_VERSION: CatalogVersion = "2026-04-17/v1.2";
 export const CURRENT_CATALOG_BUNDLE_ID = "2026-04-17-v1.2";
@@ -1605,6 +1608,16 @@ export function migrateScenario(input: unknown): MigrationResult {
   }
 
   const options = raw.options as Record<string, unknown>;
+  if (isObject(options.shiftRotation) && isObject(options.shiftRotation.schedules)) {
+    for (const [roomId, schedule] of Object.entries(options.shiftRotation.schedules)) {
+      const snapped = snapShiftScheduleToHours(schedule);
+      if (snapped && !isValidShiftSchedule(schedule)) {
+        options.shiftRotation.schedules[roomId] = snapped;
+        changes.push({ path: `options.shiftRotation.schedules.${roomId}`,
+          message: "Rounded a previously saved minute-based shift to whole-hour start and duration (1-23 hours)." });
+      }
+    }
+  }
   if (options.upgradeRankingMode == null) {
     options.upgradeRankingMode = "balanced";
     changes.push({
@@ -2200,7 +2213,14 @@ export function validateScenarioAgainstCatalog(
 
   const hardAssigned = new Set<string>();
   const roomAssignmentCounts = new Map<string, number>();
+  for (const roomId of Object.keys(scenario.options.shiftRotation?.schedules ?? {})) {
+    if (!roomIds.has(roomId)) {
+      issues.push(makeIssue("shift_schedule_unknown_room", `options.shiftRotation.schedules.${roomId}`,
+        `Shift schedule references unknown room '${roomId}'.`));
+    }
+  }
   for (const assignment of scenario.facilities.hardAssignments) {
+    if (assignment.shift === "B" && !scenario.options.shiftRotation?.enabled) continue;
     if (!ownedOperatorIds.has(assignment.operatorId)) {
       issues.push(
         makeIssue(
@@ -2242,8 +2262,9 @@ export function validateScenarioAgainstCatalog(
           ),
         );
       }
-      const currentCount = (roomAssignmentCounts.get(assignment.roomId) ?? 0) + 1;
-      roomAssignmentCounts.set(assignment.roomId, currentCount);
+      const shiftRoomId = getShiftRoomId(assignment.roomId, assignment.shift);
+      const currentCount = (roomAssignmentCounts.get(shiftRoomId) ?? 0) + 1;
+      roomAssignmentCounts.set(shiftRoomId, currentCount);
       if (currentCount > roomSpec.slotCap) {
         issues.push(
           makeIssue(
@@ -2536,6 +2557,9 @@ function validateScenarioShape(scenario: OptimizationScenario): ValidationIssue[
         );
         break;
       }
+      if (assignment.shift !== undefined && assignment.shift !== "A" && assignment.shift !== "B") {
+        issues.push(makeIssue("invalid_hard_assignment_shift", "facilities.hardAssignments", "Hard assignment shift must be A or B."));
+      }
     }
   }
 
@@ -2543,6 +2567,21 @@ function validateScenarioShape(scenario: OptimizationScenario): ValidationIssue[
     issues.push(makeIssue("invalid_options", "options", "Scenario options must be an object."));
   }
   else {
+    if (scenario.options.shiftRotation !== undefined) {
+      const rotation = scenario.options.shiftRotation;
+      if (!isObject(rotation) || typeof rotation.enabled !== "boolean"
+        || (rotation.scheduleMode !== undefined && rotation.scheduleMode !== "optimized" && rotation.scheduleMode !== "fixed")
+        || (rotation.schedules !== undefined && (!isObject(rotation.schedules) || Array.isArray(rotation.schedules)))) {
+        issues.push(makeIssue("invalid_shift_rotation", "options.shiftRotation", "Shift rotation requires an enabled boolean, an optional optimized/fixed schedule mode, and an optional schedule map."));
+      } else {
+        for (const [roomId, schedule] of Object.entries(rotation.schedules ?? {})) {
+          if (!isValidShiftSchedule(schedule)) {
+            issues.push(makeIssue("invalid_shift_schedule", `options.shiftRotation.schedules.${roomId}`,
+              "Shift times must be distinct whole hours from 00:00 through 23:00."));
+          }
+        }
+      }
+    }
     if (typeof scenario.options.maxFacilities !== "boolean") {
       issues.push(
         makeIssue(

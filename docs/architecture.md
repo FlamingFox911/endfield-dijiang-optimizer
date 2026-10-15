@@ -126,6 +126,7 @@ The score for a room is modeled from:
 - Matching production or growth bonuses from assigned operators.
 - Mood sustain effects such as room mood regen, room mood-drop reduction, and Control Nexus ship-wide sustain.
 - Reception Room and Control Nexus effects that improve clue or facility-wide value when applicable.
+- Reception throughput uses the same base and +40% per working operator as Manufacturing and Growth, multiplied by general clue skills. Generic workers remain useful; targeted clue skills require a Hard Assignment. Its configurable utility weight does not predict an exact number of clues or Credits.
 
 V1 still does not run a full time-based Mood simulation with current Mood state, explicit rest schedules, or rotation planning. It now does use the community-derived long-run Mood rates as a calibrated uptime model:
 

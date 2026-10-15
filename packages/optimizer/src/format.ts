@@ -1,6 +1,7 @@
 import type { GameCatalog, OptimizationResult, UpgradeRecommendationResult } from "@endfield/domain";
 
 import { formatScorePoints } from "./score-format.js";
+import { formatShiftTime } from "@endfield/data";
 
 export function formatProjectedOutputChange(change: { productKind: string; before: number; after: number }): string {
   const delta = change.after - change.before;
@@ -50,7 +51,7 @@ export function formatOptimizationResultText(
   const lines = [
     `Catalog: ${result.catalogVersion}`,
     `Total score (pts): ${formatScorePoints(result.totalScore)}`,
-    ...(result.search ? [`Assignment search: ${result.search.complete ? "complete for the modeled objective" : "best found; optimality not proven"} (${result.search.visitedNodes} states visited)`] : []),
+    ...(result.search ? [`${result.search.scheduleSearch ? "Team and schedule search" : "Assignment search"}: ${result.search.complete ? "complete for the modeled objective" : "best found; optimality not proven"} (${result.search.visitedNodes} ${result.search.scheduleSearch ? "plans evaluated" : "states visited"})`] : []),
     `Score model: ${result.supportWeightsVersion}`,
     "",
     "Room plans",
@@ -65,8 +66,11 @@ export function formatOptimizationResultText(
     );
 
     lines.push(
-      `- ${room.roomId} (${formatRoomKind(room.roomKind)} Lv${room.roomLevel}) score ${formatScorePoints(room.projectedScore)} pts | direct ${formatScorePoints(room.scoreBreakdown.directProductionScore)} pts | support ${formatScorePoints(room.scoreBreakdown.supportRoomScore)} pts | cross-room ${formatScorePoints(room.scoreBreakdown.crossRoomBonusContribution)} pts | confidence ${room.dataConfidence}`,
+      `- ${room.physicalRoomId ?? room.roomId}${room.shift ? ` Shift ${room.shift}` : ""} (${formatRoomKind(room.roomKind)} Lv${room.roomLevel}) score ${formatScorePoints(room.projectedScore)} pts | direct ${formatScorePoints(room.scoreBreakdown.directProductionScore)} pts | support ${formatScorePoints(room.scoreBreakdown.supportRoomScore)} pts | cross-room ${formatScorePoints(room.scoreBreakdown.crossRoomBonusContribution)} pts | confidence ${room.dataConfidence}`,
     );
+    if (room.shiftSchedule) {
+      lines.push(`  schedule: ${formatShiftTime(room.shiftSchedule.startMinute)}-${formatShiftTime(room.shiftSchedule.endMinute)} | work ${room.workingHoursPerDay?.toFixed(2)}h/day | downtime ${room.downtimeHoursPerDay?.toFixed(2)}h/day`);
+    }
     if ((room.chosenRecipeIds ?? []).length > 0) {
       lines.push(`  recipe: ${recipeNames.join(", ")}`);
     }

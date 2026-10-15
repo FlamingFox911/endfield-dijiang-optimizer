@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { createStarterScenario } from "@endfield/data";
+import { createStarterScenario, resolveDemandProfile } from "@endfield/data";
 import { loadDefaultCatalog } from "@endfield/data/node";
 import { createAssignmentScorer } from "../packages/optimizer/src/assignment-scoring.js";
 import { normalizeScenario } from "../packages/optimizer/src/solver.js";
+import { SUPPORT_WEIGHTS } from "../packages/optimizer/src/config.js";
 
 async function fixture() {
   const catalog = await loadDefaultCatalog();
@@ -103,14 +104,64 @@ describe("assignment scoring", () => {
     expect(objective.score(receptionOnly)).toBeGreaterThan(objective.score(new Map([[receptionId, ["ardelia"]]])));
   });
 
-  it("gives no standalone score to generic Reception seats, clue targeting, or Trust", async () => {
+  it("credits generic Reception workers for base throughput and +40% staffing without requiring skills", async () => {
     const { scenario, own, scorer } = await fixture();
-    own("ember", true);
-    own("lifeng", true);
+    own("chen-qianyu");
+    own("akekuri");
     scenario.facilities.manufacturingCabins[0]!.enabled = false;
     scenario.facilities.receptionRoom!.enabled = true;
-    const assignments = new Map([[scenario.facilities.receptionRoom!.id, ["ember"]], ["control_nexus", ["lifeng"]]]);
-    expect(scorer().score(assignments)).toBe(0);
+    scenario.facilities.receptionRoom!.level = 3;
+    const roomId = scenario.facilities.receptionRoom!.id;
+    const objective = scorer();
+    const weight = SUPPORT_WEIGHTS.receptionClueCollectionWeight * resolveDemandProfile(scenario.options.demandProfile).receptionWeight;
+    expect(objective.score(new Map())).toBe(0);
+    expect(objective.canContribute(roomId, "chen-qianyu")).toBe(true);
+    const one = objective.score(new Map([[roomId, ["chen-qianyu"]]]));
+    const two = objective.score(new Map([[roomId, ["chen-qianyu", "akekuri"]]]));
+    expect(one).toBeCloseTo(100 * 1.4 * 0.625 * weight, 12);
+    // Independent legacy work cycles: at least one active, plus each worker's
+    // staffing term. This checks the expected formula without reusing it.
+    expect(two).toBeCloseTo(100 * (1 - 0.375 ** 2 + 0.4 * 2 * 0.625) * weight, 12);
+    expect(two).toBeGreaterThan(one);
+  });
+
+  it("multiplies Reception staffing by general clue skills and weights both daily shifts once", async () => {
+    const { catalog, scenario, own, scorer } = await fixture();
+    own("chen-qianyu");
+    own("akekuri");
+    own("ardelia", true);
+    for (const skill of catalog.operators.find((entry) => entry.id === "ardelia")!.baseSkills) {
+      for (const rank of skill.ranks) rank.modifiers = rank.modifiers.filter((effect) => effect.metric === "clue_collection_efficiency");
+    }
+    scenario.facilities.manufacturingCabins[0]!.enabled = false;
+    scenario.facilities.receptionRoom!.enabled = true;
+    scenario.facilities.receptionRoom!.level = 3;
+    scenario.options.shiftRotation = { enabled: true, scheduleMode: "fixed" };
+    const roomId = scenario.facilities.receptionRoom!.id;
+    const objective = scorer();
+    const assigned = new Map([[roomId, ["chen-qianyu", "ardelia"]], [`${roomId}::shift-B`, ["akekuri"]]]);
+    const weight = SUPPORT_WEIGHTS.receptionClueCollectionWeight * resolveDemandProfile(scenario.options.demandProfile).receptionWeight;
+    expect(objective.workerEffects(roomId, "ardelia").clueEfficiencyPercent).toBe(30);
+    expect(objective.score(assigned)).toBeCloseTo(100 * (1.8 * 1.3 + 1.4) / 2 * weight, 12);
+    const result = objective.result(assigned);
+    expect(result.roomPlans.reduce((sum, plan) => sum + plan.projectedScore, 0)).toBeCloseTo(result.totalScore, 12);
+    expect(result.explanations.find((entry) => entry.operatorId === "chen-qianyu")!.projectedContribution).toBeGreaterThan(0);
+    expect(result.explanations.find((entry) => entry.operatorId === "chen-qianyu")!.reasons.join(" ")).toContain("40% staffing efficiency");
+    expect(objective.roomUpperBound(roomId, ["chen-qianyu"], ["ardelia", "akekuri"], 2)).toBeCloseTo(100 * 2.2 * 1.3 / 2 * weight, 12);
+  });
+
+  it("credits pinned clue-targeting workers for staffing without awarding their clue preference any extra score", async () => {
+    const { scenario, own, scorer } = await fixture();
+    const ember = own("ember");
+    scenario.facilities.manufacturingCabins[0]!.enabled = false;
+    scenario.facilities.receptionRoom!.enabled = true;
+    const roomId = scenario.facilities.receptionRoom!.id;
+    const assigned = new Map([[roomId, ["ember"]]]);
+    const before = scorer().score(assigned);
+    ember.baseSkillStates.forEach((skill) => { skill.unlockedRank = 2; });
+    scenario.facilities.hardAssignments = [{ operatorId: "ember", roomId }];
+    expect(scorer().workerEffects(roomId, "ember").targetsSpecificClue).toBe(true);
+    expect(scorer().score(assigned)).toBe(before);
   });
 
   it("values Cognitive EXP at its separate farming replacement rate", async () => {

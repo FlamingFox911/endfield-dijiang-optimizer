@@ -28,6 +28,7 @@ import {
   getGrowthSlotCap,
   getRoomSlotCap,
   getUnlockedFacilityRoomCount,
+  formatShiftTime,
   hydrateScenarioForCatalog,
   mergeLiveRosterUpdate,
   migrateScenario,
@@ -44,6 +45,7 @@ import {
 
 import { createOptimizerWorker } from "./optimizer.worker.client";
 import { SKPORT_CAPTURE_BOOKMARKLET } from "./skport-capture-bookmarklet";
+import { ShiftRotationControls } from "./ShiftRotationControls";
 import type { OptimizerWorkerResponse } from "./optimizer-worker-types";
 import type {
   OptimizationProgressSnapshot,
@@ -245,6 +247,8 @@ function getHardAssignmentTargetId(operatorId: string): string {
 }
 
 function getValidationIssueTarget(issue: ValidationIssue): ValidationIssueTarget | null {
+  const shiftMatch = issue.path.match(/^options\.shiftRotation\.schedules\.(.+)$/);
+  if (shiftMatch) return { elementId: `validation-target-shift-${shiftMatch[1]}`, tab: "planner" };
   if (issue.path === "facilities.receptionRoom.enabled") {
     return { elementId: getRoomControlTargetId("reception-1", "enabled"), tab: "planner" };
   }
@@ -298,6 +302,7 @@ function sanitizeScenarioForPersistence(scenario: OptimizationScenario): Optimiz
       hardAssignments: scenario.facilities.hardAssignments.map((assignment) => ({
         operatorId: assignment.operatorId,
         roomId: assignment.roomId,
+        ...(assignment.shift ? { shift: assignment.shift } : {}),
       })),
     },
   };
@@ -975,14 +980,14 @@ function TiedOptionsPopover({ catalog, operatorIds, slotLabel }: {
   );
 }
 
-function AnyOperatorChip() {
+function EmptyOperatorChip() {
   return (
     <div className="operatorChip operatorChipPlaceholder">
-      <div className="avatar avatarPlaceholder" aria-label="Any operator">
+      <div className="avatar avatarPlaceholder" aria-label="Unstaffed slot">
         <span aria-hidden="true">×</span>
       </div>
       <div className="operatorChipCopy">
-        <strong>Any</strong>
+        <strong>Unstaffed</strong>
         <div className="operatorChipMeta">Open slot in this plan</div>
       </div>
     </div>
@@ -1174,8 +1179,9 @@ function App() {
         if (!savedDraft) {
           const starterScenario = createStarterScenario(nextCatalog);
           setCatalog(nextCatalog);
-          setScenario(withExactSearch(starterScenario));
-          saveScenarioDraft(starterScenario);
+          const loadedScenario = withExactSearch(starterScenario);
+          setScenario(loadedScenario);
+          saveScenarioDraft(loadedScenario);
           setMessages(rosterMessages);
           return;
         }
@@ -1183,11 +1189,14 @@ function App() {
         const migration = migrateScenario(savedDraftInput);
         const hydration = hydrateScenarioForCatalog(nextCatalog, migration.scenario);
         setCatalog(nextCatalog);
-        setScenario(withExactSearch(hydration.scenario));
-        saveScenarioDraft(hydration.scenario);
+        const loadedScenario = withExactSearch(hydration.scenario);
+        setScenario(loadedScenario);
+        saveScenarioDraft(loadedScenario);
         setMessages([
           ...rosterMessages,
           ...(migration.migrated ? [`Loaded local draft and migrated it from format ${migration.fromFormatVersion} to ${migration.toFormatVersion}.`] : []),
+          ...(migration.changes.some((change) => change.path.startsWith("options.shiftRotation.schedules."))
+            ? ["Rounded saved shift times to whole-hour schedules. Check them under Plan base before using fixed times."] : []),
           ...summarizeHydration(hydration, false),
           ...migration.warnings.map((issue) => issue.message),
         ]);
@@ -1404,8 +1413,8 @@ function App() {
   const roomOrderById = new Map(roomOptions.map((room, index) => [room.id, index]));
   const orderedResultRoomPlans = result
     ? [...result.roomPlans].sort((left, right) => {
-      const leftOrder = roomOrderById.get(left.roomId) ?? Number.MAX_SAFE_INTEGER;
-      const rightOrder = roomOrderById.get(right.roomId) ?? Number.MAX_SAFE_INTEGER;
+      const leftOrder = (roomOrderById.get(left.physicalRoomId ?? left.roomId) ?? Number.MAX_SAFE_INTEGER) * 2 + (left.shift === "B" ? 1 : 0);
+      const rightOrder = (roomOrderById.get(right.physicalRoomId ?? right.roomId) ?? Number.MAX_SAFE_INTEGER) * 2 + (right.shift === "B" ? 1 : 0);
       return leftOrder - rightOrder;
     })
     : [];
@@ -2032,6 +2041,8 @@ function App() {
       setScenario(withExactSearch(hydration.scenario));
       setMessages([
         migration.migrated ? `Imported scenario and migrated it from format ${migration.fromFormatVersion} to ${migration.toFormatVersion}.` : "Imported scenario.",
+        ...(migration.changes.some((change) => change.path.startsWith("options.shiftRotation.schedules."))
+          ? ["Rounded saved shift times to whole-hour schedules. Check them under Plan base before using fixed times."] : []),
         ...summarizeHydration(hydration),
         ...migration.warnings.map((issue) => issue.message),
       ]);
@@ -2160,6 +2171,13 @@ function App() {
               />
             </span>
           </label>
+          <label className="toggle toolbarField toolbarFieldOverlay">
+            <input type="checkbox" checked={scenario.options.shiftRotation?.enabled ?? false}
+              onChange={(event) => updateScenario((current) => ({ ...current,
+                options: { ...current.options, shiftRotation: { ...current.options.shiftRotation, enabled: event.target.checked } },
+              }))} />
+            <span>Cabin shift rotation (A/B)</span>
+          </label>
         </div>
         <div className="toolbarActions">
           <button onClick={() => requestRun("optimization")} disabled={optimizationRun != null || recommendationRun != null}>Optimize</button>
@@ -2226,10 +2244,12 @@ function App() {
               ? "Optimization complete. Your results are ready."
               : optimizationRun.progress.phase}</p>
             <div className="heroMetaGrid modalStats">
-              <div><span>Allocation states checked</span><strong>{optimizationRun.progress.visitedNodes.toLocaleString()}</strong></div>
+              <div><span>{scenario.options.shiftRotation?.enabled && scenario.options.shiftRotation.scheduleMode !== "fixed" ? "Plans evaluated" : "Allocation states checked"}</span><strong>{optimizationRun.progress.visitedNodes.toLocaleString()}</strong></div>
               <div><span>Best score (pts)</span><strong>{formatScorePoints(optimizationRun.progress.bestScore)}</strong></div>
             </div>
-            {optimizationRun.completedAt == null && <p className="status">Searching for the optimal assignment for your roster, rooms, and priorities.</p>}
+            {optimizationRun.completedAt == null && <p className="status">{scenario.options.shiftRotation?.enabled && scenario.options.shiftRotation.scheduleMode !== "fixed"
+              ? "Comparing teams and daily schedules for your roster, rooms, and priorities."
+              : "Searching for the optimal assignment for your roster, rooms, and priorities."}</p>}
             {optimizationRun.completedAt != null
               ? <button type="button" onClick={viewCompletedResults}>View results</button>
               : <button type="button" onClick={cancelOptimization}>Cancel</button>}
@@ -2683,6 +2703,15 @@ function App() {
               <span>{scenario.facilities.hardAssignments.length} hard assignment{scenario.facilities.hardAssignments.length === 1 ? "" : "s"}</span>
             </div>
 
+            {scenario.options.shiftRotation?.enabled && <ShiftRotationControls scenario={scenario} rooms={roomOptions}
+              onModeChange={(scheduleMode) => updateScenario((current) => ({ ...current,
+                options: { ...current.options, shiftRotation: { ...current.options.shiftRotation!, scheduleMode } },
+              }))}
+              onChange={(roomId, schedule) => updateScenario((current) => ({ ...current,
+                options: { ...current.options, shiftRotation: { ...current.options.shiftRotation, enabled: true,
+                  schedules: { ...current.options.shiftRotation?.schedules, [roomId]: schedule },
+                } },
+              }))} />}
             <div className="plannerGrid">
               <article className="roomCard plannerRoomCard plannerRoomCardWide">
                 <div className="plannerRoomBody">
@@ -3091,7 +3120,7 @@ function App() {
                               ...current,
                               facilities: {
                                 ...current.facilities,
-                                hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: event.target.value, roomId: entry.roomId } : { operatorId: entry.operatorId, roomId: entry.roomId }),
+                                hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { ...entry, operatorId: event.target.value } : entry),
                               },
                             }))}
                           >
@@ -3108,13 +3137,23 @@ function App() {
                               ...current,
                               facilities: {
                                 ...current.facilities,
-                                hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { operatorId: entry.operatorId, roomId: event.target.value } : { operatorId: entry.operatorId, roomId: entry.roomId }),
+                                hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { ...entry, roomId: event.target.value } : entry),
                               },
                             }))}
                           >
                             {roomOptions.map((room) => <option key={room.id} value={room.id}>{room.label}</option>)}
                           </select>
                         </label>
+                        {scenario.options.shiftRotation?.enabled ? <label className="plannerCell">
+                          <span>Shift</span>
+                          <select aria-label={`Shift for ${currentOperatorName}`} value={assignment.shift ?? "A"}
+                            onChange={(event) => updateScenario((current) => ({ ...current,
+                              facilities: { ...current.facilities, hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) =>
+                                entryIndex === index ? { ...entry, shift: event.target.value as "A" | "B" } : entry) },
+                            }))}>
+                            <option value="A">Shift A</option><option value="B">Shift B</option>
+                          </select>
+                        </label> : assignment.shift === "B" && <small>Shift B pin saved; inactive while rotation is off.</small>}
                         <HoverTooltip
                           label={`Remove hard assignment for ${currentOperatorName}`}
                           className="hardAssignmentRemoveTooltip"
@@ -3178,9 +3217,18 @@ function App() {
 
             {result ? (
               <div className="resultWorkspace">
-                {result.search && <p className="status">{result.search.complete
+                {result.search && <p className="status">{result.search.scheduleSearch
+                  ? "Shift teams and daily schedules optimized. Best plan found; global optimality not proven."
+                  : result.search.complete
                   ? "Search complete: optimal for the current modeled objective."
                   : "Best assignment found; optimality not proven. More search effort may find a better plan."} {result.search.visitedNodes.toLocaleString()} states visited.</p>}
+                <p className="subtle">Unstaffed slots use no operator and add no staffing or skill effects. Each operator appears once in the plan. Reception assignments avoid specific-clue Rate-UP unless you use a Hard Assignment.</p>
+                {(result.unassignedOperators?.length ?? 0) > 0 && <details className="resultSummary">
+                  <summary>Unused owned operators ({result.unassignedOperators!.length})</summary>
+                  <ul>{result.unassignedOperators!.map((entry) => <li key={entry.operatorId}>
+                    <strong>{operatorsById.get(entry.operatorId)?.name ?? entry.operatorId}</strong>: {entry.reasons.join(" ")}
+                  </li>)}</ul>
+                </details>}
                 {optimizationSearchWarning && (
                   <article className="resultSummary resultAlertSummary">
                     <div className="panelHeader panelHeaderWide">
@@ -3214,11 +3262,16 @@ function App() {
                       <article className="resultCard" key={room.roomId}>
                         <div className="resultHeader">
                           <div>
-                            <h3>{roomLabelById.get(room.roomId) ?? room.roomId}</h3>
+                            <h3>{roomLabelById.get(room.physicalRoomId ?? room.roomId) ?? room.physicalRoomId ?? room.roomId}{room.shift ? ` · Shift ${room.shift}` : ""}</h3>
                             <p>Lv{room.roomLevel}</p>
+                            {room.shiftSchedule && <p>{formatShiftTime(room.shiftSchedule.startMinute)}–{formatShiftTime(room.shiftSchedule.endMinute)} · {room.scheduledHoursPerDay?.toFixed(0)}h scheduled</p>}
                           </div>
                           <span className="miniStat">{room.dataConfidence}</span>
                         </div>
+                        {room.shift && <p className="shiftResultSummary">
+                          Estimated work {room.workingHoursPerDay?.toFixed(2)}h/day · Downtime {room.downtimeHoursPerDay?.toFixed(2)}h/day
+                          {room.assignedOperatorIds.length > 0 && room.estimatedWorkHoursFromFullMood !== undefined && <><br />From full Mood: {room.estimatedWorkHoursFromFullMood === null ? "no Mood drain" : `${room.estimatedWorkHoursFromFullMood.toFixed(2)}h at estimated support`}</>}
+                        </p>}
                         <div className="operatorChipList operatorChipGrid">
                           {room.assignedOperatorIds.map((operatorId, slotIndex) => {
                             const operator = operatorsById.get(operatorId);
@@ -3240,7 +3293,7 @@ function App() {
                             const slotIndex = room.assignedOperatorIds.length + openIndex;
                             const alternatives = room.alternativeOperatorIdsBySlot?.[slotIndex] ?? [];
                             return <div className="resultOperatorSlot" key={`${room.roomId}-any-${openIndex}`}>
-                              <AnyOperatorChip />
+                              <EmptyOperatorChip />
                               {alternatives.length > 0 && <TiedOptionsPopover catalog={catalog} operatorIds={alternatives}
                                 slotLabel={`slot ${slotIndex + 1}: open slot`} />}
                             </div>;
@@ -3301,7 +3354,7 @@ function App() {
                       <p className="eyebrow">Optimization</p>
                       <h3>Scenario snapshot</h3>
                     </div>
-                    <span className="miniStat">{orderedResultRoomPlans.length} rooms planned</span>
+                    <span className="miniStat">{orderedResultRoomPlans.length} {result.roomPlans.some((room) => room.shift) ? "shifts" : "rooms"} planned</span>
                   </div>
                   <div className="resultSummaryGrid">
                     <div className="resultMetric resultMetricHighlight">

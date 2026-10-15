@@ -47,7 +47,9 @@ function enumerateAssignments(catalog: GameCatalog, scenario: OptimizationScenar
     visit(index + 1);
     for (const room of rooms) {
       const workers = assigned.get(room.roomId)!;
-      if (workers.length === room.slotCap) continue;
+      // Respect the same user policy as both solvers: specific-clue workers
+      // need an explicit Reception pin, even when their staffing has value.
+      if (workers.length === room.slotCap || !scorer.canAssign(room.roomId, ids[index]!)) continue;
       workers.push(ids[index]!);
       visit(index + 1);
       workers.pop();

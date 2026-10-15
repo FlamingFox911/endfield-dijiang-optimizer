@@ -254,12 +254,14 @@ describe("optimizer runtime", () => {
 
     expect(receptionPlan).toBeDefined();
     expect(receptionPlan!.scoreBreakdown.supportRoomScore).toBeCloseTo(
-      (30 + 30) * SUPPORT_WEIGHTS.receptionClueCollectionWeight * 2.5 * 0.625,
+      // Two independent workers: zero, one (182%), or two (288%) active.
+      100 * (2 * 0.625 * 0.375 * 1.4 * 1.3 + 0.625 ** 2 * 1.8 * 1.6)
+        * SUPPORT_WEIGHTS.receptionClueCollectionWeight * 2.5,
       6,
     );
   });
 
-  it("keeps Reception Room clue utility on a conservative support scale", async () => {
+  it("includes Reception staffing and multiplies general skills on its explicit utility scale", async () => {
     const catalog = await loadDefaultCatalog();
     const scenario = createStarterScenario(catalog);
     const ardelia = scenario.roster.find((operator) => operator.operatorId === "ardelia");
@@ -300,7 +302,8 @@ describe("optimizer runtime", () => {
     expect(receptionPlan).toBeDefined();
     expect(receptionPlan!.assignedOperatorIds).toEqual(["ardelia", "estella"]);
     expect(receptionPlan!.scoreBreakdown.supportRoomScore).toBeCloseTo(
-      (30 + 30) * SUPPORT_WEIGHTS.receptionClueCollectionWeight * 0.625,
+      100 * (2 * 0.625 * 0.375 * 1.4 * 1.3 + 0.625 ** 2 * 1.8 * 1.6)
+        * SUPPORT_WEIGHTS.receptionClueCollectionWeight,
       6,
     );
   });
@@ -320,7 +323,7 @@ describe("optimizer runtime", () => {
           || (operator.operatorId === "estella" && state.skillId === "frequency-monitoring")
             ? 2
             : (operator.operatorId === "avywenna" && state.skillId === "messengers-secret")
-              || (operator.operatorId === "arclight" && state.skillId === "blade-of-the-wildlands")
+              || (operator.operatorId === "arclight" && state.skillId === "hanna-traditions")
               ? 1
               : 0,
       }));
@@ -354,7 +357,8 @@ describe("optimizer runtime", () => {
       operator.owned = operator.operatorId === "arclight" || operator.operatorId === "avywenna";
       operator.baseSkillStates = operator.baseSkillStates.map((state) => ({
         ...state,
-        unlockedRank: operator.operatorId === "avywenna" && state.skillId === "messengers-secret" ? 1 : 0,
+        unlockedRank: (operator.operatorId === "avywenna" && state.skillId === "messengers-secret")
+          || (operator.operatorId === "arclight" && state.skillId === "hanna-traditions") ? 1 : 0,
       }));
     }
 

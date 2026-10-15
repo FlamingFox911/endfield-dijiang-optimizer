@@ -3,13 +3,14 @@ import type { OptimizationProfile } from "@endfield/domain";
 import type { OptimizationSearchConfig } from "./types.js";
 
 export const SUPPORT_WEIGHTS = {
-  version: "v4",
+  version: "v5",
   assignedOperatorProductionEfficiencyPercent: 40,
   baselineMoodDrainPerHour: 3_600,
   baselineMoodRegenPerHour: 6_000,
   baselineMoodWorkingUptime: 0.625,
-  // Reception Room credits matter, but guide priority and community discussion both put
-  // them below steady production once social-loop and store RNG variance are accounted for.
+  // Utility per percentage point of active Reception throughput, including
+  // its base, +40% per worker, and multiplicative general clue skills. This is
+  // a configurable preference scale, not a measured Credits-to-EXP conversion.
   receptionClueCollectionWeight: 0.01,
   receptionClueRateWeight: 0,
   priorityRecipeFocusMultiplier: 2.5,

@@ -1,7 +1,8 @@
-import type { GameCatalog, OptimizationResult, OptimizationScenario, RecipeDefinition, FacilityKind } from "@endfield/domain";
+import type { GameCatalog, OptimizationResult, OptimizationScenario, RecipeDefinition, FacilityKind, ShiftSchedule } from "@endfield/domain";
 import {
   getFacilityLevelCapForControlNexus, getGrowthSlotCap, getMaxFacilityRoomCounts,
   getRoomSlotCap, getUnlockedFacilityRoomCount,
+  getRoomShiftSchedule, getShiftRoomId,
 } from "@endfield/data";
 import {
   DEFAULT_OPTIMIZATION_EFFORT, DEFAULT_OPTIMIZATION_PROFILE, OPTIMIZATION_PROFILE_EFFORTS,
@@ -12,10 +13,14 @@ import { createOperatorPreference } from "./operator-preference.js";
 import { boundAssignmentSearch } from "./search-space.js";
 import { createSearchTiming } from "./search-timing.js";
 import { searchRoomTeams } from "./team-search.js";
+import { optimizeRotationSchedules } from "./rotation-search.js";
 import type { OptimizationProgressSnapshot, OptimizationSearchConfig, SolveScenarioOptions } from "./types.js";
 
 export interface NormalizedRoom {
   roomId: string;
+  physicalRoomId?: string;
+  shift?: "A" | "B";
+  shiftSchedule?: ShiftSchedule;
   roomKind: FacilityKind;
   level: number;
   slotCap: number;
@@ -238,9 +243,18 @@ export function normalizeScenario(
     }
   }
 
+  const activeRooms = rooms.filter((room) => room.slotCap > 0 || room.roomKind === "control_nexus");
+  const shiftedRooms = normalizedScenario.options.shiftRotation?.enabled
+    ? activeRooms.flatMap((room) => {
+      const schedule = getRoomShiftSchedule(normalizedScenario, room.roomId);
+      return (["A", "B"] as const).map((shift) => ({
+        ...room, roomId: getShiftRoomId(room.roomId, shift), physicalRoomId: room.roomId, shift,
+        shiftSchedule: shift === "A" ? schedule : { startMinute: schedule.endMinute, endMinute: schedule.startMinute },
+      }));
+    }) : activeRooms;
   return {
     scenario: normalizedScenario,
-    rooms: rooms.filter((room) => room.slotCap > 0 || room.roomKind === "control_nexus"),
+    rooms: shiftedRooms,
     warnings: uniqueWarnings(warnings),
   };
 }
@@ -258,7 +272,8 @@ function buildHardAssignmentState(
   const hardAssignedOperatorIds = new Set<string>();
 
   for (const assignment of normalizedScenario.facilities.hardAssignments) {
-    const room = roomMap.get(assignment.roomId);
+    if (assignment.shift === "B" && !normalizedScenario.options.shiftRotation?.enabled) continue;
+    const room = roomMap.get(getShiftRoomId(assignment.roomId, assignment.shift));
     if (!room) {
       warnings.push(`Ignoring hard assignment for unknown room '${assignment.roomId}'.`);
       continue;
@@ -316,6 +331,10 @@ export function solveNormalizedScenario(
   normalized: NormalizedScenarioResult,
   options?: SolveScenarioOptions,
 ): OptimizationResult {
+  if (normalized.scenario.options.shiftRotation?.enabled
+    && normalized.scenario.options.shiftRotation.scheduleMode !== "fixed") {
+    return optimizeRotationSchedules(catalog, normalized, options, solveNormalizedScenario);
+  }
   const warnings = [...normalized.warnings];
   const { scenario, rooms } = normalized;
   const { owned, hard, limits } = prepareSearchState(catalog, normalized, warnings);
@@ -323,6 +342,8 @@ export function solveNormalizedScenario(
   const compareOperators = createOperatorPreference(catalog.operators);
   const available = [...owned.keys()].filter((id) => !hard.hardAssignedOperatorIds.has(id)).sort(compareOperators);
   const scorer = createAssignmentScorer(catalog, scenario, rooms);
+  const scoreTolerance = scenario.options.shiftRotation?.enabled ? 1e-12 : 0;
+  const scoresTie = (left: number, right: number) => Math.abs(left - right) <= scoreTolerance;
   // Keep each room's slots together to eliminate equivalent worker permutations.
   // Control is considered after productive rooms, when its actual benefit is known.
   const orderedRooms = [...rooms].sort((left, right) => {
@@ -417,7 +438,7 @@ export function solveNormalizedScenario(
   };
   const accept = (assignment: Map<string, Array<string | null>>, score: number) => {
     const workers = [...assignment.values()].flat().filter(Boolean).length;
-    if (score > bestScore || (score === bestScore && (workers < bestWorkerCount
+    if (score > bestScore + scoreTolerance || (scoresTie(score, bestScore) && (workers < bestWorkerCount
       || (workers === bestWorkerCount && compareAssignments(assignment, bestAssignments) < 0)))) {
       bestAssignments = cloneAssignedByRoom(assignment);
       bestScore = score;
@@ -491,14 +512,20 @@ export function solveNormalizedScenario(
       for (const id of plan.assignedOperatorIds) {
         const index = values.indexOf(null);
         if (index < 0) break;
-        if (freeIds(hinted).includes(id)) values[index] = id;
+        if (freeIds(hinted).includes(id) && scorer.canAssign(plan.roomId, id)) values[index] = id;
       }
     }
     accept(hinted, scorer.score(hinted));
     accept(hinted, greedyFill(hinted));
   }
   searchTiming.start();
-  if (config.maxVisitedNodes == null && config.maxBranchCandidatesPerSlot == null) {
+  const certified = scorer.certifiedFullUptimePlan(hard.assignedByRoom, available);
+  if (certified) {
+    maybeCancel();
+    accept(certified, scorer.score(certified));
+    visitedNodes += 1;
+    emitProgress("Proved rotation assignment with staffing bound", slots.length);
+  } else if (config.maxVisitedNodes == null && config.maxBranchCandidatesPerSlot == null) {
     searchRoomTeams({
       rooms, available, hardAssignments: hard.assignedByRoom, scorer, compareOperators,
       best: () => ({ score: bestScore, assignments: bestAssignments, workerCount: bestWorkerCount }),
@@ -544,6 +571,8 @@ export function solveNormalizedScenario(
         if (source.roomId === target.roomId) continue;
         const targetValues = current.get(target.roomId)!;
         const targetId = targetValues[target.index]!;
+        if (!scorer.canAssign(target.roomId, sourceId)
+          || (targetId != null && !scorer.canAssign(source.roomId, targetId))) continue;
         sourceValues[source.index] = targetId;
         targetValues[target.index] = sourceId;
         const score = scorer.score(current);
@@ -569,8 +598,9 @@ export function solveNormalizedScenario(
       for (const id of freeIds(bestAssignments)) {
         maybeCancel();
         if (compareOperators(id, original) >= 0) continue;
+        if (!scorer.canAssign(slot.roomId, id)) continue;
         values[slot.index] = id;
-        if (scorer.score(bestAssignments) === bestScore) {
+        if (scoresTie(scorer.score(bestAssignments), bestScore)) {
           changed = true;
           break;
         }
@@ -602,8 +632,9 @@ export function solveNormalizedScenario(
       const alternatives: string[] = [];
       for (const id of unassigned) {
         maybeCancel();
+        if (!scorer.canAssign(plan.roomId, id)) continue;
         values[assignmentIndex] = id;
-        if (scorer.score(bestAssignments) === bestScore) alternatives.push(id);
+        if (scoresTie(scorer.score(bestAssignments), bestScore)) alternatives.push(id);
       }
       values[assignmentIndex] = original;
       return alternatives;

@@ -442,6 +442,23 @@ export interface ReceptionRoomState {
 export interface HardAssignment {
   operatorId: string;
   roomId: string;
+  /** Defaults to A. Shift B pins are inactive when rotation is disabled. */
+  shift?: "A" | "B";
+}
+
+export interface ShiftSchedule {
+  /** Minutes after midnight, restricted to whole hours (multiples of 60).
+   * Equal endpoints are invalid; each shift lasts 1-23 hours. */
+  startMinute: number;
+  endMinute: number;
+}
+
+export interface ShiftRotationOptions {
+  enabled: boolean;
+  /** Defaults to optimized. Fixed preserves the user's cabin schedules. */
+  scheduleMode?: "optimized" | "fixed";
+  /** Shift A's window by physical room id; B covers the rest of each day. */
+  schedules?: Record<string, ShiftSchedule>;
 }
 
 export interface FacilityState {
@@ -461,6 +478,7 @@ export interface DemandProfile {
 
 export interface BaseOptimizationOptions {
   maxFacilities: boolean;
+  shiftRotation?: ShiftRotationOptions;
   upgradeRankingMode?: UpgradeRankingMode;
   optimizationProfile?: OptimizationProfile;
   optimizationEffort?: number;
@@ -520,6 +538,15 @@ export interface ScoreBreakdown {
 
 export interface RoomPlan {
   roomId: string;
+  physicalRoomId?: string;
+  shift?: "A" | "B";
+  shiftSchedule?: ShiftSchedule;
+  /** Daily averages over the rotation forecast, including empty-team downtime. */
+  scheduledHoursPerDay?: number;
+  workingHoursPerDay?: number;
+  downtimeHoursPerDay?: number;
+  /** null means no Mood drain under the estimated support. */
+  estimatedWorkHoursFromFullMood?: number | null;
   roomKind: FacilityKind;
   roomLevel: number;
   slotCap?: number;
@@ -547,6 +574,8 @@ export interface OptimizationResult {
     maxVisitedNodes: number | null;
     budgetExceeded: boolean;
     candidatesLimited: boolean;
+    /** Joint schedule search is approximate, even if its seed allocation was certified. */
+    scheduleSearch?: { evaluatedSchedules: number; resolutionMinutes: number };
   };
   catalogVersion: CatalogVersion;
   totalScore: number;
@@ -554,6 +583,8 @@ export interface OptimizationResult {
   projectedOutputs: Record<ProductKind, number>;
   roomPlans: RoomPlan[];
   explanations: AssignmentExplanation[];
+  /** Open-seat gains hold all other teams and schedules fixed. */
+  unassignedOperators?: Array<{ operatorId: string; reasons: string[]; bestOpenSlotScoreGain: number }>;
   warnings: string[];
   supportWeightsVersion: string;
 }

@@ -1,0 +1,1060 @@
+{
+  "description": "27-owned-operator rotation regression. Only roster, facility, and scoring inputs; live catalog differences frozen for offline reproduction.",
+  "scenario": {
+    "scenarioFormatVersion": 1,
+    "catalogVersion": "2026-04-17/v1.2",
+    "roster": [
+      {
+        "operatorId": "purrchena",
+        "owned": true,
+        "level": 80,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "brand-ambassador",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "desserts-for-the-debrief",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "typhoeus",
+        "owned": true,
+        "level": 90,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "lithic-murmurs",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "life-in-the-spores",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "liino",
+        "owned": true,
+        "level": 90,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "idol-passion",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "stage-vibe-that-lingers",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "arcane",
+        "owned": true,
+        "level": 90,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "pluck-the-mountain-boil-the-sea",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "botanophile",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "camille",
+        "owned": false,
+        "level": 1,
+        "promotionTier": 0,
+        "baseSkillStates": [
+          {
+            "skillId": "hemo-vitreography",
+            "unlockedRank": 0
+          },
+          {
+            "skillId": "aga-mekanazs-manual",
+            "unlockedRank": 0
+          }
+        ]
+      },
+      {
+        "operatorId": "mifu",
+        "owned": true,
+        "level": 90,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "secret-informants",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "esoteric-tisane",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "zhuang-fangyi",
+        "owned": true,
+        "level": 90,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "viceroy-experience",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "tianshi-chi-meditation",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "rossi",
+        "owned": false,
+        "level": 1,
+        "promotionTier": 0,
+        "baseSkillStates": [
+          {
+            "skillId": "clan-etiquette",
+            "unlockedRank": 0
+          },
+          {
+            "skillId": "scent-of-the-hunt",
+            "unlockedRank": 0
+          }
+        ]
+      },
+      {
+        "operatorId": "tangtang",
+        "owned": true,
+        "level": 90,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "supreme-chief",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "rivers-daughter",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "yvonne",
+        "owned": false,
+        "level": 1,
+        "promotionTier": 0,
+        "baseSkillStates": [
+          {
+            "skillId": "fungal-pigment-extraction",
+            "unlockedRank": 0
+          },
+          {
+            "skillId": "fashionista",
+            "unlockedRank": 0
+          }
+        ]
+      },
+      {
+        "operatorId": "gilberta",
+        "owned": true,
+        "level": 90,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "messengerial-processing",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "messengerial-arms-mastery",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "laevatain",
+        "owned": false,
+        "level": 1,
+        "promotionTier": 0,
+        "baseSkillStates": [
+          {
+            "skillId": "memory-crucible",
+            "unlockedRank": 0
+          },
+          {
+            "skillId": "undying-flames",
+            "unlockedRank": 0
+          }
+        ]
+      },
+      {
+        "operatorId": "pogranichnik",
+        "owned": true,
+        "level": 90,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "hone-the-weapons",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "morale-boost",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "ember",
+        "owned": true,
+        "level": 90,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "special-northern-training",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "keepers-of-the-banner",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "last-rite",
+        "owned": true,
+        "level": 90,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "cemetery-gardening",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "fame-of-the-royal-courts",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "lifeng",
+        "owned": true,
+        "level": 90,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "youthful-ambition",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "laddie-reliable",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "ardelia",
+        "owned": true,
+        "level": 90,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "tales-of-the-land",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "mr-dollys-game",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "perlica",
+        "owned": true,
+        "level": 80,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "supervisor",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "protocol-redistribution",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "chen-qianyu",
+        "owned": true,
+        "level": 80,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "blade-critique",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "jadeworking",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "wulfgard",
+        "owned": true,
+        "level": 80,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "pack-techniques",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "knack-for-the-wildlands",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "arclight",
+        "owned": true,
+        "level": 80,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "blade-of-the-wildlands",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "hanna-traditions",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "xaihi",
+        "owned": true,
+        "level": 80,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "standardized-scripting",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "murmuring-session",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "alesh",
+        "owned": true,
+        "level": 80,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "casual-angling",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "anglers-intel-network",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "da-pan",
+        "owned": true,
+        "level": 80,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "chef-of-forage-and-game",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "worldly-wisdom",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "avywenna",
+        "owned": true,
+        "level": 80,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "residence-advisor",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "messengers-secret",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "snowshine",
+        "owned": true,
+        "level": 80,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "rescuers-perseverance",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "happy-go-lucky",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "akekuri",
+        "owned": true,
+        "level": 80,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "coffee-or-tea",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "icebreaker",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "estella",
+        "owned": true,
+        "level": 80,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "fragmented-rest",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "frequency-monitoring",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "catcher",
+        "owned": true,
+        "level": 80,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "silent-caretaker",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "grounded-approach",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "fluorite",
+        "owned": true,
+        "level": 80,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "wildlands-trekker",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "reader-of-emotions",
+            "unlockedRank": 2
+          }
+        ]
+      },
+      {
+        "operatorId": "antal",
+        "owned": true,
+        "level": 80,
+        "promotionTier": 4,
+        "baseSkillStates": [
+          {
+            "skillId": "experimental-arts-unit",
+            "unlockedRank": 2
+          },
+          {
+            "skillId": "pun-isher-studies",
+            "unlockedRank": 2
+          }
+        ]
+      }
+    ],
+    "facilities": {
+      "controlNexus": {
+        "level": 5
+      },
+      "manufacturingCabins": [
+        {
+          "id": "mfg-1",
+          "enabled": true,
+          "level": 3,
+          "fixedRecipeId": "advanced-cognitive-carrier"
+        },
+        {
+          "id": "mfg-2",
+          "enabled": true,
+          "level": 3,
+          "fixedRecipeId": "arms-insp-set"
+        }
+      ],
+      "growthChambers": [
+        {
+          "id": "growth-1",
+          "enabled": true,
+          "level": 3,
+          "fixedRecipeIds": [
+            "wulingstone",
+            "igneosite",
+            "false-aggela",
+            "blighted-jadeleaf",
+            "cosmagaric",
+            "bloodcap",
+            "talos-cap",
+            "protocolith",
+            "crimson-spearleaf"
+          ]
+        }
+      ],
+      "receptionRoom": {
+        "id": "reception-1",
+        "enabled": true,
+        "level": 3
+      },
+      "hardAssignments": []
+    },
+    "options": {
+      "maxFacilities": false,
+      "upgradeRankingMode": "roi",
+      "optimizationProfile": "exhaustive",
+      "optimizationEffort": 100,
+      "demandProfile": {
+        "preset": "balanced",
+        "productWeights": {
+          "operator_exp": 2,
+          "weapon_exp": 1,
+          "fungal": 1,
+          "vitrified_plant": 1,
+          "rare_mineral": 1
+        },
+        "receptionWeight": 2
+      },
+      "shiftRotation": {
+        "enabled": true
+      }
+    }
+  },
+  "catalogOverrides": {
+    "operators": [
+      {
+        "id": "purrchena",
+        "name": "Purrchena",
+        "rarity": 5,
+        "className": "Defender",
+        "dataConfidence": "verified",
+        "baseSkills": [
+          {
+            "id": "brand-ambassador",
+            "name": "Brand Ambassador",
+            "facilityKind": "reception_room",
+            "ranks": [
+              {
+                "rank": 1,
+                "label": "alpha",
+                "modifiers": [
+                  {
+                    "metric": "clue_rate_up",
+                    "appliesTo": "clue_2",
+                    "value": 1,
+                    "unit": "tier"
+                  }
+                ]
+              },
+              {
+                "rank": 2,
+                "label": "beta",
+                "modifiers": [
+                  {
+                    "metric": "clue_rate_up",
+                    "appliesTo": "clue_2",
+                    "value": 2,
+                    "unit": "tier"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "desserts-for-the-debrief",
+            "name": "Desserts for the Debrief",
+            "facilityKind": "manufacturing_cabin",
+            "ranks": [
+              {
+                "rank": 1,
+                "label": "beta",
+                "modifiers": [
+                  {
+                    "metric": "production_efficiency",
+                    "appliesTo": "operator_exp",
+                    "value": 20,
+                    "unit": "percent"
+                  }
+                ]
+              },
+              {
+                "rank": 2,
+                "label": "gamma",
+                "modifiers": [
+                  {
+                    "metric": "production_efficiency",
+                    "appliesTo": "operator_exp",
+                    "value": 30,
+                    "unit": "percent"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "typhoeus",
+        "name": "Typhoeus",
+        "rarity": 6,
+        "className": "Striker",
+        "dataConfidence": "verified",
+        "baseSkills": [
+          {
+            "id": "lithic-murmurs",
+            "name": "Lithic Murmurs",
+            "facilityKind": "growth_chamber",
+            "ranks": [
+              {
+                "rank": 1,
+                "label": "beta",
+                "modifiers": [
+                  {
+                    "metric": "growth_rate",
+                    "appliesTo": "rare_mineral",
+                    "value": 20,
+                    "unit": "percent"
+                  }
+                ]
+              },
+              {
+                "rank": 2,
+                "label": "gamma",
+                "modifiers": [
+                  {
+                    "metric": "growth_rate",
+                    "appliesTo": "rare_mineral",
+                    "value": 30,
+                    "unit": "percent"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "life-in-the-spores",
+            "name": "Life in the Spores",
+            "facilityKind": "growth_chamber",
+            "ranks": [
+              {
+                "rank": 1,
+                "label": "beta",
+                "modifiers": [
+                  {
+                    "metric": "growth_rate",
+                    "appliesTo": "fungal",
+                    "value": 20,
+                    "unit": "percent"
+                  }
+                ]
+              },
+              {
+                "rank": 2,
+                "label": "gamma",
+                "modifiers": [
+                  {
+                    "metric": "growth_rate",
+                    "appliesTo": "fungal",
+                    "value": 30,
+                    "unit": "percent"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "liino",
+        "name": "Liino",
+        "rarity": 6,
+        "className": "Supporter",
+        "dataConfidence": "verified",
+        "baseSkills": [
+          {
+            "id": "idol-passion",
+            "name": "Idol Passion",
+            "facilityKind": "reception_room",
+            "ranks": [
+              {
+                "rank": 1,
+                "label": "beta",
+                "modifiers": [
+                  {
+                    "metric": "mood_drop_reduction",
+                    "appliesTo": "all",
+                    "value": 14,
+                    "unit": "percent"
+                  }
+                ]
+              },
+              {
+                "rank": 2,
+                "label": "gamma",
+                "modifiers": [
+                  {
+                    "metric": "mood_drop_reduction",
+                    "appliesTo": "all",
+                    "value": 18,
+                    "unit": "percent"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "stage-vibe-that-lingers",
+            "name": "Stage Vibe That Lingers",
+            "facilityKind": "control_nexus",
+            "ranks": [
+              {
+                "rank": 1,
+                "label": "beta",
+                "modifiers": [
+                  {
+                    "metric": "mood_regen",
+                    "appliesTo": "all",
+                    "value": 12,
+                    "unit": "percent"
+                  }
+                ]
+              },
+              {
+                "rank": 2,
+                "label": "gamma",
+                "modifiers": [
+                  {
+                    "metric": "mood_regen",
+                    "appliesTo": "all",
+                    "value": 16,
+                    "unit": "percent"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "arcane",
+        "name": "Arcane",
+        "rarity": 6,
+        "className": "Caster",
+        "dataConfidence": "verified",
+        "baseSkills": [
+          {
+            "id": "pluck-the-mountain-boil-the-sea",
+            "name": "Pluck the Mountain, Boil the Sea",
+            "facilityKind": "growth_chamber",
+            "ranks": [
+              {
+                "rank": 1,
+                "label": "beta",
+                "modifiers": [
+                  {
+                    "metric": "growth_rate",
+                    "appliesTo": "rare_mineral",
+                    "value": 20,
+                    "unit": "percent"
+                  }
+                ]
+              },
+              {
+                "rank": 2,
+                "label": "gamma",
+                "modifiers": [
+                  {
+                    "metric": "growth_rate",
+                    "appliesTo": "rare_mineral",
+                    "value": 30,
+                    "unit": "percent"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "botanophile",
+            "name": "Botanophile",
+            "facilityKind": "growth_chamber",
+            "ranks": [
+              {
+                "rank": 1,
+                "label": "beta",
+                "modifiers": [
+                  {
+                    "metric": "growth_rate",
+                    "appliesTo": "vitrified_plant",
+                    "value": 20,
+                    "unit": "percent"
+                  }
+                ]
+              },
+              {
+                "rank": 2,
+                "label": "gamma",
+                "modifiers": [
+                  {
+                    "metric": "growth_rate",
+                    "appliesTo": "vitrified_plant",
+                    "value": 30,
+                    "unit": "percent"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "camille",
+        "name": "Camille",
+        "rarity": 6,
+        "className": "Vanguard",
+        "dataConfidence": "verified",
+        "baseSkills": [
+          {
+            "id": "hemo-vitreography",
+            "name": "Hemo-Vitreography",
+            "facilityKind": "growth_chamber",
+            "ranks": [
+              {
+                "rank": 1,
+                "label": "beta",
+                "modifiers": [
+                  {
+                    "metric": "growth_rate",
+                    "appliesTo": "vitrified_plant",
+                    "value": 20,
+                    "unit": "percent"
+                  }
+                ]
+              },
+              {
+                "rank": 2,
+                "label": "gamma",
+                "modifiers": [
+                  {
+                    "metric": "growth_rate",
+                    "appliesTo": "vitrified_plant",
+                    "value": 30,
+                    "unit": "percent"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "aga-mekanazs-manual",
+            "name": "Agaš'mekanaz's Manual",
+            "facilityKind": "manufacturing_cabin",
+            "ranks": [
+              {
+                "rank": 1,
+                "label": "beta",
+                "modifiers": [
+                  {
+                    "metric": "production_efficiency",
+                    "appliesTo": "operator_exp",
+                    "value": 20,
+                    "unit": "percent"
+                  }
+                ]
+              },
+              {
+                "rank": 2,
+                "label": "gamma",
+                "modifiers": [
+                  {
+                    "metric": "production_efficiency",
+                    "appliesTo": "operator_exp",
+                    "value": 30,
+                    "unit": "percent"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "mifu",
+        "name": "Mifu",
+        "rarity": 6,
+        "className": "Guard",
+        "dataConfidence": "verified",
+        "baseSkills": [
+          {
+            "id": "secret-informants",
+            "name": "Secret Informants",
+            "facilityKind": "reception_room",
+            "ranks": [
+              {
+                "rank": 1,
+                "label": "alpha",
+                "modifiers": [
+                  {
+                    "metric": "clue_rate_up",
+                    "appliesTo": "clue_3",
+                    "value": 1,
+                    "unit": "tier"
+                  }
+                ]
+              },
+              {
+                "rank": 2,
+                "label": "beta",
+                "modifiers": [
+                  {
+                    "metric": "clue_rate_up",
+                    "appliesTo": "clue_3",
+                    "value": 2,
+                    "unit": "tier"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "esoteric-tisane",
+            "name": "Esoteric Tisane",
+            "facilityKind": "growth_chamber",
+            "ranks": [
+              {
+                "rank": 1,
+                "label": "beta",
+                "modifiers": [
+                  {
+                    "metric": "growth_rate",
+                    "appliesTo": "fungal",
+                    "value": 20,
+                    "unit": "percent"
+                  }
+                ]
+              },
+              {
+                "rank": 2,
+                "label": "gamma",
+                "modifiers": [
+                  {
+                    "metric": "growth_rate",
+                    "appliesTo": "fungal",
+                    "value": 30,
+                    "unit": "percent"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "recipes": [
+      {
+        "id": "crimson-spearleaf",
+        "name": "Crimson Spearleaf",
+        "facilityKind": "growth_chamber",
+        "productKind": "vitrified_plant",
+        "roomLevel": 3,
+        "baseDurationMinutes": 7500,
+        "outputAmount": 3,
+        "sourceRefs": [
+          {
+            "id": "endfieldtools-live-resource-crimson-spearleaf",
+            "label": "EndfieldTools Crimson Spearleaf item data",
+            "url": "https://endfieldtools.dev/localdb/optimized/factory/factory-data.json",
+            "retrievedOn": "2026-10-15",
+            "confidence": "inferred",
+            "notes": "The item identity and Growth Chamber family come from the extracted game database. Level, duration, and output inherit the bundled verified values for other rarity-5 resources in the same family pending direct in-game verification."
+          }
+        ],
+        "dataConfidence": "provisional"
+      },
+      {
+        "id": "talos-cap",
+        "name": "Talos Cap",
+        "facilityKind": "growth_chamber",
+        "productKind": "fungal",
+        "roomLevel": 3,
+        "baseDurationMinutes": 7500,
+        "outputAmount": 1,
+        "sourceRefs": [
+          {
+            "id": "endfieldtools-live-resource-talos-cap",
+            "label": "EndfieldTools Talos Cap item data",
+            "url": "https://endfieldtools.dev/localdb/optimized/factory/factory-data.json",
+            "retrievedOn": "2026-10-15",
+            "confidence": "inferred",
+            "notes": "The item identity and Growth Chamber family come from the extracted game database. Level, duration, and output inherit the bundled verified values for other rarity-5 resources in the same family pending direct in-game verification."
+          }
+        ],
+        "dataConfidence": "provisional"
+      },
+      {
+        "id": "protocolith",
+        "name": "Protocolith",
+        "facilityKind": "growth_chamber",
+        "productKind": "rare_mineral",
+        "roomLevel": 3,
+        "baseDurationMinutes": 7500,
+        "outputAmount": 1,
+        "sourceRefs": [
+          {
+            "id": "endfieldtools-live-resource-protocolith",
+            "label": "EndfieldTools Protocolith item data",
+            "url": "https://endfieldtools.dev/localdb/optimized/factory/factory-data.json",
+            "retrievedOn": "2026-10-15",
+            "confidence": "inferred",
+            "notes": "The item identity and Growth Chamber family come from the extracted game database. Level, duration, and output inherit the bundled verified values for other rarity-5 resources in the same family pending direct in-game verification."
+          }
+        ],
+        "dataConfidence": "provisional"
+      }
+    ]
+  }
+}
