@@ -12,7 +12,8 @@ const END_HOUR = WARMUP_HOURS + FORECAST_DAYS * 24;
 const EPSILON = 1e-8;
 
 export interface RotationTeam {
-  schedule: ShiftSchedule;
+  /** No schedule means normal operation: work, recover fully, then resume. */
+  schedule?: ShiftSchedule;
   workers: MoodModifiers[];
 }
 interface SupportSegment extends MoodModifiers {
@@ -38,12 +39,14 @@ export const EMPTY_ROTATION_SUPPORT: RotationSupport = {
   workingHoursPerDay: [], average: { ...NO_SUPPORT },
 };
 
-function isScheduled(schedule: ShiftSchedule, hour: number): boolean {
+function isScheduled(schedule: ShiftSchedule | undefined, hour: number): boolean {
+  if (!schedule) return true;
   const minute = ((hour * 60) % 1440 + 1440) % 1440;
   return (minute - schedule.startMinute + 1440) % 1440 < getShiftDurationMinutes(schedule);
 }
 
-function nextBoundary(schedule: ShiftSchedule, hour: number): number {
+function nextBoundary(schedule: ShiftSchedule | undefined, hour: number): number {
+  if (!schedule) return Infinity;
   return Math.min(...[schedule.startMinute / 60, schedule.endMinute / 60].map((boundary) => {
     const day = Math.floor((hour - boundary + EPSILON) / 24) + 1;
     return boundary + day * 24;
@@ -113,7 +116,7 @@ export function simulateControlRotation(teams: RotationTeam[], key: string): Rot
 
 export function getRotationUptime(team: RotationTeam, support = EMPTY_ROTATION_SUPPORT): RotationUptime {
   const effects = teamEffects(team);
-  const scheduledHoursPerDay = getShiftDurationMinutes(team.schedule) / 60;
+  const scheduledHoursPerDay = team.schedule ? getShiftDurationMinutes(team.schedule) / 60 : 24;
   const drainFromFull = SUPPORT_WEIGHTS.baselineMoodDrainPerHour * Math.max(0,
     1 - (effects.moodDropReductionPercent + support.average.moodDropReductionPercent) / 100);
   const estimatedWorkHoursFromFullMood = drainFromFull === 0 ? null : MAX_MOOD / drainFromFull;

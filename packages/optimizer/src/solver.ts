@@ -14,6 +14,7 @@ import { boundAssignmentSearch } from "./search-space.js";
 import { createSearchTiming } from "./search-timing.js";
 import { searchRoomTeams } from "./team-search.js";
 import { optimizeRotationSchedules } from "./rotation-search.js";
+import { solveHybridRotation } from "./hybrid-rotation.js";
 import type { OptimizationProgressSnapshot, OptimizationSearchConfig, SolveScenarioOptions } from "./types.js";
 
 export interface NormalizedRoom {
@@ -331,9 +332,19 @@ export function solveNormalizedScenario(
   normalized: NormalizedScenarioResult,
   options?: SolveScenarioOptions,
 ): OptimizationResult {
+  return normalized.scenario.options.shiftRotation?.enabled
+    ? solveHybridRotation(catalog, normalized, options, solveRoomAssignments)
+    : solveRoomAssignments(catalog, normalized, options);
+}
+
+function solveRoomAssignments(
+  catalog: GameCatalog,
+  normalized: NormalizedScenarioResult,
+  options?: SolveScenarioOptions,
+): OptimizationResult {
   if (normalized.scenario.options.shiftRotation?.enabled
     && normalized.scenario.options.shiftRotation.scheduleMode !== "fixed") {
-    return optimizeRotationSchedules(catalog, normalized, options, solveNormalizedScenario);
+    return optimizeRotationSchedules(catalog, normalized, options, solveRoomAssignments);
   }
   const warnings = [...normalized.warnings];
   const { scenario, rooms } = normalized;

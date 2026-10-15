@@ -11,7 +11,8 @@ import sources from "../../../catalogs/2026-04-17-v1.2/sources.json";
 import gaps from "../../../catalogs/2026-04-17-v1.2/gaps.json";
 import assets from "../../../catalogs/2026-04-17-v1.2/assets.json";
 
-import { toGameCatalog } from "@endfield/data";
+import { createStarterScenario, toGameCatalog } from "@endfield/data";
+import { solveScenario } from "@endfield/optimizer";
 import type { LiveRosterUpdateDocument, SourceRef } from "@endfield/domain";
 
 import { App } from "./App";
@@ -273,6 +274,35 @@ describe("App", () => {
     expect(await screen.findByText("Catalog sync added 1 operator: Second Sync Test.")).toBeInTheDocument();
     expect(screen.queryByText(/Catalog sync added 2 operators/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Expanded the draft with/)).not.toBeInTheDocument();
+  });
+
+  it("renders normal facilities beside staffed A/B cards with a mixed summary", async () => {
+    const catalog = toGameCatalog({ manifest, progression, operators, facilities, recipes, sources, gaps, assets } as any);
+    const scenario = createStarterScenario(catalog);
+    scenario.facilities.controlNexus.level = 5;
+    scenario.facilities.manufacturingCabins.forEach((room, index) => {
+      room.enabled = index === 0; room.level = 3; room.fixedRecipeId = "arms-insp-set";
+    });
+    scenario.facilities.growthChambers.forEach((room) => { room.enabled = false; });
+    scenario.facilities.receptionRoom!.enabled = false;
+    scenario.roster.forEach((entry) => { entry.owned = ["ember", "chen-qianyu"].includes(entry.operatorId); });
+    scenario.options.shiftRotation = { enabled: true, scheduleMode: "fixed" };
+    const result = solveScenario(catalog, scenario);
+    localStorage.setItem("endfield-dijiang-optimizer:draft", JSON.stringify(scenario));
+    render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.click(screen.getByRole("button", { name: "Optimize" }));
+    act(() => workerInstances[0]!.emit({ type: "optimization-completed", runId: 1, result }));
+    await userEvent.click(screen.getByRole("button", { name: "View results" }));
+    const normal = await screen.findByText("Normal operation");
+    const card = requireHtmlElement(normal.closest(".resultCard"));
+    expect(within(card).getByRole("heading", { name: "Control Nexus" })).toBeInTheDocument();
+    expect(within(card).queryByText(/scheduled/)).not.toBeInTheDocument();
+    expect(within(card).getByText(/Rest .*h\/day/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Manufacturing Cabin 1 · Shift A" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Manufacturing Cabin 1 · Shift B" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Control Nexus · Shift/ })).not.toBeInTheDocument();
+    expect(screen.getByText("1 normal · 2 shifts planned")).toBeInTheDocument();
   });
 
   it("uses an existing draft to avoid replaying legacy sync additions", async () => {

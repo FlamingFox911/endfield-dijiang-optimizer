@@ -3223,6 +3223,7 @@ function App() {
                   ? "Search complete: optimal for the current modeled objective."
                   : "Best assignment found; optimality not proven. More search effort may find a better plan."} {result.search.visitedNodes.toLocaleString()} states visited.</p>}
                 <p className="subtle">Unstaffed slots use no operator and add no staffing or skill effects. Each operator appears once in the plan. Reception assignments avoid specific-clue Rate-UP unless you use a Hard Assignment.</p>
+                {scenario.options.shiftRotation?.enabled && <p className="subtle">Facilities rotate only when both shifts have operators. A facility with one team uses normal operation and rests when Mood is depleted.</p>}
                 {(result.unassignedOperators?.length ?? 0) > 0 && <details className="resultSummary">
                   <summary>Unused owned operators ({result.unassignedOperators!.length})</summary>
                   <ul>{result.unassignedOperators!.map((entry) => <li key={entry.operatorId}>
@@ -3264,12 +3265,13 @@ function App() {
                           <div>
                             <h3>{roomLabelById.get(room.physicalRoomId ?? room.roomId) ?? room.physicalRoomId ?? room.roomId}{room.shift ? ` · Shift ${room.shift}` : ""}</h3>
                             <p>Lv{room.roomLevel}</p>
+                            {scenario.options.shiftRotation?.enabled && !room.shift && <p>Normal operation</p>}
                             {room.shiftSchedule && <p>{formatShiftTime(room.shiftSchedule.startMinute)}–{formatShiftTime(room.shiftSchedule.endMinute)} · {room.scheduledHoursPerDay?.toFixed(0)}h scheduled</p>}
                           </div>
                           <span className="miniStat">{room.dataConfidence}</span>
                         </div>
-                        {room.shift && <p className="shiftResultSummary">
-                          Estimated work {room.workingHoursPerDay?.toFixed(2)}h/day · Downtime {room.downtimeHoursPerDay?.toFixed(2)}h/day
+                        {room.workingHoursPerDay !== undefined && <p className="shiftResultSummary">
+                          Estimated work {room.workingHoursPerDay.toFixed(2)}h/day · {room.shift ? "Downtime" : "Rest"} {room.downtimeHoursPerDay?.toFixed(2)}h/day
                           {room.assignedOperatorIds.length > 0 && room.estimatedWorkHoursFromFullMood !== undefined && <><br />From full Mood: {room.estimatedWorkHoursFromFullMood === null ? "no Mood drain" : `${room.estimatedWorkHoursFromFullMood.toFixed(2)}h at estimated support`}</>}
                         </p>}
                         <div className="operatorChipList operatorChipGrid">
@@ -3354,7 +3356,9 @@ function App() {
                       <p className="eyebrow">Optimization</p>
                       <h3>Scenario snapshot</h3>
                     </div>
-                    <span className="miniStat">{orderedResultRoomPlans.length} {result.roomPlans.some((room) => room.shift) ? "shifts" : "rooms"} planned</span>
+                    <span className="miniStat">{result.roomPlans.some((room) => room.shift) && result.roomPlans.some((room) => !room.shift)
+                      ? `${result.roomPlans.filter((room) => !room.shift).length} normal · ${result.roomPlans.filter((room) => room.shift).length} shifts planned`
+                      : `${orderedResultRoomPlans.length} ${result.roomPlans.some((room) => room.shift) ? "shifts" : "rooms"} planned`}</span>
                   </div>
                   <div className="resultSummaryGrid">
                     <div className="resultMetric resultMetricHighlight">

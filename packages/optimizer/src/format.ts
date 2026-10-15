@@ -70,6 +70,8 @@ export function formatOptimizationResultText(
     );
     if (room.shiftSchedule) {
       lines.push(`  schedule: ${formatShiftTime(room.shiftSchedule.startMinute)}-${formatShiftTime(room.shiftSchedule.endMinute)} | work ${room.workingHoursPerDay?.toFixed(2)}h/day | downtime ${room.downtimeHoursPerDay?.toFixed(2)}h/day`);
+    } else if (room.workingHoursPerDay !== undefined) {
+      lines.push(`  normal operation | work ${room.workingHoursPerDay.toFixed(2)}h/day | rest ${room.downtimeHoursPerDay?.toFixed(2)}h/day`);
     }
     if ((room.chosenRecipeIds ?? []).length > 0) {
       lines.push(`  recipe: ${recipeNames.join(", ")}`);

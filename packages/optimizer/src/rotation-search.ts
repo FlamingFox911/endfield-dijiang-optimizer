@@ -27,6 +27,7 @@ export function optimizeRotationSchedules(
   // A sustainable balanced split gives a useful starting allocation without
   // spending an unbounded search on an arbitrary user-saved starting schedule.
   const seedRooms = rooms.map((room) => {
+    if (!room.shift) return { ...room };
     const original = physical.find((entry) => entry.physicalRoomId === room.physicalRoomId)!.shiftSchedule!;
     const start = original.startMinute;
     return { ...room, shiftSchedule: room.shift === "A"
@@ -57,7 +58,7 @@ export function optimizeRotationSchedules(
   };
   const schedules = () => new Map(physical.map((room) => [room.physicalRoomId!, { ...room.shiftSchedule! }]));
   const restore = (saved: Map<string, ShiftSchedule>) => { for (const [id, schedule] of saved) scorer.setShiftSchedule(id, schedule); };
-  const balanced = new Map(seedRooms.filter((room) => room.shift === "A").map((room) => [room.physicalRoomId!, { ...room.shiftSchedule }]));
+  const balanced = new Map(seedRooms.filter((room) => room.shift === "A").map((room) => [room.physicalRoomId!, { ...room.shiftSchedule! }]));
   restore(balanced);
   let evaluations = seed.search?.visitedNodes ?? 0;
   let evaluatedSchedules = 0;
@@ -274,7 +275,7 @@ export function optimizeRotationSchedules(
   }
   checkCancel();
   const result = scorer.result(best);
-  result.supportWeightsVersion = `${result.supportWeightsVersion.replace(/-rotation-v\d+$/, "")}-rotation-v3`;
+  result.supportWeightsVersion = `${result.supportWeightsVersion.replace(/-rotation-v\d+$/, "")}-rotation-v4`;
   result.search = { complete: false, visitedNodes: evaluations, maxVisitedNodes: null, budgetExceeded: false,
     candidatesLimited: false, scheduleSearch: { evaluatedSchedules, resolutionMinutes: SHIFT_SCHEDULE_STEP_MINUTES } };
   for (const plan of result.roomPlans) {

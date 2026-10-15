@@ -39,9 +39,15 @@ describe("27-operator rotation roster regression", () => {
   it("reproduces the 27-operator roster offline and returns only playable hourly schedules", () => {
     expect(validateScenarioAgainstCatalog(catalog, scenario).ok).toBe(true);
     expect(scenario.roster.filter((entry) => entry.owned)).toHaveLength(27);
-    expect(result.roomPlans).toHaveLength(10);
+    expect(result.roomPlans).toHaveLength(9);
     expect(result.search?.scheduleSearch?.resolutionMinutes).toBe(60);
     for (const plan of result.roomPlans) {
+      if (!plan.shift) {
+        expect(plan.shiftSchedule).toBeUndefined();
+        expect(result.roomPlans.filter((entry) => entry.physicalRoomId === plan.physicalRoomId)).toHaveLength(1);
+        continue;
+      }
+      expect(plan.assignedOperatorIds.length).toBeGreaterThan(0);
       expect(isValidShiftSchedule(plan.shiftSchedule)).toBe(true);
       expect(Number.isInteger(plan.scheduledHoursPerDay)).toBe(true);
       expect(plan.scheduledHoursPerDay).toBeGreaterThanOrEqual(1);
@@ -53,7 +59,7 @@ describe("27-operator rotation roster regression", () => {
     }
     // v5 includes Reception's baseline and staffing in the objective.
     expect(result.totalScore).toBeGreaterThan(4);
-    expect(result.supportWeightsVersion).toBe("v5-rotation-v3");
+    expect(result.supportWeightsVersion).toBe("v5-rotation-v4");
     expect(result.search?.complete).toBe(false);
   });
 
@@ -104,7 +110,7 @@ describe("27-operator rotation roster regression", () => {
       { operatorId: "akekuri", roomId: "reception-1", shift: "B" },
     ];
     const fixed = solveScenario(catalog, pinned);
-    expect(fixed.roomPlans.find((plan) => plan.roomId === "control_nexus::shift-B")!.assignedOperatorIds).toContain("alesh");
+    expect(fixed.roomPlans.find((plan) => plan.roomId === "control_nexus")!.assignedOperatorIds).toContain("alesh");
     expect(fixed.roomPlans.find((plan) => plan.roomId === "reception-1::shift-B")!.assignedOperatorIds).toContain("akekuri");
   });
 });

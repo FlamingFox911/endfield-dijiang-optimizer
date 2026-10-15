@@ -13,7 +13,7 @@ export function ShiftRotationControls({ scenario, rooms, onChange, onModeChange 
   return <article className="roomCard shiftRotationCard" aria-label="Cabin shift schedules">
     <div className="panelHeader">
       <div><p className="eyebrow">Cabin: Auto-Rotate</p><h3>Shift schedules</h3></div>
-      <span className="miniStat">Two teams per cabin</span>
+      <span className="miniStat">Up to two teams per cabin</span>
     </div>
     <label className="plannerCell">
       <span>Schedule mode</span>
@@ -24,6 +24,7 @@ export function ShiftRotationControls({ scenario, rooms, onChange, onModeChange 
       </select>
     </label>
     <p className="subtle">Shift times use whole hours. Hourly handoffs can leave some downtime or extra rest; forecasts still show actual work and recovery time.</p>
+    <p className="subtle">Both shifts need operators. A facility with only one team uses normal operation instead, so results can mix normal facilities and A/B shifts.</p>
     {automatic ? <>
       <p>Optimize searches team assignments and complementary daily work windows together. Stronger teams can work longer while the other team covers their recovery. Each operator has one placement across the entire base, with up to 30 distinct operators at maximum facilities.</p>
       <p className="subtle">Recommended times appear on the result cards. Mood carries across days. This searches the daily Auto-Rotate schedule; repeated manual swaps within a day are not modeled. The best plan found is an estimate, not a proven global optimum.</p>

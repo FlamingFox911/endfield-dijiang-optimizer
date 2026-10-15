@@ -543,7 +543,7 @@ export interface RoomPlan {
   physicalRoomId?: string;
   shift?: "A" | "B";
   shiftSchedule?: ShiftSchedule;
-  /** Daily averages over the rotation forecast, including empty-team downtime. */
+  /** Daily averages over the hybrid forecast; normal operation has a 24h window. */
   scheduledHoursPerDay?: number;
   workingHoursPerDay?: number;
   downtimeHoursPerDay?: number;

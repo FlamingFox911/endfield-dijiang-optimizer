@@ -45,6 +45,15 @@ describe("rotation Mood forecast", () => {
     expect(result.downtimeHoursPerDay).toBe(12);
   });
 
+  it("lets a normal team resume work after recovery without waiting for a shift boundary", () => {
+    const normal = getRotationUptime({ workers: [noMood] });
+    const shortShift = getRotationUptime({ schedule: { startMinute: 0, endMinute: 60 }, workers: [noMood] });
+    expect(normal.scheduledHoursPerDay).toBe(24);
+    expect(normal.workingHoursPerDay).toBeCloseTo(15, 0);
+    expect(normal.workingHoursPerDay).toBeGreaterThan(shortShift.workingHoursPerDay);
+    expect(normal.downtimeHoursPerDay).toBeGreaterThan(0);
+  });
+
   it("carries partial recovery across days even when a full-Mood team initially covers its window", () => {
     const result = getRotationUptime({ schedule: { startMinute: 0, endMinute: 1200 },
       workers: [{ ...noMood, moodDropReductionPercent: 40 }] });
@@ -72,6 +81,69 @@ describe("rotation Mood forecast", () => {
 });
 
 describe("shift assignment integration", () => {
+  it("uses one normal facility card for a lone team in both fixed and optimized modes", async () => {
+    const { catalog, scenario } = await fixture();
+    scenario.roster.forEach((entry) => { entry.owned = entry.operatorId === "ember"; });
+    scenario.facilities.hardAssignments = [{ operatorId: "ember", roomId: "mfg-1", shift: "B" }];
+    scenario.options.shiftRotation!.schedules = { "mfg-1": { startMinute: 0, endMinute: 1380 } };
+    for (const scheduleMode of ["fixed", "optimized"] as const) {
+      scenario.options.shiftRotation!.scheduleMode = scheduleMode;
+      const saved = structuredClone(scenario);
+      const result = solveScenario(catalog, scenario);
+      const plans = result.roomPlans.filter((plan) => plan.physicalRoomId === "mfg-1");
+      expect(plans).toHaveLength(1);
+      const plan = plans[0]!;
+      expect(plan.roomId).toBe("mfg-1");
+      expect(plan.shift).toBeUndefined();
+      expect(plan.shiftSchedule).toBeUndefined();
+      expect(plan.assignedOperatorIds).toEqual(["ember"]);
+      expect(plan.workingHoursPerDay).toBeGreaterThan(12);
+      expect(result.roomPlans.every((entry) => !entry.shift)).toBe(true);
+      expect(result.totalScore).toBeCloseTo(result.projectedRecipeOutputs["arms-insp-set"]!, 10);
+      expect(result.roomPlans.reduce((sum, entry) => sum + entry.projectedScore, 0)).toBeCloseTo(result.totalScore, 10);
+      expect(formatOptimizationResultText(result, catalog)).toContain("normal operation");
+      expect(formatOptimizationResultText(result, catalog)).not.toContain("Shift B");
+      expect(scenario).toEqual(saved);
+    }
+  });
+
+  it("mixes a normal Nexus with two staffed production shifts and recomputes shipwide support", async () => {
+    const { catalog, scenario } = await fixture();
+    scenario.roster.forEach((entry) => { entry.owned = ["ember", "chen-qianyu", "lifeng"].includes(entry.operatorId); });
+    const operator = catalog.operators.find((entry) => entry.id === "lifeng")!;
+    const skill = operator.baseSkills.find((entry) => entry.facilityKind === "control_nexus")!;
+    for (const rank of skill.ranks) rank.modifiers = [{ metric: "mood_drop_reduction", appliesTo: "all", unit: "percent", value: 100 }];
+    scenario.roster.find((entry) => entry.operatorId === "lifeng")!.baseSkillStates = [{ skillId: skill.id, unlockedRank: 2 }];
+    scenario.facilities.hardAssignments = [
+      { operatorId: "lifeng", roomId: "control_nexus", shift: "B" },
+      { operatorId: "ember", roomId: "mfg-1", shift: "A" },
+      { operatorId: "chen-qianyu", roomId: "mfg-1", shift: "B" },
+    ];
+    scenario.options.shiftRotation!.schedules = { "mfg-1": { startMinute: 0, endMinute: 1380 } };
+    const result = solveScenario(catalog, scenario);
+    const control = result.roomPlans.filter((plan) => plan.roomKind === "control_nexus");
+    expect(control).toHaveLength(1);
+    expect(control[0]!.shift).toBeUndefined();
+    expect(control[0]!.assignedOperatorIds).toEqual(["lifeng"]);
+    expect(control[0]!.workingHoursPerDay).toBe(24);
+    const production = result.roomPlans.filter((plan) => plan.roomKind === "manufacturing_cabin");
+    expect(production.map((plan) => plan.shift)).toEqual(["A", "B"]);
+    expect(production.map((plan) => plan.workingHoursPerDay)).toEqual([23, 1]);
+    expect(production.every((plan) => plan.assignedOperatorIds.length > 0)).toBe(true);
+    expect(result.roomPlans.reduce((sum, plan) => sum + plan.projectedScore, 0)).toBeCloseTo(result.totalScore, 10);
+    expect(result.search?.complete).toBe(false);
+    expect(result.warnings.join(" ")).not.toContain("Shift undefined");
+  });
+
+  it("shows an entirely unstaffed facility once without inventing shifts", async () => {
+    const { catalog, scenario } = await fixture();
+    scenario.roster.forEach((entry) => { entry.owned = false; });
+    const result = solveScenario(catalog, scenario);
+    expect(result.roomPlans).toHaveLength(2);
+    expect(result.roomPlans.every((plan) => !plan.shift && plan.assignedOperatorIds.length === 0)).toBe(true);
+    expect(result.totalScore).toBe(0);
+  });
+
   it("optimizes a stronger team's daily window with recovery instead of fixing it at 12 hours", async () => {
     const { catalog, scenario } = await fixture();
     scenario.facilities.manufacturingCabins[0]!.fixedRecipeId = "advanced-combat-record";
@@ -157,8 +229,9 @@ describe("shift assignment integration", () => {
     normalized.scenario.options.shiftRotation!.scheduleMode = "optimized";
     const result = solveNormalizedScenario(catalog, normalized);
     expect(result.totalScore).toBeGreaterThan(fixed.totalScore);
-    expect(result.roomPlans.find((room) => room.roomKind === "control_nexus" && room.shift === "A")!.assignedOperatorIds).toEqual(["lifeng"]);
-    expect(result.roomPlans.find((room) => room.roomKind === "manufacturing_cabin" && room.shift === "A")!.workingHoursPerDay).toBeCloseTo(23, 8);
+    expect(result.roomPlans.find((room) => room.roomKind === "control_nexus")!.assignedOperatorIds).toEqual(["lifeng"]);
+    expect(result.roomPlans.find((room) => room.roomKind === "manufacturing_cabin")!.workingHoursPerDay).toBeCloseTo(24, 8);
+    expect(result.roomPlans.every((room) => !room.shift)).toBe(true);
   });
 
   it("avoids specific-clue targeting automatically and permits explicit Reception pins", async () => {
@@ -205,8 +278,8 @@ describe("shift assignment integration", () => {
       expect(reception.every((plan) => plan.assignedOperatorIds.length === 3)).toBe(true);
       const workers = reception.flatMap((plan) => plan.assignedOperatorIds);
       expect(new Set(workers).size).toBe(enabled ? 6 : 3);
-      expect(result.search?.complete).toBe(true);
-      if (enabled) expect(result.search?.visitedNodes).toBe(1);
+      expect(result.search?.complete).toBe(!enabled);
+      if (enabled) expect(result.search?.visitedNodes).toBe(2);
     }
   });
 
@@ -220,7 +293,7 @@ describe("shift assignment integration", () => {
     })).toThrow("Optimization canceled");
   });
 
-  it("certifies a full roster and maximum base without enumerating shift permutations", async () => {
+  it("fills a maximum base without enumerating shift permutations and collapses its empty Nexus", async () => {
     const { catalog, scenario } = await fixture();
     scenario.options.maxFacilities = true;
     scenario.facilities.growthChambers[0]!.fixedRecipeIds = ["kalkonyx"];
@@ -229,8 +302,8 @@ describe("shift assignment integration", () => {
       entry.baseSkillStates.forEach((skill) => { skill.unlockedRank = 2; });
     });
     const result = solveScenario(catalog, scenario);
-    expect(result.search?.complete).toBe(true);
-    expect(result.search?.visitedNodes).toBe(1);
+    expect(result.search?.complete).toBe(false);
+    expect(result.search?.visitedNodes).toBe(2);
     const production = result.roomPlans.filter((room) => room.roomKind === "manufacturing_cabin" || room.roomKind === "growth_chamber");
     expect(production).toHaveLength(6);
     expect(production.every((room) => room.assignedOperatorIds.length === 3 && room.downtimeHoursPerDay === 0)).toBe(true);
@@ -268,7 +341,7 @@ describe("shift assignment integration", () => {
     enumerate(0, ids);
     const result = solveNormalizedScenario(catalog, normalized);
     expect(result.totalScore).toBeCloseTo(best, 10);
-    expect(result.search?.complete).toBe(true);
+    expect(result.search?.complete).toBe(false);
   });
 
   it("searches both shifts together and uses each operator once", async () => {
@@ -283,7 +356,7 @@ describe("shift assignment integration", () => {
     const recipe = catalog.recipes.find((entry) => entry.id === "arms-insp-set")!;
     expect(result.projectedOutputs.weapon_exp).toBeCloseTo(60 / recipe.baseDurationMinutes! * recipe.outputAmount! * 1.4, 8);
     expect(result.roomPlans.reduce((sum, room) => sum + room.projectedScore, 0)).toBeCloseTo(result.totalScore, 10);
-    expect(result.search?.complete).toBe(true);
+    expect(result.search?.complete).toBe(false);
     expect(formatOptimizationResultText(result, catalog)).toContain("mfg-1 Shift B");
   });
 

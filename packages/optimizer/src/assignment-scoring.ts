@@ -89,7 +89,8 @@ export function createAssignmentScorer(
   // If even the worst drain and recovery rates cover every window, Nexus
   // skills cannot improve the objective. Avoid enumerating irrelevant teams.
   const requiresNexusSupport = () => !scenario.options.shiftRotation?.enabled || rooms.some((room) => {
-    if (room.roomKind === "control_nexus" || !room.shiftSchedule) return false;
+    if (room.roomKind === "control_nexus") return false;
+    if (!room.shiftSchedule) return true;
     const hours = ((room.shiftSchedule.endMinute - room.shiftSchedule.startMinute + 1440) % 1440) / 60;
     return hours * SUPPORT_WEIGHTS.baselineMoodDrainPerHour > MAX_MOOD
       || hours * SUPPORT_WEIGHTS.baselineMoodDrainPerHour > (24 - hours) * SUPPORT_WEIGHTS.baselineMoodRegenPerHour;
@@ -224,11 +225,11 @@ export function createAssignmentScorer(
   function controlSupport(assignments: Assignments): ControlSupport {
     if (scenario.options.shiftRotation?.enabled) {
       const controls = rooms.filter((room) => room.roomKind === "control_nexus");
-      const key = controls.map((room) => `${room.roomId}:${room.shiftSchedule!.startMinute}-${room.shiftSchedule!.endMinute}:${workerIds(room.roomId, assignments).join(",")}`).join("|");
+      const key = controls.map((room) => `${room.roomId}:${room.shiftSchedule ? `${room.shiftSchedule.startMinute}-${room.shiftSchedule.endMinute}` : "normal"}:${workerIds(room.roomId, assignments).join(",")}`).join("|");
       const cached = rotationControlCache.get(key);
       if (cached) return cached;
       const rotation = simulateControlRotation(controls.map((room) => ({
-        schedule: room.shiftSchedule!,
+        schedule: room.shiftSchedule,
         workers: workerIds(room.roomId, assignments).map((id) => effects.get(room.roomId)!.get(id)!),
       })), key);
       if (rotationControlCache.size >= 256) rotationControlCache.clear();
@@ -255,7 +256,8 @@ export function createAssignmentScorer(
     const cached = roomCache.get(key);
     if (cached) return cached;
     const workers = ids.map((id) => effects.get(room.roomId)!.get(id)!);
-    const rotation = room.shiftSchedule ? getRotationUptime({ schedule: room.shiftSchedule, workers }, support.rotation ?? EMPTY_ROTATION_SUPPORT) : undefined;
+    const rotation = scenario.options.shiftRotation?.enabled
+      ? getRotationUptime({ schedule: room.shiftSchedule, workers }, support.rotation ?? EMPTY_ROTATION_SUPPORT) : undefined;
     const uptimes = rotation ? workers.map(() => rotation.workingHoursPerDay / 24) : getRoomWorkingUptimes(workers, support);
     const outputs = createProjectedOutputs();
     const recipeOutputs: Record<string, number> = {};
@@ -310,7 +312,7 @@ export function createAssignmentScorer(
       }
       if (!control) crossRoomGain += boosted.score - baseline.score;
       const perRoomWarnings = [...roomWarnings.get(room.roomId)!];
-      if (boosted.rotation && boosted.rotation.downtimeHoursPerDay > 1 / 60 && !control) {
+      if (room.shift && boosted.rotation && boosted.rotation.downtimeHoursPerDay > 1 / 60 && !control) {
         const roomName = room.roomKind === "manufacturing_cabin" ? "Manufacturing Cabin" : room.roomKind === "growth_chamber" ? "Growth Chamber" : "Reception Room";
         perRoomWarnings.push(`${roomName} (${room.physicalRoomId}): Shift ${room.shift} has estimated downtime ${boosted.rotation.downtimeHoursPerDay.toFixed(2)} hours/day within its scheduled window${boosted.workers.length === 0 ? " (no operators assigned)" : " due to Mood depletion and recovery"}.`);
       }
@@ -335,10 +337,11 @@ export function createAssignmentScorer(
       const roomScore = directProductionScore + supportRoomScore;
       roomPlans.push({
         roomId: room.roomId,
+        ...(room.physicalRoomId ? { physicalRoomId: room.physicalRoomId } : {}),
         ...(room.shift ? {
-          physicalRoomId: room.physicalRoomId, shift: room.shift, shiftSchedule: room.shiftSchedule,
-          ...boosted.rotation,
+          shift: room.shift, shiftSchedule: room.shiftSchedule,
         } : {}),
+        ...boosted.rotation,
         roomKind: room.roomKind,
         roomLevel: room.level,
         slotCap: room.slotCap,
@@ -374,8 +377,8 @@ export function createAssignmentScorer(
         const working = support.rotation.workingHoursPerDay[index] ?? 0;
         controlPlan.workingHoursPerDay = working;
         controlPlan.downtimeHoursPerDay = Math.max(0, (controlPlan.scheduledHoursPerDay ?? 0) - working);
-        if (controlPlan.downtimeHoursPerDay > 1 / 60 && needsNexusSupport) {
-          const warning = `Shift ${controlPlan.shift}: estimated Control Nexus support downtime ${controlPlan.downtimeHoursPerDay.toFixed(2)} hours/day.`;
+        if (controlPlan.shift && controlPlan.downtimeHoursPerDay > 1 / 60 && needsNexusSupport) {
+          const warning = `${controlPlan.shift ? `Shift ${controlPlan.shift}` : "Normal operation"}: estimated Control Nexus support downtime ${controlPlan.downtimeHoursPerDay.toFixed(2)} hours/day.`;
           controlPlan.warnings.push(warning);
           warnings.push(warning);
         }
@@ -420,7 +423,7 @@ export function createAssignmentScorer(
       explanations,
       unassignedOperators,
       warnings: [...new Set(warnings)],
-      supportWeightsVersion: scenario.options.shiftRotation?.enabled ? `${SUPPORT_WEIGHTS.version}-rotation-v1` : SUPPORT_WEIGHTS.version,
+      supportWeightsVersion: scenario.options.shiftRotation?.enabled ? `${SUPPORT_WEIGHTS.version}-rotation-v4` : SUPPORT_WEIGHTS.version,
     };
   }
 
