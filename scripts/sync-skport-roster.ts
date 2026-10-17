@@ -6,6 +6,7 @@ import type {
   EffectModifier,
   FacilityKind,
   LiveRosterUpdateDocument,
+  MaterialCost,
   OperatorDefinition,
   OperatorPromotionOverride,
   SourceRef,
@@ -137,10 +138,8 @@ class IncompleteSkportOperatorError extends Error {}
 
 interface ParsedCell {
   text: string;
-  entries: Array<{
-    id: string;
-    count: number;
-  }>;
+  // Preserve the order and boundaries between linked costs and formatted text.
+  content: Array<string | { id: string; count: number }>;
 }
 
 interface ParsedTable {
@@ -327,6 +326,28 @@ function inlineText(element: SkportInlineElement): string {
   return element.text?.text ?? element.link?.text ?? "";
 }
 
+function parseCellContent(blocks: SkportBlock[]): ParsedCell["content"] {
+  return blocks.flatMap((block) => {
+    const content: ParsedCell["content"] = [];
+    let text = "";
+    const flushText = () => {
+      if (text.trim()) content.push(text.trim());
+      text = "";
+    };
+    for (const element of block.text?.inlineElements ?? []) {
+      if (element.kind === "entry") {
+        flushText();
+        content.push({ id: element.entry?.id ?? "", count: Number(element.entry?.count) });
+      } else {
+        // Bold/linked inline fragments are not separate material names.
+        text += inlineText(element);
+      }
+    }
+    flushText();
+    return content;
+  });
+}
+
 function parseTables(detail: SkportDetailItem): ParsedTable[] {
   const tables: ParsedTable[] = [];
   for (const [documentId, document] of Object.entries(detail.document.documentMap)) {
@@ -342,13 +363,7 @@ function parseTables(detail: SkportDetailItem): ParsedTable[] {
         const elements = childBlocks.flatMap((childBlock) => childBlock.text?.inlineElements ?? []);
         return {
           text: elements.map(inlineText).filter(Boolean).join("\n").trim(),
-          entries: elements
-            .filter((element) => element.kind === "entry" && element.entry?.id)
-            .map((element) => ({
-              id: element.entry!.id,
-              count: Number(element.entry!.count ?? 0),
-            }))
-            .filter((entry) => Number.isFinite(entry.count)),
+          content: parseCellContent(childBlocks),
         };
       }));
       tables.push({ documentId, rows });
@@ -557,6 +572,42 @@ function createSkportOperator(
   };
 }
 
+// No material allowlist: new official names become the same stable slugs whether
+// first published as plain text or later indexed as linked wiki entries.
+function parseTextMaterialCosts(text: string): MaterialCost[] {
+  if (/^[,;\s]*$/u.test(text)) return [];
+  const name = String.raw`[\p{L}\p{N}][\p{L}\p{N}\p{Pd}\p{Zs}\t.'‘’()/]*?`;
+  const quantity = String.raw`\d+(?:,\d{3})*`;
+  const suffix = new RegExp(String.raw`^(${name})\s*(?:[*＊×]|\s[xX])\s*(${quantity})(?=\s*(?:$|[,;\r\n]))`, "u");
+  const prefix = new RegExp(String.raw`^(${quantity})\s*[*＊×xX]\s*(${name})(?=\s*(?:$|[,;\r\n]))`, "u");
+  const costs: MaterialCost[] = [];
+  let remaining = text.trim();
+  while (remaining) {
+    const suffixMatch = suffix.exec(remaining);
+    const prefixMatch = suffixMatch ? null : prefix.exec(remaining);
+    const match = suffixMatch ?? prefixMatch;
+    if (!match) {
+      throw new Error(`Unsupported official material cost text: '${remaining}'. Expected a material name and explicit quantity.`);
+    }
+    const materialName = (suffixMatch ? match[1] : match[2])!.trim();
+    const itemId = slugify(materialName);
+    const amount = Number((suffixMatch ? match[2] : match[1])!.replace(/,/g, ""));
+    if (!itemId || !Number.isSafeInteger(amount) || amount <= 0) {
+      throw new Error(`Invalid official material cost: '${match[0]}'.`);
+    }
+    costs.push({ itemId, quantity: amount });
+    remaining = remaining.slice(match[0].length);
+    if (remaining.trim()) {
+      const separator = /^\s*[,;\r\n]+\s*/u.exec(remaining);
+      if (!separator) throw new Error(`Unsupported official material cost separator: '${remaining}'.`);
+      remaining = remaining.slice(separator[0].length);
+    } else {
+      remaining = "";
+    }
+  }
+  return costs;
+}
+
 function createSkportPromotionOverride(
   operator: OperatorDefinition,
   detail: SkportDetailItem,
@@ -566,13 +617,39 @@ function createSkportPromotionOverride(
     table.rows.some((row) => row[0]?.text === "Promotion IV")
   ));
   const promotionRow = promotionTable?.rows.find((row) => row[0]?.text === "Promotion IV");
-  const costs = promotionRow?.flatMap((cell) => cell.entries) ?? [];
-  const additionalMaterialCosts = costs
-    .map((entry) => ({
-      itemId: slugify(entryNamesById[entry.id] ?? ""),
-      quantity: entry.count,
-    }))
-    .filter((entry) => entry.itemId && !["protoset", "t-creds"].includes(entry.itemId));
+  if (!promotionTable || !promotionRow) {
+    throw new IncompleteSkportOperatorError(`Official operator '${operator.name}' is awaiting Promotion IV material data.`);
+  }
+  const costColumn = promotionTable.rows[0]?.findIndex((cell) => /^(?:costs?|materials?(?:\s+costs?)?)$/iu.test(cell.text)) ?? -1;
+  if (costColumn < 0) {
+    throw new Error(`Official operator '${operator.name}' has no supported Promotion IV cost column.`);
+  }
+  const costs = new Map<string, MaterialCost>();
+  for (const part of promotionRow[costColumn]?.content ?? []) {
+    let parsed: MaterialCost[];
+    if (typeof part === "string") {
+      parsed = parseTextMaterialCosts(part);
+    } else {
+      const materialName = entryNamesById[part.id];
+      if (!materialName) {
+        throw new IncompleteSkportOperatorError(`Official operator '${operator.name}' is awaiting the name of Promotion IV material '${part.id}'.`);
+      }
+      const itemId = slugify(materialName);
+      if (!itemId || !Number.isSafeInteger(part.count) || part.count <= 0) {
+        throw new Error(`Official operator '${operator.name}' has an invalid Promotion IV cost for '${materialName}'.`);
+      }
+      parsed = [{ itemId, quantity: part.count }];
+    }
+    for (const cost of parsed) {
+      const previous = costs.get(cost.itemId);
+      if (previous && previous.quantity !== cost.quantity) {
+        throw new Error(`Official operator '${operator.name}' has conflicting Promotion IV quantities for '${cost.itemId}'.`);
+      }
+      costs.set(cost.itemId, cost);
+    }
+  }
+  const additionalMaterialCosts = [...costs.values()]
+    .filter((entry) => !["protoset", "t-creds"].includes(entry.itemId));
   if (additionalMaterialCosts.length < 2) {
     throw new IncompleteSkportOperatorError(`Official operator '${operator.name}' is awaiting Promotion IV material data.`);
   }

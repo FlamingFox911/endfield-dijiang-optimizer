@@ -62,6 +62,8 @@ Updates are schema-validated before they can replace catalog definitions. Operat
 
 Each overlay includes a stable content hash that excludes generation and retrieval timestamps. The browser remembers the last announced hash, so restarting the development server or rebuilding an unchanged Pages deployment does not repeat the catalog-update notice.
 
+New Promotion IV materials are discovered automatically from official linked entries or explicitly named and quantified text, even before the wiki gives a material its own entry. No material allowlist or catalog rebuild is needed. Linked and plain-text versions normalize to the same item ID, duplicate costs are not counted twice, and ambiguous or conflicting costs are rejected. Discovered materials appear in upgrade requirements and inventory subtraction; the existing placeholder is used when no icon is available.
+
 ## Optional SKPort roster import
 
 The web app can perform a one-time, local import from SKPort's official Team Picks data sync. Its included bookmarklet uses the request client already loaded by Team Picks to retrieve `/game/endfield/team/user-game-data`, then automatically requests `/game/endfield/team/user-char-data` for each owned assignable operator. It produces a compact capture that can be copied into the optimizer or downloaded as JSON. An older `card/detail` response or a manually saved response/HAR remains available as a fallback. Before applying it, the app recommends exporting a backup, explains the third-party risk, and previews whether the capture represents the complete roster or only a selected showcase.

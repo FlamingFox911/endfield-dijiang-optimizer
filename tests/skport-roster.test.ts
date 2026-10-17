@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mergeLiveRosterUpdate, parseLiveRosterUpdate } from "@endfield/data";
+import { getPromotionTierRequirement, mergeLiveRosterUpdate, parseLiveRosterUpdate, remainingUpgradeMaterials } from "@endfield/data";
 import { loadDefaultCatalog } from "@endfield/data/node";
 import audit from "./fixtures/base-skill-audit.json";
 import { buildOfficialPrimaryLiveRosterUpdate } from "../scripts/sync-live-roster";
@@ -239,6 +239,148 @@ describe("official SKPORT roster source", () => {
     expect(result.warnings).toEqual([
       "Official operator 'Released Without Details' has no detail payload.",
     ]);
+  });
+
+  it.each([
+    "Warp Plasma-Coated Slide*20",
+    "Warp Plasma-Coated Slide × 20",
+    "Warp Plasma-Coated Slide x20",
+    "Warp Plasma-Coated Slide X 20",
+    "Warp Plasma-Coated Slide＊20",
+    "20 × Warp Plasma-Coated Slide",
+    "20x Warp Plasma-Coated Slide",
+    "Warp Plasma-Coated Slide\n*20",
+  ])("discovers an unindexed material from an explicit official cost: %s", (text) => {
+    const data = officialSourceData();
+    data.operatorItems[0]!.name = "Si";
+    data.details[0]!.document.documentMap.promotion.blockMap.promotion_cost.text.inlineElements[1] = {
+      kind: "text", text: { text },
+    };
+    const result = buildSkportRoster(data);
+    expect(result.warnings).toEqual([]);
+    expect(result.pendingOperators).toEqual([]);
+    expect(result.operators[0]?.id).toBe("si");
+    expect(result.promotionOverrides[0]?.additionalMaterialCosts).toEqual([
+      { itemId: "warp-plasma-coated-slide", quantity: 20 },
+      { itemId: "talos-cap", quantity: 8 },
+    ]);
+  });
+
+  it("parses entirely plain-text material lists and comma-grouped quantities", () => {
+    const data = officialSourceData();
+    data.details[0]!.document.documentMap.promotion.blockMap.promotion_cost.text.inlineElements = [{
+      kind: "text", text: { text: "Protoset*36\nFuture Nanoflake Mk. 4*20; 8×Future Crystal, T-Creds*100,000" },
+    }];
+    const result = buildSkportRoster(data);
+    expect(result.warnings).toEqual([]);
+    expect(result.pendingOperators).toEqual([]);
+    expect(result.promotionOverrides[0]?.additionalMaterialCosts).toEqual([
+      { itemId: "future-nanoflake-mk-4", quantity: 20 },
+      { itemId: "future-crystal", quantity: 8 },
+    ]);
+  });
+
+  it("joins formatted inline spans without losing material names or quantities", () => {
+    const data = officialSourceData();
+    const elements = data.details[0]!.document.documentMap.promotion.blockMap.promotion_cost.text.inlineElements;
+    elements.splice(1, 1, ...["New ", "Material", " × ", "2", "0"].map((text) => ({ kind: "text", text: { text } })));
+    const result = buildSkportRoster(data);
+    expect(result.warnings).toEqual([]);
+    expect(result.promotionOverrides[0]?.additionalMaterialCosts[0]).toEqual({ itemId: "new-material", quantity: 20 });
+  });
+
+  it("accepts paragraph-separated costs and punctuation between linked and plain-text items", () => {
+    const data = officialSourceData();
+    const blocks = data.details[0]!.document.documentMap.promotion.blockMap;
+    blocks.promotion_cost.text.inlineElements = [
+      { kind: "entry", entry: { id: "protoset", count: "36" } },
+      { kind: "text", text: { text: ", " } },
+      { kind: "entry", entry: { id: "plant", count: "8" } },
+      { kind: "text", text: { text: "; " } },
+    ];
+    blocks.new_material = textBlock("New Lattice*20", "promotion_cost");
+    blocks.table.table.cellMap.promotion_cost.childIds.push("new_material");
+    const result = buildSkportRoster(data);
+    expect(result.warnings).toEqual([]);
+    expect(result.promotionOverrides[0]?.additionalMaterialCosts).toEqual([
+      { itemId: "talos-cap", quantity: 8 }, { itemId: "new-lattice", quantity: 20 },
+    ]);
+  });
+
+  it("keeps costs and the semantic hash stable when a new material becomes indexed and linked", () => {
+    const data = officialSourceData();
+    const elements = data.details[0]!.document.documentMap.promotion.blockMap.promotion_cost.text.inlineElements;
+    elements[1] = { kind: "text", text: { text: "Future's Lattice*20" } };
+    const plain = buildOfficialPrimaryLiveRosterUpdate(data, undefined, "2026-10-16T12:00:00.000Z");
+    Object.assign(data.entryNamesById, { "future-material": "Future's Lattice" });
+    elements[1] = { kind: "entry", entry: { id: "future-material", count: "20" } };
+    const linked = buildOfficialPrimaryLiveRosterUpdate(data, undefined, "2026-10-17T12:00:00.000Z");
+    expect(plain.warnings).toEqual([]);
+    expect(linked.warnings).toEqual([]);
+    expect(linked.promotionOverrides[0]?.additionalMaterialCosts).toEqual(plain.promotionOverrides[0]?.additionalMaterialCosts);
+    expect(linked.contentHash).toBe(plain.contentHash);
+  });
+
+  it("does not double-count linked material costs repeated as text", () => {
+    const data = officialSourceData();
+    data.details[0]!.document.documentMap.promotion.blockMap.promotion_cost.text.inlineElements.splice(2, 0, {
+      kind: "text", text: { text: "Quadrant Fitting Fluid*20" },
+    });
+    const result = buildSkportRoster(data);
+    expect(result.warnings).toEqual([]);
+    expect(result.promotionOverrides[0]?.additionalMaterialCosts).toEqual([
+      { itemId: "quadrant-fitting-fluid", quantity: 20 }, { itemId: "talos-cap", quantity: 8 },
+    ]);
+  });
+
+  it.each([
+    "Unknown Material", "Unknown Material*0", "Unknown Material*-1", "Unknown Material*1.5",
+    "Unknown Material*9,007,199,254,740,992", "Unknown Material*1,00", "Unknown Material*20 or Other Material*20",
+    "Quadrant Fitting Fluid*21",
+  ])("rejects missing, invalid, ambiguous, or conflicting material quantities: %s", (text) => {
+    const data = officialSourceData();
+    data.details[0]!.document.documentMap.promotion.blockMap.promotion_cost.text.inlineElements.splice(2, 0, {
+      kind: "text", text: { text },
+    });
+    const result = buildSkportRoster(data);
+    expect(result.operators).toEqual([]);
+    expect(result.promotionOverrides).toEqual([]);
+    expect(result.warnings).toHaveLength(1);
+  });
+
+  it("never silently discards unresolved linked material identities", () => {
+    const data = officialSourceData();
+    data.details[0]!.document.documentMap.promotion.blockMap.promotion_cost.text.inlineElements.push({
+      kind: "entry", entry: { id: "not-yet-indexed", count: "20" },
+    });
+    const result = buildSkportRoster(data);
+    expect(result.operators).toEqual([]);
+    expect(result.pendingOperators).toMatchObject([{ id: "liino", reason: expect.stringContaining("not-yet-indexed") }]);
+    const existing = buildSkportRoster(data, undefined, new Set(["liino"]));
+    expect(existing.pendingOperators).toEqual([]);
+    expect(existing.warnings).toHaveLength(1);
+  });
+
+  it.each(["0", "-1", "1.5", "NaN", "9007199254740992"])("rejects invalid linked material quantities: %s", (count) => {
+    const data = officialSourceData();
+    data.details[0]!.document.documentMap.promotion.blockMap.promotion_cost.text.inlineElements[1].entry.count = count;
+    const result = buildSkportRoster(data);
+    expect(result.operators).toEqual([]);
+    expect(result.warnings).toHaveLength(1);
+  });
+
+  it("carries newly discovered materials through catalog merging and inventory subtraction", async () => {
+    const data = officialSourceData();
+    data.details[0]!.document.documentMap.promotion.blockMap.promotion_cost.text.inlineElements[1] = {
+      kind: "text", text: { text: "Warp Plasma-Coated Slide*20" },
+    };
+    const update = buildOfficialPrimaryLiveRosterUpdate(data, undefined);
+    expect(parseLiveRosterUpdate(update)).toBe(update);
+    const catalog = mergeLiveRosterUpdate(await loadDefaultCatalog(), update).catalog;
+    const costs = getPromotionTierRequirement(catalog, "liino", 4)!.materialCosts;
+    expect(costs).toContainEqual({ itemId: "warp-plasma-coated-slide", quantity: 20 });
+    expect(remainingUpgradeMaterials(catalog, costs, [{ id: "warp-plasma-coated-slide", ownedCount: 7 }]))
+      .toContainEqual({ itemId: "warp-plasma-coated-slide", quantity: 13 });
   });
 
   it("defers a newly released operator with no Base Skill tables, then includes it when complete", () => {

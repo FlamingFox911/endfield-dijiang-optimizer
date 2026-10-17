@@ -15,6 +15,7 @@ import {
   migrateScenario,
   parseSkportRosterImport,
   parseSkportRosterImportText,
+  remainingUpgradeMaterials,
   toGameCatalog,
   validateScenarioAgainstCatalog,
 } from "@endfield/data";
@@ -102,6 +103,20 @@ describe("SKPort roster import", () => {
   it("preserves manual Base Skill choices for unknown talent nodes, but accepts an explicitly empty unlocked list", () => {
     expect(parseSkportRosterImport(calculatorCapture(["unknown-node"]), catalog).characters[0]?.baseSkillStates).toBeUndefined();
     expect(parseSkportRosterImport(calculatorCapture([]), catalog).characters[0]?.baseSkillStates?.map((skill) => skill.unlockedRank)).toEqual([0, 0]);
+  });
+
+  it.each([
+    ["Warp Plasma-Coated Slide", "warp-plasma-coated-slide"],
+    ["Founder's Catalyst", "founders-catalyst"],
+    ["Founder’s Catalyst", "founders-catalyst"],
+  ])("automatically matches new named inventory materials to live costs: %s", (name, itemId) => {
+    const capture = calculatorCapture();
+    Object.assign(capture.materialCatalog.data.materials, { new_item: { id: "new_item", name } });
+    Object.assign(capture.response.data.userGameData.itemCount, { new_item: 7 });
+    const preview = parseSkportRosterImport(capture, catalog);
+    expect(preview.inventorySnapshot?.materials).toContainEqual({ id: itemId, name, ownedCount: 7 });
+    expect(remainingUpgradeMaterials(catalog, [{ itemId, quantity: 20 }], preview.inventorySnapshot!.materials!))
+      .toEqual([{ itemId, quantity: 13 }]);
   });
 
   it("reads calculator HAR responses and base64 material definitions while ignoring request secrets", () => {

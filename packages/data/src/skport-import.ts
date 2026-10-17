@@ -369,7 +369,8 @@ function teamUserGameDataToCardDetail(
         throw new Error("The calculator capture contains an invalid material quantity.");
       }
       const name = referenceNames.materials?.get(sourceId);
-      const itemId = name?.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      // Match official roster material slugs, including newly discovered names.
+      const itemId = name?.toLowerCase().replace(/[\u2018\u2019']/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
       return { id: itemId || `skport:${sourceId}`, name, ownedCount };
     }) : undefined,
   };

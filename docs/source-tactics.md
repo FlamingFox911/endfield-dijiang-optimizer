@@ -16,6 +16,8 @@ This document records how public catalog data is obtained at the domain level, s
   - exclude entries whose official catalog card uses `brief.dotType = label_type_preview`, then fetch each released operator from `/web/v1/wiki/item/info?id={itemId}`
   - parse the structured document tables rather than rendered HTML
   - recognize `Talent Effect`, `Talent effect`, `Base Skill Effect`, and `Advancement Effect` table variants by their two ranked assignment rows, and normalize non-breaking whitespace before facility matching
+  - read Promotion IV costs from their cost column, accepting both linked entries and explicitly quantified text such as `New Material*20`, `New Material × 20`, or `20x New Material`; preserve formatted inline spans and support newline/semicolon/comma-separated lists
+  - discover material IDs from official names using the same slug normalization for linked and text costs; new material names do not need an allowlist or an immutable catalog rebuild
   - download official portrait originals without a cross-site referrer, resize them to 256 pixels, encode them as quality-84 WebP, and publish content-addressed files with the Pages artifact
   - run `npm run sync:live-roster`; no browser binary or user login is required
 - Safety rule:
@@ -24,6 +26,8 @@ This document records how public catalog data is obtained at the domain level, s
   - a newly discovered operator with missing details, fewer than two complete Base Skill tables, or missing Promotion IV costs is recorded in `pendingOperators`, not made selectable; other complete entries can still update without warnings
   - the bundled and previous published operator IDs distinguish new entries from existing ones: losing data on an existing operator still warns and blocks replacement
   - unsupported descriptions, inconsistent ranks, or other malformed data still warn, even for new operators; operator fields are never mixed with a secondary source
+  - require positive safe-integer material quantities; identical linked/text costs are deduplicated, conflicting quantities or ambiguous text warn, and unresolved linked material names remain pending rather than being silently discarded
+  - newly discovered materials flow through existing promotion requirements, inventory subtraction, and generic effort estimates; unavailable artwork uses the existing UI placeholder rather than a guessed icon
   - pending operators are retried at the existing incomplete-data cadence and admitted automatically once fully documented; pending metadata does not change the semantic content hash or trigger a deployment
   - push and manual Pages builds validate against the published catalog too; on a failed refresh they restore a healthy published overlay and its hash-checked portraits, preserving the previous sync date; an unhealthy or unreadable fallback fails closed
   - the browser app never calls SKPORT directly; it reads only the validated same-origin generated overlay
