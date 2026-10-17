@@ -1,5 +1,6 @@
 import { createHash, createHmac } from "node:crypto";
 import { correctSkportBaseSkill } from "./skport-skill-corrections";
+import { materialIdFromName } from "../packages/data/src/material-ids.js";
 
 import type {
   BaseSkillDefinition,
@@ -590,7 +591,7 @@ function parseTextMaterialCosts(text: string): MaterialCost[] {
       throw new Error(`Unsupported official material cost text: '${remaining}'. Expected a material name and explicit quantity.`);
     }
     const materialName = (suffixMatch ? match[1] : match[2])!.trim();
-    const itemId = slugify(materialName);
+    const itemId = materialIdFromName(materialName);
     const amount = Number((suffixMatch ? match[2] : match[1])!.replace(/,/g, ""));
     if (!itemId || !Number.isSafeInteger(amount) || amount <= 0) {
       throw new Error(`Invalid official material cost: '${match[0]}'.`);
@@ -634,7 +635,7 @@ function createSkportPromotionOverride(
       if (!materialName) {
         throw new IncompleteSkportOperatorError(`Official operator '${operator.name}' is awaiting the name of Promotion IV material '${part.id}'.`);
       }
-      const itemId = slugify(materialName);
+      const itemId = materialIdFromName(materialName);
       if (!itemId || !Number.isSafeInteger(part.count) || part.count <= 0) {
         throw new Error(`Official operator '${operator.name}' has an invalid Promotion IV cost for '${materialName}'.`);
       }

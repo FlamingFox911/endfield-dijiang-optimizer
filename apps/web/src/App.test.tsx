@@ -1505,6 +1505,38 @@ describe("App", () => {
     });
   });
 
+  it("accepts calculator imports with numbered selection crates without a scenario validation error", async () => {
+    render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.click(screen.getByRole("button", { name: "Sync SKPort roster" }));
+    const dialog = screen.getByRole("dialog", { name: "Sync SKPort roster" });
+    fireEvent.change(within(dialog).getByLabelText("Paste captured import data"), { target: { value: JSON.stringify({
+      response: { data: { userGameData: {
+        userChars: { w: { charId: "w", owned: true, level: "60", evolvePhase: 3 } },
+        itemCount: { crate_i: 182, crate_ii: 10 },
+      } } },
+      characterCatalog: { data: { chars: [{ id: "w", name: "Wulfgard" }] } },
+      materialCatalog: { data: { materials: {
+        crate_i: { id: "crate_i", name: "Advanced Progression Selection Crate Ⅰ" },
+        crate_ii: { id: "crate_ii", name: "Advanced Progression Selection Crate Ⅱ" },
+      } } },
+    }) } });
+    await userEvent.click(within(dialog).getByRole("checkbox"));
+    await userEvent.click(within(dialog).getByRole("button", { name: "Apply one-time import" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Sync SKPort roster" })).not.toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /Edit roster/i })).toHaveTextContent("1 owned");
+    });
+    expect(screen.queryByText("Material quantities must be nonnegative safe integers with unique item ids.")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Optimize" })).toBeEnabled();
+    const savedDraft = JSON.parse(localStorage.getItem("endfield-dijiang-optimizer:draft") ?? "{}");
+    expect(savedDraft.rosterImport.inventory.materials).toEqual([
+      { id: "advanced-progression-selection-crate-i", name: "Advanced Progression Selection Crate Ⅰ", ownedCount: 182 },
+      { id: "advanced-progression-selection-crate-ii", name: "Advanced Progression Selection Crate Ⅱ", ownedCount: 10 },
+    ]);
+  });
+
   it.each([false, true])("rejects invalid pasted SKPort data without changing the draft (previous preview: %s)", async (previewFirst) => {
     render(<App />);
     await screen.findByText("Endfield Dijiang Optimizer");

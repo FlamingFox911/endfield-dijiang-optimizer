@@ -38,6 +38,8 @@ Combat records fund transitions below level 60. Cognitive carriers fund transiti
 
 The existing JSON/HAR preview accepts calculator account responses. Include `search-chars` and `calculate/material-list` in a HAR, or `characterCatalog` and `materialCatalog` in a compact capture. Unknown material ids are retained with a `skport:` prefix and are not guessed. Invalid material quantities are rejected. Zero stock is valid.
 
+Material names use the same normalization as live wiki costs, preserving compatibility characters such as Roman numerals (`Ⅰ` → `i`, `Ⅱ` → `ii`). If distinct source ids still normalize to the same name, both retain their original `skport:` ids and quantities. These ambiguous items are excluded from cost estimates with a warning, never merged or assigned arbitrarily. This check includes unowned material definitions too.
+
 `talent.latestSpaceshipSkillNodes` exposes actual Dijiang unlocks. Nodes must belong to that operator's official `cultivationTalents` list and have recognizable slot/rank suffixes. Recognized lists replace the two Base Skill states, including explicitly locked slots; absent or unfamiliar lists preserve manual selections. Account identity fields, headers, cookies, and tokens are not stored in scenarios.
 
 The bookmarklet additionally requests calculator materials and account data through SKPort's loaded client. It combines calculator and Team Picks data only when their role and server match, retaining Team Picks equipment data. Older Team Picks and card imports still work. This remains an explicit snapshot import; there is no background account polling or optimizer login.

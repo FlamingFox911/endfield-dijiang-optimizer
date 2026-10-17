@@ -109,6 +109,8 @@ describe("SKPort roster import", () => {
     ["Warp Plasma-Coated Slide", "warp-plasma-coated-slide"],
     ["Founder's Catalyst", "founders-catalyst"],
     ["Founder’s Catalyst", "founders-catalyst"],
+    ["Future Material Ⅰ", "future-material-i"],
+    ["Future Material Ⅱ", "future-material-ii"],
   ])("automatically matches new named inventory materials to live costs: %s", (name, itemId) => {
     const capture = calculatorCapture();
     Object.assign(capture.materialCatalog.data.materials, { new_item: { id: "new_item", name } });
@@ -117,6 +119,70 @@ describe("SKPort roster import", () => {
     expect(preview.inventorySnapshot?.materials).toContainEqual({ id: itemId, name, ownedCount: 7 });
     expect(remainingUpgradeMaterials(catalog, [{ itemId, quantity: 20 }], preview.inventorySnapshot!.materials!))
       .toEqual([{ itemId, quantity: 13 }]);
+  });
+
+  it.each(["compact", "HAR"])("keeps numbered selection crates distinct in a %s calculator import", (format) => {
+    const capture = calculatorCapture();
+    Object.assign(capture.materialCatalog.data.materials, {
+      crate_i: { id: "crate_i", name: "Advanced Progression Selection Crate Ⅰ" },
+      crate_ii: { id: "crate_ii", name: "Advanced Progression Selection Crate Ⅱ" },
+    });
+    Object.assign(capture.response.data.userGameData.itemCount, { crate_i: 182, crate_ii: 10 });
+    const input = format === "compact" ? capture : { log: { entries: [
+      ["search-chars", capture.characterCatalog],
+      ["calculate/material-list", capture.materialCatalog],
+      ["calculate/user-game-data", capture.response],
+    ].map(([path, body]) => ({
+      request: { url: `https://zonai.skport.com/web/v1/game/endfield/${path}` },
+      response: { content: { text: JSON.stringify(body) } },
+    })) } };
+    const preview = parseSkportRosterImport(input, catalog);
+    expect(preview.inventorySnapshot?.materials).toEqual([
+      { id: "t-creds", name: "T-Creds", ownedCount: 12000 },
+      { id: "advanced-combat-record", name: "Advanced Combat Record", ownedCount: 0 },
+      { id: "advanced-progression-selection-crate-i", name: "Advanced Progression Selection Crate Ⅰ", ownedCount: 182 },
+      { id: "advanced-progression-selection-crate-ii", name: "Advanced Progression Selection Crate Ⅱ", ownedCount: 10 },
+    ]);
+    const result = applySkportRosterImport(createStarterScenario(catalog), preview);
+    expect(validateScenarioAgainstCatalog(catalog, result.scenario).ok).toBe(true);
+    // Selection crates are not automatically opened or spent as upgrade materials.
+    expect(remainingUpgradeMaterials(catalog, [{ itemId: "protoset", quantity: 36 }], preview.inventorySnapshot!.materials!))
+      .toEqual([{ itemId: "protoset", quantity: 36 }]);
+    expect(preview.warnings.join(" ")).not.toMatch(/Some materials|Some material names/);
+  });
+
+  it.each([
+    ["Founder's Catalyst", "Founders Catalyst", "founders-catalyst"],
+    ["Future Material Ⅰ", "Future Material I", "future-material-i"],
+    ["New Material", "New Material", "new-material"],
+  ])("retains separate stock when distinct source ids have ambiguous names: %s / %s", (firstName, secondName, itemId) => {
+    const capture = calculatorCapture();
+    Object.assign(capture.materialCatalog.data.materials, {
+      first: { id: "first", name: firstName },
+      second: { id: "second", name: secondName },
+    });
+    Object.assign(capture.response.data.userGameData.itemCount, { first: 7, second: 11 });
+    const preview = parseSkportRosterImport(capture, catalog);
+    expect(preview.inventorySnapshot?.materials).toEqual(expect.arrayContaining([
+      { id: "skport:first", name: firstName, ownedCount: 7 },
+      { id: "skport:second", name: secondName, ownedCount: 11 },
+    ]));
+    expect(validateScenarioAgainstCatalog(catalog, applySkportRosterImport(createStarterScenario(catalog), preview).scenario).ok).toBe(true);
+    expect(remainingUpgradeMaterials(catalog, [{ itemId, quantity: 20 }], preview.inventorySnapshot!.materials!))
+      .toEqual([{ itemId, quantity: 20 }]);
+    expect(preview.warnings.join(" ")).toContain("kept separate and excluded from cost estimates");
+    expect(preview.warnings.join(" ")).not.toContain("Include the calculator material-list response");
+  });
+
+  it("checks name ambiguity against unowned materials too", () => {
+    const capture = calculatorCapture();
+    Object.assign(capture.materialCatalog.data.materials, {
+      first: { id: "first", name: "Founder's Catalyst" },
+      unowned: { id: "unowned", name: "Founders Catalyst" },
+    });
+    Object.assign(capture.response.data.userGameData.itemCount, { first: 7 });
+    const preview = parseSkportRosterImport(capture, catalog);
+    expect(preview.inventorySnapshot?.materials).toContainEqual({ id: "skport:first", name: "Founder's Catalyst", ownedCount: 7 });
   });
 
   it("reads calculator HAR responses and base64 material definitions while ignoring request secrets", () => {

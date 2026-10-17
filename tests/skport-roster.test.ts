@@ -280,6 +280,23 @@ describe("official SKPORT roster source", () => {
     ]);
   });
 
+  it.each(["text", "linked"])("preserves numbered materials in official %s costs", (format) => {
+    const data = officialSourceData();
+    if (format === "text") {
+      data.details[0]!.document.documentMap.promotion.blockMap.promotion_cost.text.inlineElements = [{
+        kind: "text", text: { text: "Future Material Ⅰ*20; Future Material Ⅱ*8" },
+      }];
+    } else {
+      Object.assign(data.entryNamesById, { special: "Future Material Ⅰ", plant: "Future Material Ⅱ" });
+    }
+    const result = buildSkportRoster(data);
+    expect(result.warnings).toEqual([]);
+    expect(result.promotionOverrides[0]?.additionalMaterialCosts).toEqual([
+      { itemId: "future-material-i", quantity: 20 },
+      { itemId: "future-material-ii", quantity: 8 },
+    ]);
+  });
+
   it("joins formatted inline spans without losing material names or quantities", () => {
     const data = officialSourceData();
     const elements = data.details[0]!.document.documentMap.promotion.blockMap.promotion_cost.text.inlineElements;

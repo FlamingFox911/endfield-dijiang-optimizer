@@ -35,6 +35,7 @@ import { isValidShiftSchedule, getShiftRoomId, snapShiftScheduleToHours } from "
 
 export * from "./skport-import.js";
 export * from "./shifts.js";
+export * from "./material-ids.js";
 
 export const CURRENT_CATALOG_VERSION: CatalogVersion = "2026-04-17/v1.2";
 export const CURRENT_CATALOG_BUNDLE_ID = "2026-04-17-v1.2";

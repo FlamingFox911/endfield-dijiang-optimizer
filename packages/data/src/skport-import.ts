@@ -10,6 +10,8 @@ import type {
   SkportSyncedWeapon,
 } from "@endfield/domain";
 
+import { materialIdFromName } from "./material-ids.js";
+
 type JsonRecord = Record<string, unknown>;
 
 const SKPORT_OPERATOR_ID_ALIASES: Record<string, string> = {
@@ -289,6 +291,23 @@ function calculatorMaterials(value: unknown): Map<string, string> {
   return calculatorMaterials(value.data ?? value.materialCatalog);
 }
 
+function unambiguousMaterialIds(names: ReadonlyMap<string, string>): Map<string, string> {
+  const idsBySource = new Map<string, string>();
+  const sourceCountsById = new Map<string, number>();
+  // Check all definitions, including materials absent from the current stock.
+  for (const [sourceId, name] of names) {
+    const itemId = materialIdFromName(name);
+    if (!itemId) continue;
+    idsBySource.set(sourceId, itemId);
+    sourceCountsById.set(itemId, (sourceCountsById.get(itemId) ?? 0) + 1);
+  }
+  for (const [sourceId, itemId] of idsBySource) {
+    // Never guess which distinct source item pays a catalog cost or pool them.
+    if (sourceCountsById.get(itemId) !== 1) idsBySource.delete(sourceId);
+  }
+  return idsBySource;
+}
+
 function cultivationNodes(value: unknown): Map<string, string[]> {
   if (!isRecord(value)) return new Map();
   if (Array.isArray(value.chars)) {
@@ -339,6 +358,7 @@ function teamUserGameDataToCardDetail(
       charData: detailCharData ?? { id: charId, name: referenceNames.characters.get(charId) ?? charId },
     }];
   });
+  const materialIds = unambiguousMaterialIds(referenceNames.materials ?? new Map());
   const inventory: SkportInventorySnapshot = {
     weapons: Object.values(isRecord(userGameData.userWeapons) ? userGameData.userWeapons : {}).flatMap((entry) => {
       if (!isRecord(entry) || (entry.owned !== true && !(isRecord(userGameData.itemCount) && entry.owned == null))) {
@@ -369,9 +389,7 @@ function teamUserGameDataToCardDetail(
         throw new Error("The calculator capture contains an invalid material quantity.");
       }
       const name = referenceNames.materials?.get(sourceId);
-      // Match official roster material slugs, including newly discovered names.
-      const itemId = name?.toLowerCase().replace(/[\u2018\u2019']/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      return { id: itemId || `skport:${sourceId}`, name, ownedCount };
+      return { id: materialIds.get(sourceId) ?? `skport:${sourceId}`, name, ownedCount };
     }) : undefined,
   };
   return {
@@ -702,8 +720,11 @@ export function parseSkportRosterImport(input: unknown, catalog: GameCatalog): S
     : "SKPort does not expose recognizable Dijiang Base Skill unlocks in this payload, so existing Base Skill selections will be preserved.");
   if (inventorySnapshot?.materials) {
     warnings.push("Calculator materials will be used for remaining upgrade costs. Each recommendation uses the same inventory independently; partial EXP within a level is not reported.");
-    if (inventorySnapshot.materials.some((entry) => entry.id.startsWith("skport:"))) {
+    if (inventorySnapshot.materials.some((entry) => entry.id.startsWith("skport:") && !entry.name)) {
       warnings.push("Some materials could not be named. Include the calculator material-list response to use them in cost estimates.");
+    }
+    if (inventorySnapshot.materials.some((entry) => entry.id.startsWith("skport:") && entry.name)) {
+      warnings.push("Some material names could not be matched unambiguously to catalog items. Their quantities have been kept separate and excluded from cost estimates.");
     }
   }
   if (isTeamUserGameData && loadoutOperatorCount < matchedOperatorCount) {
