@@ -122,7 +122,7 @@ export function formatUpgradeRecommendationsText(
     `Catalog: ${result.catalogVersion}`,
     `Ranking mode: ${result.rankingMode}`,
     `Baseline score (pts): ${formatScorePoints(result.baselineScore)}`,
-    ...(result.searchComplete == null ? [] : [`Assignment searches: ${result.searchComplete ? "all complete for the modeled objective" : "best found; rankings may change"}`]),
+    ...(result.searchComplete == null ? [] : [`All unlocks evaluated individually. ${result.searchComplete ? "Best plans proven optimal for the modeled objective." : "Gains compare the best plans found; global optimality is not proven."}`]),
     ...(result.warnings ?? []).map((warning) => `Warning: ${warning}`),
     "",
     "Recommendations",

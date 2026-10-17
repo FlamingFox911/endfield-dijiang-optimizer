@@ -571,7 +571,10 @@ export interface RoomPlan {
 }
 
 export interface OptimizationResult {
-  /** Completion concerns the modeled objective, not the accuracy of game data. */
+  /** complete certifies optimality for the modeled objective; false does not
+   * necessarily mean the computation was interrupted or hit a search limit.
+   * This is separate from the accuracy of game data.
+   */
   search?: {
     complete: boolean;
     visitedNodes: number;
@@ -625,6 +628,9 @@ export interface UpgradeRecommendation {
 }
 
 export interface UpgradeRecommendationResult {
+  /** Whether the baseline and every candidate have a modeled optimality proof,
+   * not whether all candidates finished evaluation.
+   */
   searchComplete?: boolean;
   warnings?: string[];
   catalogVersion: CatalogVersion;

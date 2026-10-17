@@ -1,0 +1,408 @@
+{
+  "scope": "Restricted exhaustive probes; no full-roster optimality or runtime claim.",
+  "environment": {
+    "node": "v20.5.1",
+    "platform": "win32",
+    "architecture": "x64"
+  },
+  "comparisons": [
+    {
+      "name": "normal mode must compete with rotation",
+      "syntheticWorkers": [
+        {
+          "production": 60,
+          "reduction": 100
+        },
+        {
+          "production": 0,
+          "reduction": 0
+        }
+      ],
+      "facilities": 1,
+      "heuristicScore": 0.1726027397260274,
+      "exactScore": 0.17534246575342466,
+      "gainPercent": 1.5873015873015817,
+      "fullUptimeUpperBound": 0.17534246585342467,
+      "heuristicMs": 20.424800001084805,
+      "exactMs": 15.637499995529652,
+      "heuristicPlans": [
+        {
+          "shift": "A",
+          "workers": [
+            "probe-0"
+          ],
+          "schedule": {
+            "startMinute": 0,
+            "endMinute": 1380
+          }
+        },
+        {
+          "shift": "B",
+          "workers": [
+            "probe-1"
+          ],
+          "schedule": {
+            "startMinute": 1380,
+            "endMinute": 0
+          }
+        }
+      ],
+      "exact": {
+        "score": 0.17534246575342466,
+        "columns": [
+          {
+            "mask": 1,
+            "score": 0.1753424657534247,
+            "mode": "normal",
+            "a": [
+              "probe-0"
+            ],
+            "b": []
+          }
+        ],
+        "evaluatedWindows": 1104,
+        "uniqueUptimeSimulations": 1106,
+        "combinations": 4
+      }
+    },
+    {
+      "name": "ordinary Mood reduction",
+      "syntheticWorkers": [
+        {
+          "production": 60,
+          "reduction": 20
+        },
+        {
+          "production": 0,
+          "reduction": 0
+        }
+      ],
+      "facilities": 1,
+      "heuristicScore": 0.15342465753424656,
+      "exactScore": 0.15342465753424656,
+      "gainPercent": 0,
+      "fullUptimeUpperBound": 0.17534246585342467,
+      "heuristicMs": 8.042000003159046,
+      "exactMs": 10.546400003135204,
+      "heuristicPlans": [
+        {
+          "shift": "A",
+          "workers": [
+            "probe-0"
+          ],
+          "schedule": {
+            "startMinute": 0,
+            "endMinute": 960
+          }
+        },
+        {
+          "shift": "B",
+          "workers": [
+            "probe-1"
+          ],
+          "schedule": {
+            "startMinute": 960,
+            "endMinute": 0
+          }
+        }
+      ],
+      "exact": {
+        "score": 0.15342465753424656,
+        "columns": [
+          {
+            "mask": 3,
+            "mode": "rotation",
+            "a": [
+              "probe-0"
+            ],
+            "b": [
+              "probe-1"
+            ],
+            "schedule": {
+              "startMinute": 0,
+              "endMinute": 960
+            },
+            "score": 0.15342465753424658
+          }
+        ],
+        "evaluatedWindows": 1104,
+        "uniqueUptimeSimulations": 1106,
+        "combinations": 4
+      }
+    },
+    {
+      "name": "shared operators across two facilities",
+      "syntheticWorkers": [
+        {
+          "production": 80,
+          "weaponProduction": 0,
+          "reduction": 40
+        },
+        {
+          "production": 0,
+          "weaponProduction": 80,
+          "reduction": 20
+        },
+        {
+          "production": 30,
+          "weaponProduction": 40,
+          "reduction": 0
+        },
+        {
+          "production": 0,
+          "reduction": 0
+        }
+      ],
+      "facilities": 2,
+      "heuristicScore": 0.35456621004566213,
+      "exactScore": 0.3549032398347467,
+      "gainPercent": 0.095054119522886,
+      "fullUptimeUpperBound": 0.39452054804520564,
+      "heuristicMs": 11.594900004565716,
+      "exactMs": 19.716499999165535,
+      "heuristicPlans": [
+        {
+          "shift": "A",
+          "workers": [
+            "probe-0"
+          ],
+          "schedule": {
+            "startMinute": 0,
+            "endMinute": 1080
+          }
+        },
+        {
+          "shift": "B",
+          "workers": [
+            "probe-3"
+          ],
+          "schedule": {
+            "startMinute": 1080,
+            "endMinute": 0
+          }
+        },
+        {
+          "shift": "A",
+          "workers": [
+            "probe-1"
+          ],
+          "schedule": {
+            "startMinute": 0,
+            "endMinute": 960
+          }
+        },
+        {
+          "shift": "B",
+          "workers": [
+            "probe-2"
+          ],
+          "schedule": {
+            "startMinute": 960,
+            "endMinute": 0
+          }
+        }
+      ],
+      "exact": {
+        "score": 0.3549032398347467,
+        "columns": [
+          {
+            "mask": 9,
+            "mode": "rotation",
+            "a": [
+              "probe-0"
+            ],
+            "b": [
+              "probe-3"
+            ],
+            "schedule": {
+              "startMinute": 1380,
+              "endMinute": 1020
+            },
+            "score": 0.1722548380082627
+          },
+          {
+            "mask": 6,
+            "mode": "rotation",
+            "a": [
+              "probe-1"
+            ],
+            "b": [
+              "probe-2"
+            ],
+            "schedule": {
+              "startMinute": 0,
+              "endMinute": 960
+            },
+            "score": 0.1826484018264841
+          }
+        ],
+        "evaluatedWindows": 13248,
+        "uniqueUptimeSimulations": 1659,
+        "combinations": 63
+      }
+    }
+  ],
+  "rosterProfile": {
+    "owned": 27,
+    "elapsedMs": 6293.635299995542,
+    "score": 1.5059045960471045,
+    "search": {
+      "complete": false,
+      "visitedNodes": 102636,
+      "maxVisitedNodes": null,
+      "budgetExceeded": false,
+      "candidatesLimited": false,
+      "scheduleSearch": {
+        "evaluatedSchedules": 88964,
+        "resolutionMinutes": 60
+      }
+    },
+    "exactFullRosterVerified": false,
+    "fullUptimeUpperBound": 1.6293965995478268,
+    "upperBoundGapPercent": 8.200519729130274,
+    "facilityEffectProfiles": [
+      {
+        "room": "control_nexus",
+        "slotCap": 3,
+        "distinctLocalEffects": 11
+      },
+      {
+        "room": "mfg-1",
+        "slotCap": 3,
+        "distinctLocalEffects": 14
+      },
+      {
+        "room": "mfg-2",
+        "slotCap": 3,
+        "distinctLocalEffects": 14
+      },
+      {
+        "room": "growth-1",
+        "slotCap": 3,
+        "distinctLocalEffects": 12
+      },
+      {
+        "room": "reception-1",
+        "slotCap": 3,
+        "distinctLocalEffects": 14
+      }
+    ]
+  },
+  "constantSupportPhaseCheck": {
+    "durationHours": 19,
+    "reductionPercent": 20,
+    "phaseValues": [
+      {
+        "startHour": 0,
+        "workingHoursPerDay": 14.952380952380937
+      },
+      {
+        "startHour": 1,
+        "workingHoursPerDay": 14.952380952380937
+      },
+      {
+        "startHour": 2,
+        "workingHoursPerDay": 14.952380952380937
+      },
+      {
+        "startHour": 3,
+        "workingHoursPerDay": 14.952380952380937
+      },
+      {
+        "startHour": 4,
+        "workingHoursPerDay": 14.952380952380937
+      },
+      {
+        "startHour": 5,
+        "workingHoursPerDay": 14.952380952380937
+      },
+      {
+        "startHour": 6,
+        "workingHoursPerDay": 14.981150793650782
+      },
+      {
+        "startHour": 7,
+        "workingHoursPerDay": 15.016865079365067
+      },
+      {
+        "startHour": 8,
+        "workingHoursPerDay": 15.052579365079353
+      },
+      {
+        "startHour": 9,
+        "workingHoursPerDay": 15.08829365079364
+      },
+      {
+        "startHour": 10,
+        "workingHoursPerDay": 15.124007936507924
+      },
+      {
+        "startHour": 11,
+        "workingHoursPerDay": 15.15972222222221
+      },
+      {
+        "startHour": 12,
+        "workingHoursPerDay": 15.195436507936495
+      },
+      {
+        "startHour": 13,
+        "workingHoursPerDay": 15.231150793650782
+      },
+      {
+        "startHour": 14,
+        "workingHoursPerDay": 15.249999999999984
+      },
+      {
+        "startHour": 15,
+        "workingHoursPerDay": 15.249999999999984
+      },
+      {
+        "startHour": 16,
+        "workingHoursPerDay": 15.130952380952365
+      },
+      {
+        "startHour": 17,
+        "workingHoursPerDay": 15.130952380952365
+      },
+      {
+        "startHour": 18,
+        "workingHoursPerDay": 15.130952380952365
+      },
+      {
+        "startHour": 19,
+        "workingHoursPerDay": 15.130952380952365
+      },
+      {
+        "startHour": 20,
+        "workingHoursPerDay": 15.130952380952365
+      },
+      {
+        "startHour": 21,
+        "workingHoursPerDay": 15.130952380952365
+      },
+      {
+        "startHour": 22,
+        "workingHoursPerDay": 15.130952380952365
+      },
+      {
+        "startHour": 23,
+        "workingHoursPerDay": 14.952380952380937
+      }
+    ],
+    "rangeHoursPerDay": 0.29761904761904745
+  },
+  "rawEnumeration": [
+    {
+      "owned": 27,
+      "teamCapacity": 3,
+      "orderedDisjointNonemptyTeamPairs": 7798752,
+      "pairWindowCombinationsPerFacility": 4304911104
+    },
+    {
+      "owned": 32,
+      "teamCapacity": 3,
+      "orderedDisjointNonemptyTeamPairs": 22685552,
+      "pairWindowCombinationsPerFacility": 12522424704
+    }
+  ]
+}

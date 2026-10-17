@@ -3,7 +3,7 @@ import { createStarterScenario } from "@endfield/data";
 import { loadDefaultCatalog } from "@endfield/data/node";
 import {
   getOptimizationSearchLimits, getScenarioSearchConfig, getOptimizationSearchConfig,
-  normalizeScenario, recommendUpgrades, solveScenario, OptimizationCancelledError,
+  formatUpgradeRecommendationsText, normalizeScenario, recommendUpgrades, solveScenario, OptimizationCancelledError,
 } from "@endfield/optimizer";
 import { boundAssignmentSearch } from "../packages/optimizer/src/search-space.js";
 
@@ -85,8 +85,8 @@ describe("roster-aware search limits", () => {
     expect(baseline.search).toMatchObject({ complete: false, budgetExceeded: true });
     const recommendations = recommendUpgrades(catalog, scenario, baseline);
     expect(recommendations.searchComplete).toBe(false);
-    expect(recommendations.warnings?.join(" ")).toContain("Baseline assignment search");
-    expect(recommendations.recommendations.every((entry) => entry.notes.some((note) => note.includes("ranking may change")))).toBe(true);
+    expect(recommendations.warnings?.join(" ")).toContain("Baseline assignment search reached a search limit");
+    expect(recommendations.recommendations.flatMap((entry) => entry.notes).join(" ")).not.toMatch(/incomplete or unverified|more search effort/);
   });
 
   it("does not claim completion when candidate limits omit branches", async () => {
@@ -99,7 +99,7 @@ describe("roster-aware search limits", () => {
     expect(result.search).toMatchObject({ complete: false, budgetExceeded: false, candidatesLimited: true });
   });
 
-  it("discloses incomplete candidate searches in unlock rankings", async () => {
+  it("discloses actual candidate search limits in unlock rankings", async () => {
     const catalog = await loadDefaultCatalog();
     const scenario = createStarterScenario(catalog);
     scenario.options.optimizationEffort = 1;
@@ -113,8 +113,38 @@ describe("roster-aware search limits", () => {
     scenario.roster.find((operator) => operator.operatorId === "ember")!.baseSkillStates[0]!.unlockedRank = 1;
     const result = recommendUpgrades(catalog, scenario);
     expect(result.searchComplete).toBe(false);
-    expect(result.warnings?.join(" ")).toContain("unlock candidate search(es) did not complete");
+    expect(result.warnings?.join(" ")).toContain("1 unlock candidate search reached search limits");
     expect(result.recommendations).toHaveLength(1);
+  });
+
+  it("finishes every rotation unlock evaluation without reporting an unproven optimum as a search limit", async () => {
+    const catalog = await loadDefaultCatalog();
+    const scenario = createStarterScenario(catalog);
+    for (const operator of scenario.roster) {
+      operator.owned = ["ember", "chen-qianyu"].includes(operator.operatorId);
+      operator.baseSkillStates = catalog.operators.find((entry) => entry.id === operator.operatorId)!.baseSkills
+        .map((skill) => ({ skillId: skill.id, unlockedRank: 2 }));
+    }
+    scenario.roster.find((operator) => operator.operatorId === "ember")!.baseSkillStates[0]!.unlockedRank = 1;
+    scenario.facilities.manufacturingCabins.forEach((room, index) => {
+      room.enabled = index === 0;
+      room.fixedRecipeId = "arms-insp-set";
+    });
+    scenario.facilities.growthChambers.forEach((room) => { room.enabled = false; });
+    scenario.facilities.receptionRoom!.enabled = false;
+    scenario.options.optimizationProfile = "exhaustive";
+    scenario.options.shiftRotation = { enabled: true, scheduleMode: "optimized" };
+    const completed: number[] = [];
+    const result = recommendUpgrades(catalog, scenario, undefined, {
+      onProgress: (progress) => completed.push(progress.completedCandidates),
+    });
+    expect(result.recommendations).toHaveLength(1);
+    expect(completed.at(-1)).toBe(1);
+    // The search finished normally, but the heuristic still has no proof.
+    expect(result.searchComplete).toBe(false);
+    expect(result.warnings).toEqual([]);
+    expect(result.recommendations.flatMap((entry) => entry.notes).join(" ")).not.toMatch(/incomplete or unverified|search effort|did not complete/);
+    expect(formatUpgradeRecommendationsText(result, catalog)).toContain("All unlocks evaluated individually. Gains compare the best plans found; global optimality is not proven.");
   });
 
   it("keeps every intermediate effort bounded and makes the endpoint unlimited", () => {

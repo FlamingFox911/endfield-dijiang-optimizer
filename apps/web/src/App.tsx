@@ -3217,14 +3217,16 @@ function App() {
 
             {result ? (
               <div className="resultWorkspace">
-                {result.search && <p className="status">{result.search.scheduleSearch
-                  ? "Shift teams and daily schedules optimized. Best plan found; global optimality not proven."
-                  : result.search.complete
-                  ? "Search complete: optimal for the current modeled objective."
-                  : "Best assignment found; optimality not proven. More search effort may find a better plan."} {result.search.visitedNodes.toLocaleString()} states visited.</p>}
-                <p className="subtle">Unstaffed slots use no operator and add no staffing or skill effects. Each operator appears once in the plan. Reception assignments avoid specific-clue Rate-UP unless you use a Hard Assignment.</p>
-                <p className="subtle">Room scores exclude the shipwide gain credited to Control Nexus. Working hours and outputs include its support.</p>
-                {scenario.options.shiftRotation?.enabled && <p className="subtle">Facilities rotate only when both shifts have operators. A facility with one team uses normal operation and rests when Mood is depleted.</p>}
+                <div className="resultTextNotes">
+                  {result.search && <p className="status">{result.search.scheduleSearch
+                    ? "Shift teams and daily schedules optimized. Best plan found; global optimality not proven."
+                    : result.search.complete
+                    ? "Search complete: optimal for the current modeled objective."
+                    : "Best assignment found; optimality not proven. More search effort may find a better plan."} {result.search.visitedNodes.toLocaleString()} states visited.</p>}
+                  <p>Unstaffed slots use no operator and add no staffing or skill effects. Each operator appears once in the plan.</p>
+                  <p>Room scores exclude the shipwide gain credited to Control Nexus. Working hours and outputs include its support.</p>
+                  {scenario.options.shiftRotation?.enabled && <p>Facilities rotate only when both shifts have operators. A facility with one team uses normal operation and rests when Mood is depleted.</p>}
+                </div>
                 {(result.unassignedOperators?.length ?? 0) > 0 && <details className="resultSummary">
                   <summary>Unused owned operators ({result.unassignedOperators!.length})</summary>
                   <ul>{result.unassignedOperators!.map((entry) => <li key={entry.operatorId}>
@@ -3395,10 +3397,12 @@ function App() {
 
             {recommendations && (
               <div className="recommendationStack">
-                {recommendations.searchComplete != null && <p className="status">{recommendations.searchComplete
-                  ? "All assignment searches complete for the modeled objective. Unlocks are evaluated individually."
-                  : "Unlock gains are estimates from incomplete or unverified assignment searches; rankings may change."}</p>}
-                {recommendations.warnings?.map((warning) => <p className="warningText" key={warning}>{warning}</p>)}
+                <div className="resultTextNotes">
+                  {recommendations.searchComplete != null && <p className="status">{recommendations.searchComplete
+                    ? "All unlocks evaluated individually. Best plans proven optimal for the modeled objective."
+                    : "All unlocks evaluated individually. Gains compare the best plans found; global optimality is not proven."}</p>}
+                  {recommendations.warnings?.map((warning) => <p className="warningText" key={warning}>{warning}</p>)}
+                </div>
                 <div className="panelHeader panelHeaderWide">
                   <div>
                     <p className="eyebrow">Recommendations</p>

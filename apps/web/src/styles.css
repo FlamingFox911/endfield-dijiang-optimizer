@@ -193,7 +193,6 @@ select:focus-visible,
 .heroMetaGrid span,
 .rosterStats span,
 .editorStats span,
-.resultSummary p:first-child,
 .plannerCell span,
 .plannerStatCell span,
 .resultMetric span,
@@ -219,6 +218,17 @@ select:focus-visible,
 
 .heroCopy {
   gap: 16px;
+}
+
+.resultTextNotes {
+  display: grid;
+  gap: 6px;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
+.resultTextNotes p {
+  margin: 0;
 }
 
 .heroMetaGrid,
@@ -979,10 +989,20 @@ button.secondary,
   min-height: 0;
 }
 
-.resultGrid,
-.recommendationGrid {
+.resultGrid {
   grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
   align-items: start;
+}
+
+.recommendationGrid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 34rem), 34rem));
+  align-items: start;
+}
+
+.recommendationCard {
+  width: 100%;
+  max-width: 34rem;
+  min-width: 0;
 }
 
 .resultMetricGrid,

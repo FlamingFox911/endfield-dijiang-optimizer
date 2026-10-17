@@ -1,6 +1,8 @@
 # Exact search and accuracy
 
-The web app always uses unlimited exact assignment search for **Optimize** and every **Recommend unlocks** counterfactual. It no longer exposes an effort slider or optimization profile. Existing drafts and imported scenarios are upgraded to `optimizationProfile: "exhaustive"` and `optimizationEffort: 100`, retaining their other preferences. There is no hidden time, node, or candidate cutoff. Users can cancel an active worker.
+The web app requests exhaustive assignment search for **Optimize** and every **Recommend unlocks** counterfactual. It no longer exposes an effort slider or optimization profile. Existing drafts and imported scenarios are upgraded to `optimizationProfile: "exhaustive"` and `optimizationEffort: 100`, retaining their other preferences. Users can cancel an active worker.
+
+The exact assignment path described below has no time, node, or candidate cutoff. Automatic shift timing currently uses a separate bounded joint heuristic, and hybrid normal/rotation mode repair also lacks an optimality proof; see [shift search guarantees](shift-rotation.md#search-and-guarantees). A recommendation batch can finish evaluating every unlock while `searchComplete` remains false because its optimum is unproven. The summary distinguishes those cases, and separate warnings identify actual budget or candidate limits. The [exact shift search investigation](exact-shift-search-investigation.md) proposes a complete replacement.
 
 Fast completion is possible because the solver need not visit every slot permutation separately. Swapping the same operators between equivalent slots in one room leaves its score unchanged. The solver enumerates each team once, then proves that entire groups of allocations cannot improve the incumbent before skipping them.
 

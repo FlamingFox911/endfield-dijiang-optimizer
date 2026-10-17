@@ -209,14 +209,19 @@ async function syncMaterialIcons() {
     fs.readFile(MANIFEST_PATH, "utf8"),
   ]);
 
-  const itemIds = [...collectMaterialItemIds(JSON.parse(progressionRaw))].sort((left, right) => left.localeCompare(right));
   const assetsDoc = JSON.parse(assetsRaw) as AssetsDocument;
   const manifestDoc = JSON.parse(manifestRaw) as CatalogManifest;
+  const materialItemIds = collectMaterialItemIds(JSON.parse(progressionRaw));
+  // Retain registered icons for materials introduced by the live roster overlay.
+  for (const asset of assetsDoc.assets) {
+    if (GENERATED_ASSET_ID_PATTERN.test(asset.id)) {
+      materialItemIds.add(asset.id.slice("material-".length, -"-icon".length));
+    }
+  }
+  const itemIds = [...materialItemIds].sort((left, right) => left.localeCompare(right));
 
-  await fs.rm(MATERIAL_ASSET_DIR, { recursive: true, force: true });
   await fs.mkdir(MATERIAL_ASSET_DIR, { recursive: true });
 
-  const preservedAssets = assetsDoc.assets.filter((asset) => !GENERATED_ASSET_ID_PATTERN.test(asset.id));
   const generatedAssets: ImageAsset[] = [];
   const { browser, context, page } = await createBrowserPage();
 
@@ -254,7 +259,12 @@ async function syncMaterialIcons() {
     await browser.close();
   }
 
-  assetsDoc.assets = [...preservedAssets, ...generatedAssets].sort((left, right) => left.id.localeCompare(right.id));
+  // Keep the last working file and record when a source is temporarily unavailable.
+  const assetsById = new Map(assetsDoc.assets.map((asset) => [asset.id, asset]));
+  for (const asset of generatedAssets) {
+    assetsById.set(asset.id, asset);
+  }
+  assetsDoc.assets = [...assetsById.values()].sort((left, right) => left.id.localeCompare(right.id));
   manifestDoc.counts = {
     ...(manifestDoc.counts ?? {}),
     assets: assetsDoc.assets.length,

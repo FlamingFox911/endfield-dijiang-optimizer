@@ -282,7 +282,8 @@ export function recommendUpgrades(
     });
   let completedCandidates = 0;
   let bestScoreDelta = Number.NEGATIVE_INFINITY;
-  let incompleteCandidates = 0;
+  let unprovenCandidates = 0;
+  let limitedCandidates = 0;
 
   options?.onProgress?.({
     phase: "Evaluating unlock candidates",
@@ -320,10 +321,8 @@ export function recommendUpgrades(
       const operatorDef = operatorDefs.get(action.operatorId);
       const estimatedDaysToUnlock = effortScore / SUPPORT_WEIGHTS.estimatedEffortPerDay;
       const notes = operatorDef ? [`Operator: ${operatorDef.name}`] : [];
-      if (!upgradedResult.search?.complete) incompleteCandidates += 1;
-      if (!baseline.search?.complete || !upgradedResult.search?.complete) {
-        notes.push("Assignment search is incomplete or unverified; this estimated gain and its ranking may change with more search effort.");
-      }
+      if (!upgradedResult.search?.complete) unprovenCandidates += 1;
+      if (upgradedResult.search?.budgetExceeded || upgradedResult.search?.candidatesLimited) limitedCandidates += 1;
       completedCandidates += 1;
       bestScoreDelta = Math.max(bestScoreDelta, scoreDelta);
 
@@ -356,7 +355,7 @@ export function recommendUpgrades(
         notes.push("No bundled upgrade cost data exists yet; ROI falls back to score delta.");
       }
       if (scoreDelta <= 0) {
-        notes.push("No immediate improvement was found for this unlock at the selected search effort.");
+        notes.push("No immediate improvement was found for this unlock.");
       }
 
       options?.onProgress?.({
@@ -380,10 +379,12 @@ export function recommendUpgrades(
     .sort((left, right) => compareRecommendations(rankingMode, left, right));
 
   return {
-    searchComplete: Boolean(baseline.search?.complete) && incompleteCandidates === 0,
+    searchComplete: Boolean(baseline.search?.complete) && unprovenCandidates === 0,
     warnings: [
-      ...(!baseline.search?.complete ? ["Baseline assignment search is incomplete or unverified; unlock gains may be overestimated or underestimated."] : []),
-      ...(incompleteCandidates > 0 ? [`${incompleteCandidates} unlock candidate search(es) did not complete. Gains and rankings may change with more search effort.`] : []),
+      ...(baseline.search?.budgetExceeded || baseline.search?.candidatesLimited
+        ? ["Baseline assignment search reached a search limit; gains use the best plan found."] : []),
+      ...(limitedCandidates > 0
+        ? [`${limitedCandidates} unlock candidate search${limitedCandidates === 1 ? "" : "es"} reached search limits; gains and rankings use the best plans found.`] : []),
     ],
     catalogVersion: scenario.catalogVersion,
     baselineScore: baseline.totalScore,

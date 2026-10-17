@@ -146,6 +146,12 @@
       "attribution": "Material icon from Endfield Talos Wiki page (https://endfield.wiki.gg/wiki/Protoprism); source image https://endfield.wiki.gg/images/thumb/Triphasic_Nanoflake.png/22px-Triphasic_Nanoflake.png?416228; retrieved 2026-04-03."
     },
     {
+      "id": "material-warp-plasma-coated-slide-icon",
+      "kind": "icon",
+      "path": "assets/materials/warp-plasma-coated-slide.png",
+      "attribution": "Material icon served by EndfieldTools (https://endfieldtools.dev/assets/images/endfield/itemicon/item_char_skill_specialize_6.png); retrieved 2026-10-16."
+    },
+    {
       "id": "operator-akekuri-portrait",
       "kind": "portrait",
       "path": "assets/operators/akekuri.webp",
