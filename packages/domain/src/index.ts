@@ -318,6 +318,9 @@ export interface LiveRosterUpdateDocument {
   generatedAt: string;
   sourceUpdatedAt?: string;
   gameVersion?: string;
+  /** Effective release time and provenance, used to prevent version metadata rollbacks. */
+  gameVersionReleasedAt?: string;
+  gameVersionSourceUrl?: string;
   contentHash: string;
   source: SourceRef;
   operators: OperatorDefinition[];

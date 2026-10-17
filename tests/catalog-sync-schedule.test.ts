@@ -167,4 +167,37 @@ describe("release-aware catalog sync schedule", () => {
       cadence: "weekly", shouldCheck: false, upstreamMissingOperatorIds: [],
     });
   });
+
+  it("uses daily checks for a stale game version without adding heartbeat slots or deployments", () => {
+    const now = new Date("2026-10-17T00:30:00Z");
+    const officialVersion = {
+      gameVersion: "Sanctuary of Ink",
+      gameVersionReleasedAt: "2026-10-15T04:00:00Z",
+      gameVersionSourceUrl: "https://endfield.gryphline.com/en-us/news/9560",
+    };
+    const baseline = { ...published(["arcane", "liino"]), gameVersion: "Dreamscape of Wind and Snow" };
+    expect(decideCatalogSync(policy, baseline, now, policy.dailySchedule, [], officialVersion)).toMatchObject({
+      cadence: "daily", shouldCheck: true, missingGameVersion: "Sanctuary of Ink",
+    });
+    expect(decideCatalogSync(policy, baseline, now, policy.burstSchedules[1], [], officialVersion)).toMatchObject({
+      cadence: "daily", shouldCheck: false, missingGameVersion: "Sanctuary of Ink",
+    });
+    expect(decideCatalogSync(policy, { ...baseline, ...officialVersion }, now, policy.dailySchedule, [], officialVersion))
+      .toMatchObject({ cadence: "weekly", shouldCheck: false, missingGameVersion: undefined });
+  });
+
+  it("keeps stable cadence during news outages or stale official responses", () => {
+    const current = {
+      ...published(["arcane", "liino"]), gameVersion: "Sanctuary of Ink",
+      gameVersionReleasedAt: "2026-10-15T04:00:00Z",
+    };
+    const staleOfficial = {
+      gameVersion: "Dreamscape of Wind and Snow", gameVersionReleasedAt: "2026-09-02T04:00:00Z",
+      gameVersionSourceUrl: "https://endfield.gryphline.com/en-us/news/5208",
+    };
+    for (const official of [undefined, staleOfficial]) {
+      expect(decideCatalogSync(policy, current, new Date("2026-10-17T00:30:00Z"), policy.dailySchedule, [], official))
+        .toMatchObject({ cadence: "weekly", shouldCheck: false, missingGameVersion: undefined });
+    }
+  });
 });

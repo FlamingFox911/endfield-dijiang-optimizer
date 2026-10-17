@@ -106,11 +106,17 @@ This document records how public catalog data is obtained at the domain level, s
 - Preferred tactic:
   - normal browser or HTTP fetch is acceptable
   - cite the official page directly
+  - automatic version discovery uses the same public CMS as the official website: `https://web-news.gryphline.com/api/bulletin?lang=en-us&code=arknights_endfield_official&page=1&pageSize=30&tabs[]=notices` and `/api/bulletin/{cid}?lang=en-us&code=arknights_endfield_official`
+  - inspect up to three recent notices pages as needed; match exact `[Version Name] Version Update Notes` titles, confirm detail/list identity, and parse the explicitly dated Asia-server maintenance window with its UTC offset
+  - select the latest maintenance end that has already elapsed, not the sticky order, article display date, preview-program date, or pre-download availability
 - Sync rule:
   - release information controls whether scheduled catalog checks use burst, daily, or weekly cadence
   - an operator is considered covered only when its normalized live definition is published without sync warnings
   - official announcements do not provide Dijiang effect values; the official SKPORT wiki is the primary structured source for those values
   - each six-hour heartbeat cheaply compares released SKPORT catalog cards with the deployed roster; upstream drift restores daily full checks even when the announcement calendar is stale
+  - the same heartbeat checks official version metadata; stale version labels restore daily full checks without adding schedules or deploying unchanged content
+  - retain the confirmed version, release time, and announcement URL on news failures or older feed results; metadata failures are logged but do not block healthy roster normalization
+  - `catalogs/live-sync-policy.json` version labels remain only a bootstrap fallback when no saved version is available; previews and future maintenance never activate a version
   - the weekly full-check fallback remains active between known releases after deployed coverage is complete
 
 ## local-user-supplied

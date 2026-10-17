@@ -25,6 +25,13 @@ import {
   type SkportRosterSourceData,
 } from "./sync-skport-roster";
 import { evaluateLiveRosterDeployment } from "./evaluate-live-roster-update";
+import {
+  fetchOfficialGameVersion,
+  resolveCurrentGameVersion,
+  type GameVersionInfo,
+  type GameVersionPolicy,
+  type OfficialGameVersion,
+} from "./official-game-version.mjs";
 
 const DEFAULT_SOURCE_BASE_URL = "https://endfieldtools.dev";
 const DEFAULT_OUTPUT_PATH = path.resolve("apps", "web", "public", "roster", "latest.json");
@@ -65,22 +72,24 @@ export function createLiveCatalogContentHash(content: {
   return createHash("sha256").update(serialized).digest("hex");
 }
 
-async function readCurrentGameVersion(at = new Date()): Promise<string | undefined> {
-  const policy = JSON.parse(await fs.readFile(LIVE_SYNC_POLICY_PATH, "utf8")) as {
-    operatorReleases?: Array<{
-      releaseAt?: string;
-      gameVersion?: string;
-    }>;
+async function readCurrentGameVersion(
+  official: OfficialGameVersion | undefined,
+  previous: LiveRosterUpdateDocument | undefined,
+): Promise<GameVersionInfo | undefined> {
+  const policy = JSON.parse(await fs.readFile(LIVE_SYNC_POLICY_PATH, "utf8")) as GameVersionPolicy;
+  return resolveCurrentGameVersion(official, previous, policy);
+}
+
+export function applyLiveGameVersion(
+  update: LiveRosterUpdateDocument,
+  version: GameVersionInfo | undefined,
+): LiveRosterUpdateDocument {
+  if (!version) return update;
+  return {
+    ...update,
+    ...version,
+    contentHash: createLiveCatalogContentHash({ ...update, gameVersion: version.gameVersion }),
   };
-  return (policy.operatorReleases ?? [])
-    .filter((release) => (
-      typeof release.gameVersion === "string"
-      && typeof release.releaseAt === "string"
-      && Number.isFinite(Date.parse(release.releaseAt))
-      && Date.parse(release.releaseAt) <= at.getTime()
-    ))
-    .sort((left, right) => Date.parse(right.releaseAt!) - Date.parse(left.releaseAt!))[0]
-    ?.gameVersion;
 }
 
 const PROFESSION_NAMES: Record<number, string> = {
@@ -912,6 +921,7 @@ async function main(): Promise<void> {
   const disabled = process.env.SYNC_LIVE_ROSTER_DISABLE === "1";
   const publishedUrl = disabled ? undefined : process.env.PUBLISHED_CATALOG_URL;
   const previous = disabled ? undefined : await readPreviousUpdate(outputPath, publishedUrl);
+  const gameVersionPromise = disabled ? Promise.resolve(undefined) : fetchOfficialGameVersion();
   const bundled = await loadDefaultCatalog();
   const knownOperatorIds = new Set([
     ...bundled.operators.map((operator) => operator.id),
@@ -961,20 +971,9 @@ async function main(): Promise<void> {
       update.warnings.push(`Previously available operators are missing from the candidate: ${missing.join(", ")}.`);
     }
   }
-  const gameVersion = await readCurrentGameVersion();
-  if (gameVersion) {
-    update = {
-      ...update,
-      gameVersion,
-      contentHash: createLiveCatalogContentHash({
-        gameVersion,
-        operators: update.operators,
-        promotionOverrides: update.promotionOverrides,
-        recipes: update.recipes,
-        assets: update.assets,
-      }),
-    };
-  }
+  const gameVersion = await readCurrentGameVersion(await gameVersionPromise, previous);
+  update = applyLiveGameVersion(update, gameVersion);
+  if (gameVersion) console.log(`catalog game version: ${gameVersion.gameVersion}`);
   update = await finalizeLiveRosterUpdate(update, outputPath, {
     published: previous,
     publishedUrl,

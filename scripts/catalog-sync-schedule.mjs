@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import { createHash, createHmac } from "node:crypto";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { fetchOfficialGameVersion, resolveCurrentGameVersion } from "./official-game-version.mjs";
 
 const DEFAULT_POLICY_PATH = path.resolve("catalogs", "live-sync-policy.json");
 const SKPORT_API_HOST = "https://zonai.skport.com";
@@ -59,6 +60,7 @@ export function decideCatalogSync(
   nowInput,
   scheduleExpression,
   upstreamReleasedOperatorIds = [],
+  officialGameVersion = undefined,
 ) {
   const policy = validatePolicy(policyInput);
   const now = nowInput instanceof Date ? nowInput : new Date(nowInput);
@@ -77,6 +79,9 @@ export function decideCatalogSync(
     .filter((operatorId) => !publishedOperatorIds.has(operatorId));
   const upstreamMissingOperatorIds = [...new Set(upstreamReleasedOperatorIds)]
     .filter((operatorId) => operatorId && !publishedOperatorIds.has(operatorId));
+  const currentVersion = resolveCurrentGameVersion(officialGameVersion, publishedUpdate, policy, now);
+  const missingGameVersion = currentVersion?.gameVersion !== publishedUpdate?.gameVersion
+    ? currentVersion?.gameVersion : undefined;
   const hasPublishedWarnings = !publishedUpdate || !Array.isArray(publishedUpdate.warnings)
     || publishedUpdate.warnings.length > 0;
   const activeRelease = policy.operatorReleases.find((release) => {
@@ -88,7 +93,7 @@ export function decideCatalogSync(
   let cadence;
   if (activeRelease) {
     cadence = "burst";
-  } else if (missingOperatorIds.length > 0 || upstreamMissingOperatorIds.length > 0 || hasPublishedWarnings) {
+  } else if (missingOperatorIds.length > 0 || upstreamMissingOperatorIds.length > 0 || hasPublishedWarnings || missingGameVersion) {
     cadence = "daily";
   } else {
     cadence = "weekly";
@@ -109,6 +114,7 @@ export function decideCatalogSync(
     shouldCheck,
     missingOperatorIds,
     upstreamMissingOperatorIds,
+    missingGameVersion,
     activeOperatorId: activeRelease?.operatorId,
     nextOperatorId: nextRelease?.operatorId,
     nextReleaseAt: nextRelease?.releaseAt,
@@ -219,9 +225,10 @@ async function main() {
     throw new Error("--published-url is required.");
   }
   const policy = JSON.parse(await fs.readFile(policyPath, "utf8"));
-  const [publishedUpdate, upstreamReleasedOperatorIds] = await Promise.all([
+  const [publishedUpdate, upstreamReleasedOperatorIds, officialGameVersion] = await Promise.all([
     fetchPublishedUpdate(publishedUrl),
     fetchSkportReleasedOperatorIds(),
+    fetchOfficialGameVersion(now),
   ]);
   const decision = decideCatalogSync(
     policy,
@@ -229,10 +236,12 @@ async function main() {
     now,
     scheduleExpression,
     upstreamReleasedOperatorIds,
+    officialGameVersion,
   );
   const summary = [
     `cadence=${decision.cadence}`,
     `check=${decision.shouldCheck}`,
+    decision.missingGameVersion ? `game-version-missing=${decision.missingGameVersion}` : undefined,
     decision.activeOperatorId ? `active=${decision.activeOperatorId}` : undefined,
     decision.missingOperatorIds.length > 0 ? `missing=${decision.missingOperatorIds.join(",")}` : undefined,
     decision.upstreamMissingOperatorIds.length > 0

@@ -2795,6 +2795,21 @@ export function parseLiveRosterUpdate(value: unknown): LiveRosterUpdateDocument 
       "gameVersion must be a non-empty string when present.",
     );
   }
+  if (value.gameVersionReleasedAt !== undefined) {
+    requireLiveRoster(
+      typeof value.gameVersion === "string" && typeof value.gameVersionReleasedAt === "string"
+        && Number.isFinite(Date.parse(value.gameVersionReleasedAt))
+        && Date.parse(value.gameVersionReleasedAt) <= Date.parse(value.generatedAt),
+      "gameVersionReleasedAt must be a released ISO timestamp with a gameVersion when present.",
+    );
+  }
+  if (value.gameVersionSourceUrl !== undefined) {
+    requireLiveRoster(
+      typeof value.gameVersion === "string" && typeof value.gameVersionSourceUrl === "string"
+        && /^https:\/\//.test(value.gameVersionSourceUrl),
+      "gameVersionSourceUrl must be an HTTPS URL with a gameVersion when present.",
+    );
+  }
   requireLiveRoster(
     typeof value.contentHash === "string" && /^[a-f0-9]{64}$/.test(value.contentHash),
     "contentHash must be a lowercase SHA-256 digest.",

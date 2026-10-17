@@ -12,6 +12,7 @@ import {
 import { loadDefaultCatalog } from "@endfield/data/node";
 
 import {
+  applyLiveGameVersion,
   buildLiveRosterUpdate,
   createLiveCatalogContentHash,
   finalizeLiveRosterUpdate,
@@ -205,6 +206,40 @@ describe("automatic live roster updates", () => {
     });
 
     expect(homecomingHash).not.toBe(dreamscapeHash);
+  });
+
+  it("publishes version-only changes once, without hashing release provenance or rebuild dates", () => {
+    const baseline = buildLiveRosterUpdate(sourceData(), "2026-10-17T00:00:00.000Z");
+    const published = applyLiveGameVersion(baseline, { gameVersion: "Dreamscape of Wind and Snow" });
+    const version = {
+      gameVersion: "Sanctuary of Ink",
+      gameVersionReleasedAt: "2026-10-15T04:00:00.000Z",
+      gameVersionSourceUrl: "https://endfield.gryphline.com/en-us/news/9560",
+    };
+    const candidate = applyLiveGameVersion(baseline, version);
+    expect(parseLiveRosterUpdate(candidate)).toBe(candidate);
+    expect(candidate).toMatchObject(version);
+    expect(evaluateLiveRosterDeployment(candidate, published).shouldDeploy).toBe(true);
+    const unchanged = applyLiveGameVersion({ ...baseline, generatedAt: "2026-10-18T00:00:00.000Z" }, {
+      ...version, gameVersionSourceUrl: "https://endfield.gryphline.com/en-us/news/0744",
+    });
+    expect(evaluateLiveRosterDeployment(unchanged, candidate).shouldDeploy).toBe(false);
+    expect(applyLiveGameVersion(baseline, undefined)).toBe(baseline);
+  });
+
+  it("validates optional release metadata while accepting legacy overlays", () => {
+    const baseline = buildLiveRosterUpdate(sourceData(), "2026-10-17T00:00:00.000Z");
+    expect(parseLiveRosterUpdate(baseline)).toBe(baseline);
+    expect(() => parseLiveRosterUpdate({ ...baseline, gameVersionReleasedAt: "2026-10-15T04:00:00Z" }))
+      .toThrow(/gameVersionReleasedAt/);
+    expect(() => parseLiveRosterUpdate({ ...baseline, gameVersionSourceUrl: "https://example.com" }))
+      .toThrow(/gameVersionSourceUrl/);
+    for (const gameVersionReleasedAt of ["not a date", "2026-12-01T00:00:00Z", 0]) {
+      expect(() => parseLiveRosterUpdate({ ...baseline, gameVersion: "Test", gameVersionReleasedAt }))
+        .toThrow(/gameVersionReleasedAt/);
+    }
+    expect(() => parseLiveRosterUpdate({ ...baseline, gameVersion: "Test", gameVersionSourceUrl: "http://example.com" }))
+      .toThrow(/gameVersionSourceUrl/);
   });
 
   it("generates content-addressed 256px WebP portraits for same-origin hosting", async () => {
