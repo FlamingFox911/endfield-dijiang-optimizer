@@ -10,6 +10,20 @@ This models the complementary **daily Auto-Rotate schedule** shown in the screen
 
 Both modes share the roster, recipes, demand weights, and maximum-facilities overlay. Hard assignments have an A/B selector; existing pins default to A. B pins remain saved when rotation is off but do not reserve operators or affect the legacy search. Unlock recommendations re-evaluate the same rotation objective and can reuse a feasible baseline's teams and schedules as a search seed.
 
+## Hard Assignment work-time goals
+
+Each pin has an optional **Work-time goal**:
+
+- **Placement only** reserves the operator's facility/team and optimizes output normally. This is the default for existing pins.
+- **Minimum active hours/day** requests a positive number up to 24 working hours per day. The search first minimizes the sum of unmet operator-hours across active minimum goals; once every minimum is met, extra hours have no priority over production.
+- **Maximize active time** prioritizes the combined working hours of the selected operators after minimum-hour shortfalls, with production used to choose between equal goal outcomes. Mark both trainees to prioritize both. Several goals can compete; there is no implicit per-operator priority or fairness guarantee.
+
+These are estimated actual working hours after Mood depletion and recovery, not scheduled-window lengths or invented Trust/clue probabilities. A long window can include rest. Goal-aware team and clock searches use the complete shipwide objective so helpers and Nexus recovery support can improve a goal even when production points decrease. Hours are kept separate from production utility; the displayed score still represents production and general Reception value.
+
+Fixed schedules remain fixed: the planner can change other staffing but reports any unmet target. With rotation off, active A/default pins use the existing normal work/rest estimate; saved B goals remain inactive. A rotating cabin that becomes normal retains its operator's goal. The result table and CLI output show each requested minimum, estimated working hours, and met/unmet status, or the best hours found for Maximize. Unmet minima and maximized hours are search outcomes, not proofs of infeasibility or global optimality. Work-time goals use a bounded improvement search and never inherit a production-only optimality certificate. Saved drafts, scenario JSON imports/exports, and worker messages retain goals. Unlock recommendations rank reduced minimum shortfall, then increased combined Maximize hours, before the selected production/ROI/effort ranking and explain those gains separately.
+
+For Trust farming, pin the trainees to their intended cabin/team and choose **Maximize active time**. For a clue-targeting operator, pin it to Reception and choose either a minimum or Maximize; automatic clue-targeting exclusions otherwise remain unchanged.
+
 **Unstaffed** means an actual empty seat, contributing no staffing or skill effects. Manufacturing, Growth, and Reception all count the base active throughput and +40% staffing per working operator, multiplied by matching general efficiency skills. A Reception worker does not need a clue skill to contribute. The solver leaves seats empty when there are insufficient operators or no modeled benefit. Unlocked specific-clue Rate-UP skills are excluded from automatic Reception placements, including score-equivalent alternatives. Pin an operator to Reception to request clue targeting explicitly. General clue-collection bonuses remain eligible. These rules also apply with rotation off; no clue probability or numerical penalty is invented.
 
 Results include **Unused owned operators** with reasons for each omitted worker. These explanations evaluate adding the worker to remaining legal open seats while holding the chosen teams and schedules fixed; they do not claim that every possible reallocation has been ruled out. When Reception already covers its window, extra Mood support may add no further uptime, but the added worker still contributes staffing efficiency. Hard Assignments can reserve a seat. The regression fixture in `tests/fixtures/shift-rotation-roster.json` covers a 27-owned-operator scenario and required live catalog differences, with import metadata and inventory removed. Model v6 uses all 27 operators, fully staffs the 18 Manufacturing/Growth seats, and balances the rest between Nexus and Reception. The earlier skill-only Reception objective incorrectly left two workers unused; v5 corrected staffing but overvalued Reception, which v6 rebalances without removing the staffing benefit.
@@ -55,7 +69,8 @@ Rotation is optional in scenario format 1; older scenarios require no migration.
   },
   "facilities": {
     "hardAssignments": [
-      { "operatorId": "ember", "roomId": "mfg-1", "shift": "B" }
+      { "operatorId": "ember", "roomId": "mfg-1", "shift": "B",
+        "workTimeGoal": { "mode": "minimum", "hoursPerDay": 12 } }
     ]
   }
 }

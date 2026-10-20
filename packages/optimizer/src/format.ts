@@ -54,8 +54,17 @@ export function formatOptimizationResultText(
     ...(result.search ? [`${result.search.scheduleSearch ? "Team and schedule search" : "Assignment search"}: ${result.search.complete ? "complete for the modeled objective" : "best found; optimality not proven"} (${result.search.visitedNodes} ${result.search.scheduleSearch ? "plans evaluated" : "states visited"})`] : []),
     `Score model: ${result.supportWeightsVersion}`,
     "",
-    "Room plans",
   ];
+
+  if (result.workTimeGoals?.length) {
+    lines.push("Hard Assignment work-time goals (actual work after Mood/recovery)");
+    for (const goal of result.workTimeGoals) {
+      const name = operatorsById.get(goal.operatorId)?.name ?? goal.operatorId;
+      lines.push(`- ${name}: ${goal.mode === "minimum" ? `minimum ${goal.requestedHoursPerDay}h/day` : "maximize active time"} | estimated ${goal.workingHoursPerDay.toFixed(2)}h/day | ${goal.status === "maximized" ? "best hours found; maximum not proven" : goal.status}`);
+    }
+    lines.push("");
+  }
+  lines.push("Room plans");
 
   for (const room of result.roomPlans) {
     const recipeNames = (room.chosenRecipeIds ?? []).map(

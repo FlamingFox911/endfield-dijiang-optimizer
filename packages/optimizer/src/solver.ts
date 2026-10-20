@@ -15,6 +15,7 @@ import { createSearchTiming } from "./search-timing.js";
 import { searchRoomTeams } from "./team-search.js";
 import { optimizeRotationSchedules } from "./rotation-search.js";
 import { solveHybridRotation } from "./hybrid-rotation.js";
+import { hasWorkTimeGoals } from "./work-time-goals.js";
 import type { OptimizationProgressSnapshot, OptimizationSearchConfig, SolveScenarioOptions } from "./types.js";
 
 export interface NormalizedRoom {
@@ -342,8 +343,8 @@ function solveRoomAssignments(
   normalized: NormalizedScenarioResult,
   options?: SolveScenarioOptions,
 ): OptimizationResult {
-  if (normalized.scenario.options.shiftRotation?.enabled
-    && normalized.scenario.options.shiftRotation.scheduleMode !== "fixed") {
+  if (hasWorkTimeGoals(normalized.scenario) || (normalized.scenario.options.shiftRotation?.enabled
+    && normalized.scenario.options.shiftRotation.scheduleMode !== "fixed")) {
     return optimizeRotationSchedules(catalog, normalized, options, solveRoomAssignments);
   }
   const warnings = [...normalized.warnings];

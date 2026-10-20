@@ -6,6 +6,7 @@ import type {
   OptimizationScenario,
   ProductKind,
   RoomPlan,
+  WorkTimeGoalResult,
 } from "@endfield/domain";
 import { createProjectedOutputs, getShiftRoomId, resolveDemandProfile } from "@endfield/data";
 
@@ -23,6 +24,7 @@ import {
   type RotationSupport, type RotationUptime,
 } from "./rotation-model.js";
 import type { NormalizedRoom } from "./solver.js";
+import { summarizeWorkTimeGoals, WORK_TIME_TOLERANCE, type WorkTimeObjective } from "./work-time-goals.js";
 
 type Assignments = Map<string, Array<string | null>>;
 interface WorkerEffects extends MoodModifiers {
@@ -78,6 +80,7 @@ export function createAssignmentScorer(
   const demand = resolveDemandProfile(scenario.options.demandProfile);
   const owned = new Map(scenario.roster.filter((entry) => entry.owned).map((entry) => [entry.operatorId, entry]));
   const definitions = new Map(catalog.operators.map((operator) => [operator.id, operator]));
+  const goalPins = scenario.facilities.hardAssignments.filter((pin) => pin.workTimeGoal && pin.workTimeGoal.mode !== "placement_only");
   const roomsById = new Map(rooms.map((room) => [room.roomId, room]));
   const effects = new Map<string, Map<string, WorkerEffects>>();
   const recipes = new Map<string, RecipeValue[]>();
@@ -290,6 +293,38 @@ export function createAssignmentScorer(
     return rooms.reduce((sum, room) => room.roomKind === "control_nexus" ? sum : sum + evaluateRoom(room, assignments, support).score, 0);
   }
 
+  function workTimeGoals(assignments: Assignments): WorkTimeGoalResult[] {
+    if (goalPins.length === 0) return [];
+    const support = controlSupport(assignments);
+    return goalPins.flatMap((pin): WorkTimeGoalResult[] => {
+      const goal = pin.workTimeGoal;
+      if (!goal || goal.mode === "placement_only") return [];
+      const room = roomsById.get(getShiftRoomId(pin.roomId, pin.shift));
+      const active = room && (pin.shift !== "B" || scenario.options.shiftRotation?.enabled)
+        && workerIds(room.roomId, assignments).includes(pin.operatorId);
+      let workingHoursPerDay = 0;
+      if (active) {
+        if (room.roomKind === "control_nexus" && support.rotation) {
+          const index = rooms.filter((entry) => entry.roomKind === "control_nexus").indexOf(room);
+          workingHoursPerDay = support.rotation.workingHoursPerDay[index] ?? 0;
+        } else {
+          const evaluation = evaluateRoom(room, assignments, room.roomKind === "control_nexus" ? NO_SUPPORT : support);
+          workingHoursPerDay = 24 * (evaluation.uptimes[evaluation.workers.findIndex((worker) => worker.operatorId === pin.operatorId)] ?? 0);
+        }
+      }
+      return [{ operatorId: pin.operatorId, roomId: pin.roomId, shift: pin.shift,
+        mode: goal.mode, ...(goal.mode === "minimum" ? { requestedHoursPerDay: goal.hoursPerDay } : {}),
+        workingHoursPerDay,
+        status: !active ? "inactive" : goal.mode === "maximize" ? "maximized"
+          : workingHoursPerDay + WORK_TIME_TOLERANCE >= goal.hoursPerDay ? "met" : "unmet" }];
+    });
+  }
+
+  function objective(assignments: Assignments): WorkTimeObjective {
+    if (goalPins.length === 0) return { minimumShortfallHours: 0, maximizedHours: 0, productionScore: score(assignments) };
+    return { ...summarizeWorkTimeGoals(workTimeGoals(assignments)), productionScore: score(assignments) };
+  }
+
   function result(assignments: Assignments): OptimizationResult {
     const support = controlSupport(assignments);
     const totalScore = score(assignments);
@@ -414,12 +449,17 @@ export function createAssignmentScorer(
       }
       return { operatorId, reasons, bestOpenSlotScoreGain };
     });
+    const goals = workTimeGoals(assignments);
+    for (const goal of goals) {
+      if (goal.status === "unmet") warnings.push(`Work-time minimum not met for '${goal.operatorId}': requested ${goal.requestedHoursPerDay!.toFixed(2)}h/day, estimated ${goal.workingHoursPerDay.toFixed(2)}h/day. This is the best plan found; feasibility is not proven.`);
+    }
     return {
       catalogVersion: catalog.version,
       totalScore,
       projectedOutputs,
       projectedRecipeOutputs,
       roomPlans,
+      ...(goals.length > 0 ? { workTimeGoals: goals } : {}),
       explanations,
       unassignedOperators,
       warnings: [...new Set(warnings)],
@@ -558,7 +598,7 @@ export function createAssignmentScorer(
   }
 
   return {
-    score, result, roomUpperBound, canAssign, canContribute, controlSupport, staffingUpperBound, certifiedFullUptimePlan,
+    score, objective, result, roomUpperBound, canAssign, canContribute, controlSupport, staffingUpperBound, certifiedFullUptimePlan,
     workerEffects: (roomId: string, operatorId: string) => effects.get(roomId)!.get(operatorId)!,
     setShiftSchedule: (physicalRoomId: string, schedule: NonNullable<NormalizedRoom["shiftSchedule"]>) => {
       for (const room of rooms.filter((entry) => entry.physicalRoomId === physicalRoomId)) {

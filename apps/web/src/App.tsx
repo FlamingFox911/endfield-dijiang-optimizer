@@ -46,6 +46,7 @@ import {
 import { createOptimizerWorker } from "./optimizer.worker.client";
 import { SKPORT_CAPTURE_BOOKMARKLET } from "./skport-capture-bookmarklet";
 import { ShiftRotationControls } from "./ShiftRotationControls";
+import { HardAssignmentWorkTimeControls } from "./HardAssignmentWorkTimeControls";
 import type { OptimizerWorkerResponse } from "./optimizer-worker-types";
 import type {
   OptimizationProgressSnapshot,
@@ -303,6 +304,7 @@ function sanitizeScenarioForPersistence(scenario: OptimizationScenario): Optimiz
         operatorId: assignment.operatorId,
         roomId: assignment.roomId,
         ...(assignment.shift ? { shift: assignment.shift } : {}),
+        ...(assignment.workTimeGoal ? { workTimeGoal: { ...assignment.workTimeGoal } } : {}),
       })),
     },
   };
@@ -1431,6 +1433,8 @@ function App() {
   const validationErrors = validation.issues.filter((issue) => issue.severity === "error");
   const validationWarnings = validation.issues.filter((issue) => issue.severity === "warning");
   const hardAssignmentByOperatorId = new Map(scenario.facilities.hardAssignments.map((assignment) => [assignment.operatorId, assignment]));
+  const hasActiveWorkTimeGoals = scenario.facilities.hardAssignments.some((assignment) => assignment.workTimeGoal
+    && assignment.workTimeGoal.mode !== "placement_only" && (assignment.shift !== "B" || scenario.options.shiftRotation?.enabled));
   const firstHardAssignmentIndexByOperatorId = new Map<string, number>();
   scenario.facilities.hardAssignments.forEach((assignment, index) => {
     if (!firstHardAssignmentIndexByOperatorId.has(assignment.operatorId)) {
@@ -2245,7 +2249,7 @@ function App() {
               : optimizationRun.progress.phase}</p>
             <div className="heroMetaGrid modalStats">
               <div><span>{scenario.options.shiftRotation?.enabled && scenario.options.shiftRotation.scheduleMode !== "fixed" ? "Plans evaluated" : "Allocation states checked"}</span><strong>{optimizationRun.progress.visitedNodes.toLocaleString()}</strong></div>
-              <div><span>Best score (pts)</span><strong>{formatScorePoints(optimizationRun.progress.bestScore)}</strong></div>
+              <div><span>{hasActiveWorkTimeGoals ? "Production score (pts)" : "Best score (pts)"}</span><strong>{formatScorePoints(optimizationRun.progress.bestScore)}</strong></div>
             </div>
             {optimizationRun.completedAt == null && <p className="status">{scenario.options.shiftRotation?.enabled && scenario.options.shiftRotation.scheduleMode !== "fixed"
               ? "Comparing teams and daily schedules for your roster, rooms, and priorities."
@@ -3174,6 +3178,11 @@ function App() {
                           ×
                         </button>
                         </HoverTooltip>
+                        <HardAssignmentWorkTimeControls operatorName={currentOperatorName} goal={assignment.workTimeGoal}
+                          onChange={(workTimeGoal) => updateScenario((current) => ({ ...current,
+                            facilities: { ...current.facilities, hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) =>
+                              entryIndex === index ? { ...entry, workTimeGoal } : entry) },
+                          }))} />
                       </div>
                     );
                   })}
@@ -3227,6 +3236,20 @@ function App() {
                   <p>Room scores exclude the shipwide gain credited to Control Nexus. Working hours and outputs include its support.</p>
                   {scenario.options.shiftRotation?.enabled && <p>Facilities rotate only when both shifts have operators. A facility with one team uses normal operation and rests when Mood is depleted.</p>}
                 </div>
+                {(result.workTimeGoals?.length ?? 0) > 0 && <div className="resultWorkTimeGoals">
+                  <h3>Hard Assignment work-time goals</h3>
+                  <p className="subtle">Minimum-hour shortfalls take priority, then combined active hours for Maximize goals, then production. Hours include Mood and recovery. Shared shifts share the same schedule. Maximum hours are the best found, not a proven limit.</p>
+                  <table>
+                    <thead><tr><th>Operator</th><th>Goal</th><th>Estimated work/day</th><th>Result</th></tr></thead>
+                    <tbody>{result.workTimeGoals!.map((goal, index) => <tr key={`${goal.operatorId}-${index}`}>
+                      <td>{operatorsById.get(goal.operatorId)?.name ?? goal.operatorId}<br />
+                        <small>{roomOptions.find((room) => room.id === goal.roomId)?.label ?? goal.roomId}{goal.shift ? ` · Shift ${goal.shift}` : ""}</small></td>
+                      <td>{goal.mode === "minimum" ? `At least ${goal.requestedHoursPerDay}h/day` : "Maximize active time"}</td>
+                      <td>{goal.status === "inactive" ? "—" : `${goal.workingHoursPerDay.toFixed(2)}h`}</td>
+                      <td>{goal.status === "met" ? "Minimum met" : goal.status === "unmet" ? "Minimum unmet" : goal.status === "inactive" ? "Inactive assignment" : "Best hours found"}</td>
+                    </tr>)}</tbody>
+                  </table>
+                </div>}
                 {(result.unassignedOperators?.length ?? 0) > 0 && <details className="resultSummary">
                   <summary>Unused owned operators ({result.unassignedOperators!.length})</summary>
                   <ul>{result.unassignedOperators!.map((entry) => <li key={entry.operatorId}>

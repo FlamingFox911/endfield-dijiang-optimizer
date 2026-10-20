@@ -226,6 +226,48 @@ describe("App", () => {
     expect(saved.facilities.hardAssignments[0].shift).toBe("B");
   });
 
+  it("persists work-time goals and reports requested versus actual working hours", async () => {
+    seedDraft(["ember", "chen-qianyu"]);
+    const first = render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.click(screen.getByRole("tab", { name: /Plan base/i }));
+    await userEvent.click(screen.getByRole("button", { name: "Add hard assignment" }));
+    const goalSelect = screen.getByRole("combobox", { name: /^Work-time goal for / });
+    expect(goalSelect).toHaveValue("placement_only");
+    await userEvent.selectOptions(goalSelect, "minimum");
+    const minimum = screen.getByRole("spinbutton", { name: /^Minimum active hours\/day for / });
+    expect(minimum).toHaveValue(12);
+    await userEvent.clear(minimum);
+    await userEvent.type(minimum, "16");
+    expect(JSON.parse(localStorage.getItem("endfield-dijiang-optimizer:draft")!).facilities.hardAssignments[0].workTimeGoal)
+      .toEqual({ mode: "minimum", hoursPerDay: 16 });
+    await userEvent.selectOptions(goalSelect, "maximize");
+    expect(screen.queryByRole("spinbutton", { name: /^Minimum active hours\/day for / })).not.toBeInTheDocument();
+    first.unmount();
+    render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.click(screen.getByRole("tab", { name: /Plan base/i }));
+    const restored = screen.getByRole("combobox", { name: /^Work-time goal for / });
+    expect(restored).toHaveValue("maximize");
+    await userEvent.selectOptions(restored, "minimum");
+    fireEvent.change(screen.getByRole("spinbutton", { name: /^Minimum active hours\/day for / }), { target: { value: "16" } });
+    await userEvent.click(screen.getByRole("button", { name: "Optimize" }));
+    if (screen.queryByRole("dialog", { name: "Proceed with warnings" })) {
+      await userEvent.click(screen.getByRole("button", { name: "Proceed" }));
+    }
+    const request = workerInstances[0]!.postMessage.mock.calls[0]![0];
+    expect(request.scenario.facilities.hardAssignments[0].workTimeGoal).toEqual({ mode: "minimum", hoursPerDay: 16 });
+    act(() => {
+      const result = solveScenario(request.catalog, request.scenario);
+      workerInstances[0]!.emit({ type: "optimization-completed", runId: request.runId, result });
+    });
+    await userEvent.click(screen.getByRole("button", { name: "View results" }));
+    const goals = screen.getByRole("heading", { name: "Hard Assignment work-time goals" }).parentElement!;
+    expect(within(goals).getByText("At least 16h/day")).toBeInTheDocument();
+    expect(within(goals).getByText("15.00h")).toBeInTheDocument();
+    expect(within(goals).getByText("Minimum unmet")).toBeInTheDocument();
+  });
+
   it("announces unchanged catalog sync content only once across rebuild timestamps", async () => {
     const update = createTestLiveRosterUpdate();
     localStorage.setItem("endfield-dijiang-optimizer:catalog-sync-seen", JSON.stringify({

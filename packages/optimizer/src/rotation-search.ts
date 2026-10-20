@@ -4,6 +4,7 @@ import { createAssignmentScorer } from "./assignment-scoring.js";
 import { createOperatorPreference } from "./operator-preference.js";
 import { OptimizationCancelledError, type NormalizedScenarioResult } from "./solver.js";
 import type { SolveScenarioOptions } from "./types.js";
+import { compareWorkTimeObjectives, hasWorkTimeGoals, type WorkTimeObjective } from "./work-time-goals.js";
 
 type Assignments = Map<string, Array<string | null>>;
 type FixedSolver = (catalog: GameCatalog, normalized: NormalizedScenarioResult, options?: SolveScenarioOptions) => OptimizationResult;
@@ -22,12 +23,14 @@ export function optimizeRotationSchedules(
   const startedAt = performance.now();
   const checkCancel = () => { if (options?.shouldCancel?.()) throw new OptimizationCancelledError(); };
   const scenario = normalized.scenario;
+  const workTimePriority = hasWorkTimeGoals(scenario);
+  const optimizeClock = scenario.options.shiftRotation?.enabled && scenario.options.shiftRotation.scheduleMode !== "fixed";
   const rooms = normalized.rooms.map((room) => ({ ...room, shiftSchedule: room.shiftSchedule && { ...room.shiftSchedule } }));
   const physical = rooms.filter((room) => room.shift === "A");
   // A sustainable balanced split gives a useful starting allocation without
   // spending an unbounded search on an arbitrary user-saved starting schedule.
   const seedRooms = rooms.map((room) => {
-    if (!room.shift) return { ...room };
+    if (!room.shift || !optimizeClock) return { ...room };
     const original = physical.find((entry) => entry.physicalRoomId === room.physicalRoomId)!.shiftSchedule!;
     const start = original.startMinute;
     return { ...room, shiftSchedule: room.shift === "A"
@@ -35,7 +38,13 @@ export function optimizeRotationSchedules(
       : { startMinute: minute(start + 720), endMinute: start } };
   });
   const seed = solveFixed(catalog, { ...normalized, rooms: seedRooms, scenario: {
-    ...scenario, options: { ...scenario.options, shiftRotation: { ...scenario.options.shiftRotation!, scheduleMode: "fixed" } },
+    ...scenario,
+    // Seed with the production solver. Goal-aware improvement below must not
+    // recurse into itself, or treat production-only bounds as goal certificates.
+    facilities: { ...scenario.facilities, hardAssignments: scenario.facilities.hardAssignments.map(({ workTimeGoal: _goal, ...pin }) => pin) },
+    options: { ...scenario.options, ...(scenario.options.shiftRotation ? {
+      shiftRotation: { ...scenario.options.shiftRotation, scheduleMode: "fixed" as const },
+    } : {}) },
   } }, { ...options, searchConfig: {
     profileLabel: options?.searchConfig?.profileLabel ?? scenario.options.optimizationProfile ?? "exhaustive",
     effort: options?.searchConfig?.effort ?? scenario.options.optimizationEffort ?? 100,
@@ -63,7 +72,7 @@ export function optimizeRotationSchedules(
   let evaluations = seed.search?.visitedNodes ?? 0;
   let evaluatedSchedules = 0;
   let best = clone(base);
-  let bestScore = scorer.score(best);
+  let bestObjective = scorer.objective(best);
   let bestSchedules = schedules();
   let lastProgressAt = -Infinity;
   const progress = (phase: string, force = false) => {
@@ -71,7 +80,7 @@ export function optimizeRotationSchedules(
     const now = performance.now();
     if (!force && now - lastProgressAt < 250) return;
     lastProgressAt = now;
-    options?.onProgress?.({ phase, visitedNodes: evaluations, bestScore, currentDepth: slots.length,
+    options?.onProgress?.({ phase, visitedNodes: evaluations, bestScore: bestObjective.productionScore, currentDepth: slots.length,
       totalSlots: slots.length, profileLabel: scenario.options.optimizationProfile ?? "exhaustive",
       effort: scenario.options.optimizationEffort ?? 100, maxVisitedNodes: null, maxBranchCandidatesPerSlot: null,
       timing: { elapsedMs: now - startedAt, nodesPerSecond: evaluations * 1000 / Math.max(1, now - startedAt),
@@ -80,13 +89,16 @@ export function optimizeRotationSchedules(
   const evaluate = (assignments: Assignments) => {
     evaluations += 1;
     if (evaluations % 64 === 0) progress("Optimizing shift teams and schedules");
-    return scorer.score(assignments);
+    return scorer.objective(assignments);
   };
-  const remember = (assignments: Assignments, score: number) => {
-    if (score > bestScore + EPSILON) { best = clone(assignments); bestScore = score; bestSchedules = schedules(); }
+  const remember = (assignments: Assignments, objective: WorkTimeObjective) => {
+    if (compareWorkTimeObjectives(objective, bestObjective) > 0) {
+      best = clone(assignments); bestObjective = objective; bestSchedules = schedules();
+    }
   };
 
   function optimizeTimes(assignments: Assignments): boolean {
+    if (!optimizeClock) return false;
     let improved = false;
     // Optimize production windows first, then place Nexus support around them.
     for (const room of [...physical].sort((a, b) => Number(a.roomKind === "control_nexus") - Number(b.roomKind === "control_nexus"))) {
@@ -99,9 +111,13 @@ export function optimizeRotationSchedules(
       const support = scorer.controlSupport(assignments);
       const pairScore = () => pair.reduce((sum, entry) => sum + scorer.scoreTeam(entry.roomId,
         assignments.get(entry.roomId)!.filter((worker): worker is string => worker != null), support), 0);
-      const local = room.roomKind !== "control_nexus";
-      let chosenScore = local ? pairScore() : evaluate(assignments);
-      const originalScore = chosenScore;
+      // A production window can alter a pinned operator's uptime and other
+      // priorities. Only the production-only search may use a local shortcut.
+      const local = !workTimePriority && room.roomKind !== "control_nexus";
+      const timeObjective = (): WorkTimeObjective => local
+        ? { minimumShortfallHours: 0, maximizedHours: 0, productionScore: pairScore() } : evaluate(assignments);
+      let chosenObjective = timeObjective();
+      const originalObjective = chosenObjective;
       const supportStrength = () => { const value = scorer.controlSupport(assignments); return value.moodDropReductionPercent + value.moodRegenPercent; };
       let chosenSupport = local ? 0 : supportStrength();
       const originalSupport = chosenSupport;
@@ -110,10 +126,11 @@ export function optimizeRotationSchedules(
         scorer.setShiftSchedule(id, { startMinute: minute(start), endMinute: minute(start + duration) });
         evaluatedSchedules += 1; evaluations += 1;
         if (evaluations % 64 === 0) progress("Optimizing shift lengths and recovery");
-        const value = local ? pairScore() : scorer.score(assignments);
-        const strength = local || Math.abs(value - chosenScore) > EPSILON ? 0 : supportStrength();
-        if (value > chosenScore + EPSILON || (!local && Math.abs(value - chosenScore) <= EPSILON && strength > chosenSupport + EPSILON)) {
-          chosenScore = value; chosen = { ...room.shiftSchedule! };
+        const value = timeObjective();
+        const comparison = compareWorkTimeObjectives(value, chosenObjective);
+        const strength = local || comparison !== 0 ? 0 : supportStrength();
+        if (comparison > 0 || (!local && comparison === 0 && strength > chosenSupport + EPSILON)) {
+          chosenObjective = value; chosen = { ...room.shiftSchedule! };
           chosenSupport = local ? 0 : supportStrength();
         }
       };
@@ -126,7 +143,7 @@ export function optimizeRotationSchedules(
       const durations = Array.from({ length: 23 }, (_, index) => (index + 1) * SHIFT_SCHEDULE_STEP_MINUTES);
       for (const start of starts) for (const duration of durations) tryTime(start, duration);
       scorer.setShiftSchedule(id, chosen);
-      improved ||= chosenScore > originalScore + EPSILON || chosenSupport > originalSupport + EPSILON;
+      improved ||= compareWorkTimeObjectives(chosenObjective, originalObjective) > 0 || chosenSupport > originalSupport + EPSILON;
       remember(assignments, evaluate(assignments));
     }
     return improved;
@@ -139,7 +156,7 @@ export function optimizeRotationSchedules(
     const available = free(assignments);
     const consider = () => {
       const value = evaluate(assignments);
-      if (value > nextScore + EPSILON) { nextScore = value; next = clone(assignments); }
+      if (compareWorkTimeObjectives(value, nextScore) > 0) { nextScore = value; next = clone(assignments); }
     };
     for (const [sourceIndex, source] of slots.entries()) {
       const values = assignments.get(source.roomId)!;
@@ -222,7 +239,7 @@ export function optimizeRotationSchedules(
     }
     seeds.push(hinted); seedSchedules.set(hinted, hintedSchedules);
   }
-  progress("Optimizing shift teams and schedules", true);
+  progress(workTimePriority ? "Optimizing work-time goals and assignments" : "Optimizing shift teams and schedules", true);
   for (const assignments of seeds) {
     restore(seedSchedules.get(assignments) ?? balanced);
     remember(assignments, evaluate(assignments));
@@ -238,7 +255,7 @@ export function optimizeRotationSchedules(
   // The bounded team passes may end before every useful addition is made.
   // Finish all score-improving open seats before explaining unused operators.
   while (true) {
-    let addition: { roomId: string; index: number; id: string; score: number } | undefined;
+    let addition: { roomId: string; index: number; id: string; score: WorkTimeObjective } | undefined;
     for (const room of rooms) {
       const workers = best.get(room.roomId)!;
       const index = workers.indexOf(null);
@@ -248,12 +265,12 @@ export function optimizeRotationSchedules(
         workers[index] = id;
         const score = evaluate(best);
         workers[index] = null;
-        if (score > (addition?.score ?? bestScore) + EPSILON) addition = { roomId: room.roomId, index, id, score };
+        if (compareWorkTimeObjectives(score, addition?.score ?? bestObjective) > 0) addition = { roomId: room.roomId, index, id, score };
       }
     }
     if (!addition) break;
     best.get(addition.roomId)![addition.index] = addition.id;
-    bestScore = addition.score;
+    bestObjective = addition.score;
   }
   // Keep genuinely unused seats empty, rather than advertising arbitrary
   // interchangeable workers as required. In particular, 27 owned cannot fill 30.
@@ -262,10 +279,12 @@ export function optimizeRotationSchedules(
     const worker = workers[slot.index];
     if (worker == null || pins.has(worker)) continue;
     workers[slot.index] = null;
-    if (evaluate(best) < bestScore - EPSILON) workers[slot.index] = worker;
+    if (compareWorkTimeObjectives(evaluate(best), bestObjective) < 0) workers[slot.index] = worker;
   }
+  bestObjective = scorer.objective(best);
   // A is the longer primary shift where labels are unconstrained by pins.
   for (const room of physical) {
+    if (!optimizeClock) break;
     const id = room.physicalRoomId!;
     const a = getShiftRoomId(id, "A"); const b = getShiftRoomId(id, "B");
     if (getShiftDurationMinutes(room.shiftSchedule!) >= 720
@@ -275,9 +294,13 @@ export function optimizeRotationSchedules(
   }
   checkCancel();
   const result = scorer.result(best);
-  result.supportWeightsVersion = `${result.supportWeightsVersion.replace(/-rotation-v\d+$/, "")}-rotation-v4`;
+  if (scenario.options.shiftRotation?.enabled) {
+    result.supportWeightsVersion = `${result.supportWeightsVersion.replace(/-rotation-v\d+$/, "")}-rotation-v4`;
+  }
   result.search = { complete: false, visitedNodes: evaluations, maxVisitedNodes: null, budgetExceeded: false,
-    candidatesLimited: false, scheduleSearch: { evaluatedSchedules, resolutionMinutes: SHIFT_SCHEDULE_STEP_MINUTES } };
+    candidatesLimited: false, ...(optimizeClock ? {
+      scheduleSearch: { evaluatedSchedules, resolutionMinutes: SHIFT_SCHEDULE_STEP_MINUTES },
+    } : {}) };
   for (const plan of result.roomPlans) {
     plan.assignedOperatorIds.sort(compare);
     plan.alternativeOperatorIdsBySlot = Array.from({ length: plan.slotCap ?? 0 }, (_, index) => {
@@ -289,7 +312,7 @@ export function optimizeRotationSchedules(
       const alternatives = free(best).filter((id) => {
         if (!scorer.canAssign(plan.roomId, id)) return false;
         values[seat] = id;
-        const tied = Math.abs(evaluate(best) - result.totalScore) <= EPSILON;
+        const tied = compareWorkTimeObjectives(evaluate(best), bestObjective) === 0;
         values[seat] = original;
         return tied;
       });
@@ -298,6 +321,6 @@ export function optimizeRotationSchedules(
   }
   result.warnings = [...new Set([...normalized.warnings,
     ...seed.warnings.filter((warning) => warning.startsWith("Ignoring ")), ...result.warnings])];
-  progress("Shift teams and schedules optimized", true);
+  progress(workTimePriority ? "Work-time goals and assignments optimized" : "Shift teams and schedules optimized", true);
   return result;
 }

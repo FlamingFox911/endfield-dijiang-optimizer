@@ -21,6 +21,7 @@ import {
 import { SUPPORT_WEIGHTS } from "./config.js";
 import { getScenarioSearchConfig, solveScenario } from "./solver.js";
 import type { RecommendUpgradesOptions } from "./types.js";
+import { hasWorkTimeGoals, resultWorkTimeObjective, WORK_TIME_TOLERANCE } from "./work-time-goals.js";
 
 export class UpgradeRecommendationsCancelledError extends Error {
   constructor(message = "Upgrade recommendations canceled.") {
@@ -220,6 +221,12 @@ function compareRecommendations(
   left: UpgradeRecommendation,
   right: UpgradeRecommendation,
 ): number {
+  const minimumGain = (right.workTimeImprovement?.minimumShortfallReductionHours ?? 0)
+    - (left.workTimeImprovement?.minimumShortfallReductionHours ?? 0);
+  if (Math.abs(minimumGain) > WORK_TIME_TOLERANCE) return minimumGain;
+  const maximumGain = (right.workTimeImprovement?.maximizedHoursGain ?? 0)
+    - (left.workTimeImprovement?.maximizedHoursGain ?? 0);
+  if (Math.abs(maximumGain) > WORK_TIME_TOLERANCE) return maximumGain;
   switch (mode) {
     case "fastest":
       if ((left.estimatedDaysToUnlock ?? Number.POSITIVE_INFINITY) !== (right.estimatedDaysToUnlock ?? Number.POSITIVE_INFINITY)) {
@@ -267,6 +274,7 @@ export function recommendUpgrades(
   const requireComplete = getScenarioSearchConfig(catalog, scenario).maxVisitedNodes == null;
   // Maximum effort must not inherit uncertainty from a previously bounded run.
   const baseline = suppliedBaseline && (!requireComplete || suppliedBaseline.search?.complete)
+    && (!hasWorkTimeGoals(scenario) || suppliedBaseline.workTimeGoals !== undefined)
     ? suppliedBaseline
     : solveScenario(catalog, scenario, {
       shouldCancel,
@@ -321,6 +329,15 @@ export function recommendUpgrades(
       const operatorDef = operatorDefs.get(action.operatorId);
       const estimatedDaysToUnlock = effortScore / SUPPORT_WEIGHTS.estimatedEffortPerDay;
       const notes = operatorDef ? [`Operator: ${operatorDef.name}`] : [];
+      const baselineGoal = resultWorkTimeObjective(baseline);
+      const upgradedGoal = resultWorkTimeObjective(upgradedResult);
+      const workTimeImprovement = baseline.workTimeGoals?.some((goal) => goal.status !== "inactive") ? {
+        minimumShortfallReductionHours: baselineGoal.minimumShortfallHours - upgradedGoal.minimumShortfallHours,
+        maximizedHoursGain: upgradedGoal.maximizedHours - baselineGoal.maximizedHours,
+      } : undefined;
+      if (workTimeImprovement) {
+        notes.push(`Work-time goals: minimum shortfall reduced by ${workTimeImprovement.minimumShortfallReductionHours.toFixed(2)} operator-hours/day; combined Maximize hours changed by ${workTimeImprovement.maximizedHoursGain.toFixed(2)} operator-hours/day. Goal improvements rank before production gains.`);
+      }
       if (!upgradedResult.search?.complete) unprovenCandidates += 1;
       if (upgradedResult.search?.budgetExceeded || upgradedResult.search?.candidatesLimited) limitedCandidates += 1;
       completedCandidates += 1;
@@ -354,7 +371,10 @@ export function recommendUpgrades(
       if (!hasEffortEstimate) {
         notes.push("No bundled upgrade cost data exists yet; ROI falls back to score delta.");
       }
-      if (scoreDelta <= 0) {
+      if (scoreDelta <= 0 && !(workTimeImprovement
+        && (workTimeImprovement.minimumShortfallReductionHours > WORK_TIME_TOLERANCE
+          || Math.abs(workTimeImprovement.minimumShortfallReductionHours) <= WORK_TIME_TOLERANCE
+            && workTimeImprovement.maximizedHoursGain > WORK_TIME_TOLERANCE))) {
         notes.push("No immediate improvement was found for this unlock.");
       }
 
@@ -370,6 +390,7 @@ export function recommendUpgrades(
         action,
         scoreDelta,
         projectedOutputChanges,
+        ...(workTimeImprovement ? { workTimeImprovement } : {}),
         roi: effortScore > 0 ? scoreDelta / effortScore : scoreDelta,
         effortScore: hasEffortEstimate ? effortScore : undefined,
         estimatedDaysToUnlock,

@@ -2561,6 +2561,17 @@ function validateScenarioShape(scenario: OptimizationScenario): ValidationIssue[
       if (assignment.shift !== undefined && assignment.shift !== "A" && assignment.shift !== "B") {
         issues.push(makeIssue("invalid_hard_assignment_shift", "facilities.hardAssignments", "Hard assignment shift must be A or B."));
       }
+      if (assignment.workTimeGoal !== undefined) {
+        const goal = assignment.workTimeGoal;
+        if (!isObject(goal) || !["placement_only", "minimum", "maximize"].includes(String(goal.mode))
+          || (goal.mode === "minimum" && (typeof goal.hoursPerDay !== "number"
+            || !Number.isFinite(goal.hoursPerDay) || goal.hoursPerDay <= 0 || goal.hoursPerDay > 24))
+          || (goal.mode !== "minimum" && "hoursPerDay" in goal)
+          || Object.keys(goal).some((key) => key !== "mode" && key !== "hoursPerDay")) {
+          issues.push(makeIssue("invalid_work_time_goal", `facilities.hardAssignments.${assignment.operatorId}`,
+            "Work-time goal must be placement_only, maximize, or minimum with hoursPerDay greater than 0 and at most 24."));
+        }
+      }
     }
   }
 

@@ -203,7 +203,26 @@
             "properties": {
               "operatorId": { "type": "string" },
               "roomId": { "type": "string" },
-              "shift": { "enum": ["A", "B"] }
+              "shift": { "enum": ["A", "B"] },
+              "workTimeGoal": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "required": ["mode"],
+                    "properties": { "mode": { "enum": ["placement_only", "maximize"] } },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": ["mode", "hoursPerDay"],
+                    "properties": {
+                      "mode": { "const": "minimum" },
+                      "hoursPerDay": { "type": "number", "exclusiveMinimum": 0, "maximum": 24 }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              }
             },
             "additionalProperties": false
           }

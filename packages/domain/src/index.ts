@@ -444,11 +444,18 @@ export interface ReceptionRoomState {
   level: 1 | 2 | 3;
 }
 
+export type WorkTimeGoal =
+  | { mode: "placement_only" }
+  | { mode: "minimum"; hoursPerDay: number }
+  | { mode: "maximize" };
+
 export interface HardAssignment {
   operatorId: string;
   roomId: string;
   /** Defaults to A. Shift B pins are inactive when rotation is disabled. */
   shift?: "A" | "B";
+  /** Omitted means placement only. Goals use actual work after Mood/rest. */
+  workTimeGoal?: WorkTimeGoal;
 }
 
 export interface ShiftSchedule {
@@ -558,7 +565,7 @@ export interface RoomPlan {
   chosenRecipeIds?: string[];
   chosenProductKind?: ProductKind;
   assignedOperatorIds: string[];
-  /** Unassigned replacements preserving total score with all other slots fixed.
+  /** Unassigned replacements preserving work-time goals and total score with all other slots fixed.
    * Indexed by displayed slot, excluding its current worker; hard assignments have no alternatives.
    */
   alternativeOperatorIdsBySlot?: string[][];
@@ -568,6 +575,16 @@ export interface RoomPlan {
   warnings: string[];
   usedFallbackHeuristics: boolean;
   dataConfidence: DataConfidence;
+}
+
+export interface WorkTimeGoalResult {
+  operatorId: string;
+  roomId: string;
+  shift?: "A" | "B";
+  mode: "minimum" | "maximize";
+  requestedHoursPerDay?: number;
+  workingHoursPerDay: number;
+  status: "met" | "unmet" | "maximized" | "inactive";
 }
 
 export interface OptimizationResult {
@@ -590,6 +607,7 @@ export interface OptimizationResult {
   projectedRecipeOutputs: Record<string, number>;
   projectedOutputs: Record<ProductKind, number>;
   roomPlans: RoomPlan[];
+  workTimeGoals?: WorkTimeGoalResult[];
   explanations: AssignmentExplanation[];
   /** Open-seat gains hold all other teams and schedules fixed. */
   unassignedOperators?: Array<{ operatorId: string; reasons: string[]; bestOpenSlotScoreGain: number }>;
@@ -623,6 +641,8 @@ export interface UpgradeRecommendation {
   roi: number;
   effortScore?: number;
   projectedOutputChanges?: Array<{ productKind: ProductKind; before: number; after: number }>;
+  /** Goal improvements take priority over production-only unlock rankings. */
+  workTimeImprovement?: { minimumShortfallReductionHours: number; maximizedHoursGain: number };
   estimatedDaysToUnlock?: number;
   notes: string[];
 }
