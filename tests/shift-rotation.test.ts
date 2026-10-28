@@ -432,13 +432,17 @@ describe("shift assignment integration", () => {
     expect(result.search?.complete).toBe(true);
   });
 
-  it("checks capacities per shift and still rejects duplicate operator placements", async () => {
+  it.each(["control_nexus", "mfg-1"])("checks six-pin capacity per shift in %s and still rejects duplicates", async (roomId) => {
     const { catalog, scenario } = await fixture();
     const ids = catalog.operators.slice(0, 6).map((operator) => operator.id);
     scenario.roster.forEach((operator) => { operator.owned = ids.includes(operator.operatorId); });
-    scenario.facilities.hardAssignments = ids.map((operatorId, i) => ({ operatorId, roomId: "mfg-1", shift: i < 3 ? "A" : "B" }));
+    scenario.facilities.hardAssignments = ids.map((operatorId, i) => ({ operatorId, roomId, shift: i < 3 ? "A" : "B" }));
     const validation = validateScenarioAgainstCatalog(catalog, scenario);
     expect(validation.issues.some((issue) => issue.code === "hard_assignment_room_overflow")).toBe(false);
+    scenario.facilities.hardAssignments[3]!.shift = "A";
+    expect(validateScenarioAgainstCatalog(catalog, scenario).issues.find((issue) => issue.code === "hard_assignment_room_overflow")?.message)
+      .toContain(`room '${roomId}' Shift A`);
+    scenario.facilities.hardAssignments[3]!.shift = "B";
     scenario.facilities.hardAssignments[3]!.operatorId = ids[0]!;
     expect(validateScenarioAgainstCatalog(catalog, scenario).issues.some((issue) => issue.code === "hard_assignment_duplicate")).toBe(true);
   });

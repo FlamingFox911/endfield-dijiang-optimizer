@@ -10,6 +10,8 @@ This models the complementary **daily Auto-Rotate schedule** shown in the screen
 
 Both modes share the roster, recipes, demand weights, and maximum-facilities overlay. Hard assignments have an A/B selector; existing pins default to A. B pins remain saved when rotation is off but do not reserve operators or affect the legacy search. Unlock recommendations re-evaluate the same rotation objective and can reuse a feasible baseline's teams and schedules as a search seed.
 
+Hard Assignment capacity is counted separately for A and B: up to three operators per shift, or six per facility at maximum capacity. New pins fill an available shift before moving to another facility. Changing a pin's room preserves its shift when there is space and otherwise uses the other shift. Lower-level facilities keep their actual per-shift slot limits. Existing pins retain their saved shifts; overflow warnings identify the affected shift.
+
 ## Hard Assignment work-time goals
 
 Each pin has an optional **Work-time goal**:

@@ -2271,7 +2271,7 @@ export function validateScenarioAgainstCatalog(
           makeIssue(
             "hard_assignment_room_overflow",
             `facilities.hardAssignments.${assignment.operatorId}`,
-            `Hard assignments exceed slot capacity for room '${assignment.roomId}'.`,
+            `Hard assignments exceed slot capacity for room '${assignment.roomId}'${scenario.options.shiftRotation?.enabled ? ` Shift ${assignment.shift ?? "A"}` : ""}.`,
             "warning",
           ),
         );

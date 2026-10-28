@@ -41,6 +41,7 @@ import {
   getScenarioSearchConfig,
   formatScorePoints,
   formatProjectedOutputChange,
+  normalizeScenario,
 } from "@endfield/optimizer";
 
 import { createOptimizerWorker } from "./optimizer.worker.client";
@@ -1072,6 +1073,23 @@ function getNextHardAssignmentOperatorId(
   return ownedOperators.find((entry) => !assignedOperatorIds.has(entry.operatorId))?.operatorId ?? null;
 }
 
+function getAvailableHardAssignmentTarget(
+  roomId: string,
+  slotCap: number,
+  hardAssignments: HardAssignment[],
+  rotationEnabled: boolean,
+  currentIndex = -1,
+  preferredShift: "A" | "B" = "A",
+): Pick<HardAssignment, "roomId" | "shift"> | undefined {
+  const shifts = rotationEnabled ? [preferredShift, preferredShift === "A" ? "B" : "A"] as const : ["A"] as const;
+  for (const shift of shifts) {
+    const count = hardAssignments.filter((assignment, index) => index !== currentIndex
+      && assignment.roomId === roomId && (assignment.shift ?? "A") === shift).length;
+    if (count < slotCap) return { roomId, ...(rotationEnabled ? { shift } : {}) };
+  }
+  return undefined;
+}
+
 function formatElapsedTime(valueMs: number): string {
   const totalSeconds = Math.max(0, Math.floor(valueMs / 1000));
   const minutes = Math.floor(totalSeconds / 60);
@@ -1411,6 +1429,12 @@ function App() {
     ...scenario.facilities.growthChambers.map((room, index) => ({ id: room.id, label: `Growth Chamber ${index + 1}` })),
   ];
   const nextHardAssignmentOperatorId = getNextHardAssignmentOperatorId(ownedOperators, scenario.facilities.hardAssignments);
+  const hardAssignmentSlotCaps = new Map(normalizeScenario(catalog, scenario).rooms
+    .map((room) => [room.physicalRoomId ?? room.roomId, room.slotCap]));
+  const nextHardAssignmentTarget = roomOptions.map((room) => getAvailableHardAssignmentTarget(
+    room.id, hardAssignmentSlotCaps.get(room.id) ?? 0, scenario.facilities.hardAssignments,
+    Boolean(scenario.options.shiftRotation?.enabled),
+  )).find((target) => target !== undefined);
   const roomLabelById = new Map(roomOptions.map((room) => [room.id, room.label]));
   const roomOrderById = new Map(roomOptions.map((room, index) => [room.id, index]));
   const orderedResultRoomPlans = result
@@ -1541,7 +1565,8 @@ function App() {
         return `${operatorName} is pinned more than once. Only one pin can be used.`;
       }
       if (issue.code === "hard_assignment_room_overflow") {
-        return `${roomLabel} has more pinned operators than open slots. Extra pins will be ignored.`;
+        const shiftLabel = scenario.options.shiftRotation?.enabled ? ` · Shift ${assignment?.shift ?? "A"}` : "";
+        return `${roomLabel}${shiftLabel} has more pinned operators than open slots. Extra pins will be ignored.`;
       }
       if (issue.code === "hard_assignment_inactive_room") {
         return `${operatorName} is pinned to ${roomLabel}, but that room is currently inactive. This pin will be ignored.`;
@@ -3084,6 +3109,7 @@ function App() {
                     <div>
                       <h3>Hard assignments</h3>
                       <p>Optional overrides. Leave this empty to let the optimizer place everyone freely.</p>
+                      {scenario.options.shiftRotation?.enabled && <p>Up to 3 operators per shift, or 6 per facility at maximum capacity. New pins use an available shift automatically.</p>}
                     </div>
                     <span className="miniStat">{scenario.facilities.hardAssignments.length} pinned</span>
                   </div>
@@ -3141,7 +3167,14 @@ function App() {
                               ...current,
                               facilities: {
                                 ...current.facilities,
-                                hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? { ...entry, roomId: event.target.value } : entry),
+                                hardAssignments: current.facilities.hardAssignments.map((entry, entryIndex) => entryIndex === index ? {
+                                  ...entry,
+                                  roomId: event.target.value,
+                                  ...(current.options.shiftRotation?.enabled ? getAvailableHardAssignmentTarget(
+                                    event.target.value, hardAssignmentSlotCaps.get(event.target.value) ?? 0,
+                                    current.facilities.hardAssignments, true, index, entry.shift ?? "A",
+                                  ) : {}),
+                                } : entry),
                               },
                             }))}
                           >
@@ -3189,17 +3222,17 @@ function App() {
                   <button
                     type="button"
                     className="secondary hardAssignmentButton"
-                    disabled={!nextHardAssignmentOperatorId}
+                    disabled={!nextHardAssignmentOperatorId || !nextHardAssignmentTarget}
                     onClick={() => updateScenario((current) => ({
                       ...current,
                       facilities: {
                         ...current.facilities,
-                        hardAssignments: nextHardAssignmentOperatorId
+                        hardAssignments: nextHardAssignmentOperatorId && nextHardAssignmentTarget
                           ? [
                               ...current.facilities.hardAssignments,
                               {
                                 operatorId: nextHardAssignmentOperatorId,
-                                roomId: roomOptions[0]?.id ?? "control_nexus",
+                                ...nextHardAssignmentTarget,
                               },
                             ]
                           : current.facilities.hardAssignments,

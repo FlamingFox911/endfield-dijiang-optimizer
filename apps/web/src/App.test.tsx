@@ -11,7 +11,7 @@ import sources from "../../../catalogs/2026-04-17-v1.2/sources.json";
 import gaps from "../../../catalogs/2026-04-17-v1.2/gaps.json";
 import assets from "../../../catalogs/2026-04-17-v1.2/assets.json";
 
-import { createStarterScenario, toGameCatalog } from "@endfield/data";
+import { createStarterScenario, toGameCatalog, validateScenarioAgainstCatalog } from "@endfield/data";
 import { solveScenario } from "@endfield/optimizer";
 import type { LiveRosterUpdateDocument, SourceRef } from "@endfield/domain";
 
@@ -224,6 +224,79 @@ describe("App", () => {
     expect(screen.getByLabelText("Manufacturing Cabin 1 Shift A end")).toHaveValue("12:00");
     saved = JSON.parse(localStorage.getItem("endfield-dijiang-optimizer:draft")!);
     expect(saved.facilities.hardAssignments[0].shift).toBe("B");
+  });
+
+  it.each([{ level: 3, seats: 3 }, { level: 2, seats: 2 }])("fills both Nexus shifts at level $level and honors every pin when optimizing", async ({ level, seats }) => {
+    const ids = ["ember", "chen-qianyu", "xaihi", "wulfgard", "lifeng", "da-pan"].slice(0, seats * 2);
+    seedDraft(ids);
+    const draft = JSON.parse(localStorage.getItem("endfield-dijiang-optimizer:draft")!);
+    draft.facilities.controlNexus.level = level;
+    draft.facilities.manufacturingCabins.forEach((room: { enabled: boolean; fixedRecipeId?: string }) => {
+      room.enabled = false;
+      delete room.fixedRecipeId;
+    });
+    draft.facilities.growthChambers.forEach((room: { enabled: boolean }) => { room.enabled = false; });
+    draft.facilities.receptionRoom.enabled = false;
+    localStorage.setItem("endfield-dijiang-optimizer:draft", JSON.stringify(draft));
+    const first = render(<App />);
+    await userEvent.click(await screen.findByRole("checkbox", { name: "Cabin shift rotation (A/B)" }));
+    await userEvent.click(screen.getByRole("tab", { name: /Plan base/i }));
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Shift schedule mode" }), "fixed");
+    for (const _ of ids) await userEvent.click(screen.getByRole("button", { name: "Add hard assignment" }));
+    const saved = JSON.parse(localStorage.getItem("endfield-dijiang-optimizer:draft")!);
+    expect(saved.facilities.hardAssignments.map((pin: { operatorId: string }) => pin.operatorId).sort()).toEqual([...ids].sort());
+    expect(saved.facilities.hardAssignments.map((pin: { roomId: string }) => pin.roomId)).toEqual(ids.map(() => "control_nexus"));
+    const shifts = [...Array(seats).fill("A"), ...Array(seats).fill("B")];
+    expect(saved.facilities.hardAssignments.map((pin: { shift: string }) => pin.shift)).toEqual(shifts);
+    expect(screen.getByRole("button", { name: "Add hard assignment" })).toBeDisabled();
+
+    first.unmount();
+    render(<App />);
+    await screen.findByText("Endfield Dijiang Optimizer");
+    await userEvent.click(screen.getByRole("tab", { name: /Plan base/i }));
+    expect(screen.getAllByRole("combobox", { name: /^Shift for / }).map((select) => (select as HTMLSelectElement).value))
+      .toEqual(shifts);
+    await userEvent.click(screen.getByRole("button", { name: "Optimize" }));
+    expect(screen.queryByRole("dialog", { name: "Proceed with warnings" })).not.toBeInTheDocument();
+    const request = workerInstances[0]!.postMessage.mock.calls[0]![0];
+    expect(validateScenarioAgainstCatalog(request.catalog, request.scenario).issues
+      .some((issue) => issue.code === "hard_assignment_room_overflow")).toBe(false);
+    const result = solveScenario(request.catalog, request.scenario);
+    expect(result.roomPlans).toHaveLength(2);
+    for (const shift of ["A", "B"]) {
+      const plan = result.roomPlans.find((room) => room.shift === shift)!;
+      expect(plan.assignedOperatorIds.sort()).toEqual(saved.facilities.hardAssignments
+        .filter((pin: { shift: string }) => pin.shift === shift).map((pin: { operatorId: string }) => pin.operatorId).sort());
+      expect(plan.workingHoursPerDay).toBeCloseTo(12, 8);
+    }
+    expect(result.warnings.some((warning) => warning.includes("Ignoring hard assignment"))).toBe(false);
+  });
+
+  it("uses an available shift when changing a pin's room and retains its farming goal", async () => {
+    seedDraft(["ember", "chen-qianyu", "xaihi", "wulfgard"]);
+    const draft = JSON.parse(localStorage.getItem("endfield-dijiang-optimizer:draft")!);
+    draft.facilities.controlNexus.level = 5;
+    draft.facilities.manufacturingCabins[0].level = 3;
+    localStorage.setItem("endfield-dijiang-optimizer:draft", JSON.stringify(draft));
+    const { container } = render(<App />);
+    await userEvent.click(await screen.findByRole("checkbox", { name: "Cabin shift rotation (A/B)" }));
+    await userEvent.click(screen.getByRole("tab", { name: /Plan base/i }));
+    for (let index = 0; index < 3; index += 1) {
+      await userEvent.click(screen.getByRole("button", { name: "Add hard assignment" }));
+      const row = container.querySelectorAll<HTMLElement>(".hardAssignmentRow")[index]!;
+      await userEvent.selectOptions(within(row).getByRole("combobox", { name: "Room" }), "mfg-1");
+    }
+    await userEvent.click(screen.getByRole("button", { name: "Add hard assignment" }));
+    const row = container.querySelectorAll<HTMLElement>(".hardAssignmentRow")[3]!;
+    await userEvent.selectOptions(within(row).getByRole("combobox", { name: /^Work-time goal for / }), "minimum");
+    await userEvent.selectOptions(within(row).getByRole("combobox", { name: "Room" }), "mfg-1");
+    const saved = JSON.parse(localStorage.getItem("endfield-dijiang-optimizer:draft")!);
+    expect(saved.facilities.hardAssignments[3]).toMatchObject({
+      roomId: "mfg-1", shift: "B", workTimeGoal: { mode: "minimum", hoursPerDay: 12 },
+    });
+    await userEvent.selectOptions(within(row).getByRole("combobox", { name: /^Shift for / }), "A");
+    expect(screen.getByText("Manufacturing Cabin 1 · Shift A has more pinned operators than open slots. Extra pins will be ignored."))
+      .toBeInTheDocument();
   });
 
   it("persists work-time goals and reports requested versus actual working hours", async () => {
