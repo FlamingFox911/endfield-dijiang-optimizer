@@ -217,14 +217,34 @@ const SKPORT_CAPTURE_SOURCE = String.raw`(function(){
     if(retryTimer){clearTimeout(retryTimer);}
     retryTimer=setTimeout(runDirectCapture,900);
   }
+  function findOfficialGetExport(source){
+    var bindings=[];
+    Array.from(source.matchAll(/\{([^{}]+)\}\s*=/g)).forEach(function(match){
+      var properties=match[1];
+      var get=properties.match(/\bget\s*:\s*([$A-Z_a-z][$\w]*)/);
+      if(get&&/\bpost\s*:/.test(properties)&&/\bsetOptions\s*:/.test(properties)){bindings.push(get[1]);}
+    });
+    var exports=[];
+    Array.from(source.matchAll(/\bexport\s*\{([^}]+)\}/g)).forEach(function(match){
+      match[1].split(",").forEach(function(entry){
+        var names=entry.trim().split(/\s+as\s+/);
+        if(bindings.indexOf(names[0])!==-1){exports.push(names[1]||names[0]);}
+      });
+    });
+    return exports.length===1?exports[0]:null;
+  }
   async function loadOfficialRequestClient(){
     try{
       var assetNode=Array.from(document.querySelectorAll("link[href],script[src]")).find(function(node){return /vendor_src_libs-[^/]+\.js(?:$|\?)/.test(node.href||node.src||"");});
       var moduleUrl=assetNode&&(assetNode.href||assetNode.src);
       if(!moduleUrl){return;}
+      var moduleResponse=await originalFetch.call(window,moduleUrl,{credentials:"omit"});
+      if(!moduleResponse.ok){throw new Error("Official request module could not be read");}
+      var getExport=findOfficialGetExport(await moduleResponse.text());
+      if(!getExport){throw new Error("Official GET export could not be identified");}
       var officialModule=await import(moduleUrl);
-      if(typeof officialModule.r!=="function"){return;}
-      directRequest=officialModule.r;
+      if(typeof officialModule[getExport]!=="function"){throw new Error("Official GET export is unavailable");}
+      directRequest=officialModule[getExport];
       document.addEventListener("click",scheduleDirectCapture,true);
       await runDirectCapture();
     }catch(error){setStatus("The helper is listening. Enable or re-enable SKPort's official Sync Data option.","#ffdf82");}
